@@ -43,9 +43,8 @@ Callback- en signout-routes. Middleware uitgebreid met tenant-auth-gate en
 CSP/X-Frame-Options. Org-switcher in navbar. Shadcn form/input/label/card
 toegevoegd. Encoding-sweep-script omdat Cursor's Write-tool op Windows
 soms UTF-16 uitspuugt.
-Wat volgt: Fase 2 (beheer). Eerst `0002_views.sql` opnieuw draaien in Supabase (active_user_count-fix), daarna `npm run test:integration` — groen. Service-role key
-moet eerst gezet worden in `.env.local` (anon stond er dubbel).
-Blockers: geen. Magic-link end-to-end getest nog door gebruiker.
+Wat volgt: **Fase 2 — beheer** (`/[orgSlug]/beheer`, instellingen, server actions, commits per resource). Zeg `go Fase 2` om te starten.
+Blockers: geen. `0002_views.sql` (incl. `app_public_org_active_user_count`) op dev gerund; `npm run test:integration` groen (12/12).
 
 ## SQL-runs per omgeving
 
