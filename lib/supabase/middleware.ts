@@ -1,13 +1,19 @@
 import { publicEnv } from "@/lib/env";
 import type { Database } from "@/supabase/types/supabase";
 import { type CookieOptions, createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-// Refreshes the Supabase session cookie on every request so Server Components
-// always see a fresh session. Call this from `middleware.ts`.
-export async function updateSession(request: NextRequest): Promise<NextResponse> {
+export type SessionUpdate = {
+  response: NextResponse;
+  user: User | null;
+};
+
+// Refreshes the Supabase session cookie and returns the resolved user.
+// Call this from `middleware.ts`.
+export async function updateSession(request: NextRequest): Promise<SessionUpdate> {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(
@@ -31,8 +37,18 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     },
   );
 
-  // Touching `getUser()` forces the client to refresh the access token when needed.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return response;
+  return { response, user };
+}
+
+// Copies cookies from the session-refresh response to a freshly-built
+// response (e.g. a redirect) so the browser actually receives the rotated tokens.
+export function copyCookies(from: NextResponse, to: NextResponse): NextResponse {
+  for (const cookie of from.cookies.getAll()) {
+    to.cookies.set(cookie);
+  }
+  return to;
 }

@@ -11,29 +11,46 @@
 - [ ] Vercel deploy
 - [ ] Supabase project aan `.env.local` koppelen (door gebruiker)
 
-## Fase 1 - Auth + orgs (volgende)
+## Fase 1 - Database + auth
 
-- [ ] SQL `0001_init.sql`: orgs, memberships, RLS
-- [ ] Magic-link login flow
-- [ ] `/[orgSlug]` tenant-guard met membership check
+- [x] SQL `0001_init.sql`: orgs, memberships, locations, teams, categories,
+      interventies, registraties + RLS-policies + storage bucket
+- [x] SQL `0002_views.sql`: `public_dashboard_totals`, `public_team_breakdown`,
+      `public_category_breakdown` (security_invoker, grant anon)
+- [x] SQL `9000_seed.sql`: LEV Groep, 9 locaties, 4 teams Helmond,
+      6 categorieen, 10 interventies (CO2-factoren nog placeholder)
+- [x] Types gegenereerd en in `supabase/types/supabase.ts`
+- [x] Magic-link login (`/login`) + `/auth/callback` + `/auth/signout`
+- [x] `middleware.ts`: session refresh + auth-gate op tenant-routes +
+      `X-Frame-Options: DENY` overal, `frame-ancestors` whitelist op `/embed/*`
+- [x] `(app)/[orgSlug]/layout.tsx`: membership-check via RLS + header met
+      org-switcher + uitloggen
+- [x] Home dispatcher: authed users worden doorgestuurd naar hun eerste org
+- [ ] RLS integration tests (anon-views, worker cross-team) - aparte commit
 
 ## Openstaand (later)
 
-- [ ] EOD-baseline van LEF opvragen
+- [ ] EOD-baseline van LEV opvragen
 - [ ] PWA (manifest + icons + service worker) - pas als we het praktisch nodig hebben
 - [ ] Tremor toevoegen wanneer dashboard charts krijgt
 
 ## Laatste sessie
 
 Datum: 2026-04-17
-Wat gedaan: Fase 0 scaffold. Next.js 15 + TS strict + Tailwind v4 + shadcn
-base, Biome, Vitest, Playwright, `@supabase/ssr` clients, Zod env validation,
-security headers, CI workflow, ADR 0002, README.
-Wat volgt: Vercel deploy + Supabase project koppelen, dan Fase 1 (auth + orgs + eerste SQL).
-Blockers: `.env.local` waarden moeten gezet worden voor de app lokaal start.
+Wat gedaan: Fase 1. Drie SQL-bestanden (init, views, seed) gerund op dev
+Supabase. Types gegenereerd. Magic-link login met RHF + Zod + Server Action.
+Callback- en signout-routes. Middleware uitgebreid met tenant-auth-gate en
+CSP/X-Frame-Options. Org-switcher in navbar. Shadcn form/input/label/card
+toegevoegd. Encoding-sweep-script omdat Cursor's Write-tool op Windows
+soms UTF-16 uitspuugt.
+Wat volgt: Fase 2 (beheer) zodra RLS-tests groen zijn. Service-role key
+moet eerst gezet worden in `.env.local` (anon stond er dubbel).
+Blockers: geen. Magic-link end-to-end getest nog door gebruiker.
 
 ## SQL-runs per omgeving
 
 | SQL-bestand | Gedraaid op dev | Gedraaid op staging | Gedraaid op productie |
 | --- | --- | --- | --- |
-| (nog geen) |  |  |  |
+| `0001_init.sql` | 2026-04-17 |  |  |
+| `0002_views.sql` | 2026-04-17 |  |  |
+| `9000_seed.sql` | 2026-04-17 |  |  |

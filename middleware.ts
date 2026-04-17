@@ -1,8 +1,60 @@
-import { updateSession } from "@/lib/supabase/middleware";
-import type { NextRequest } from "next/server";
+import { getServerEnv } from "@/lib/env";
+import { copyCookies, updateSession } from "@/lib/supabase/middleware";
+import { type NextRequest, NextResponse } from "next/server";
+
+// First path segments that are NOT tenant slugs. Anything else is treated
+// as `/[orgSlug]/...` and therefore requires an authenticated session.
+// Membership verification itself happens in the layout (defense in depth).
+const RESERVED_FIRST_SEGMENTS = new Set([
+  "",
+  "login",
+  "auth",
+  "api",
+  "p",
+  "tv",
+  "embed",
+  "_next",
+  "favicon.ico",
+  "robots.txt",
+  "sitemap.xml",
+  "manifest.webmanifest",
+]);
 
 export async function middleware(request: NextRequest) {
-  return updateSession(request);
+  const { response, user } = await updateSession(request);
+  const { pathname, search } = request.nextUrl;
+
+  const firstSegment = pathname.split("/")[1] ?? "";
+  const isTenantRoute = !RESERVED_FIRST_SEGMENTS.has(firstSegment);
+
+  // Auth gate for tenant-scoped routes.
+  if (isTenantRoute && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = `?redirectTo=${encodeURIComponent(pathname + search)}`;
+    return copyCookies(response, NextResponse.redirect(url));
+  }
+
+  // Already-authed users on /login bounce to home, which dispatches to their org.
+  if (pathname === "/login" && user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.search = "";
+    return copyCookies(response, NextResponse.redirect(url));
+  }
+
+  // Security headers.
+  if (firstSegment === "embed") {
+    // Embed route must be frameable by whitelisted origins (LEV intranet etc.).
+    const { EMBED_FRAME_ANCESTORS } = getServerEnv();
+    response.headers.set("Content-Security-Policy", `frame-ancestors ${EMBED_FRAME_ANCESTORS}`);
+    response.headers.delete("X-Frame-Options");
+  } else {
+    response.headers.set("X-Frame-Options", "DENY");
+    response.headers.set("Content-Security-Policy", "frame-ancestors 'none'");
+  }
+
+  return response;
 }
 
 export const config = {
