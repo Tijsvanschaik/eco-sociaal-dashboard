@@ -146,7 +146,7 @@ Storage `registrations` bucket:
 
 Alle drie met `security_invoker = true`, `grant select to anon, authenticated`:
 
-- `public_dashboard_totals` — per org: `co2_saved_kg`, `registration_count`, `active_user_count`, `eod_days_gained` (= `min(365, round((co2/baseline)*365, 2))` of `null` als baseline ontbreekt).
+- `public_dashboard_totals` — per org: `co2_saved_kg`, `registration_count`, `active_user_count` (via `app_public_org_active_user_count`: SECURITY DEFINER, zodat `anon` geen directe SELECT op `registrations.user_id` nodig heeft), `eod_days_gained` (= `min(365, round((co2/baseline)*365, 2))` of `null` als baseline ontbreekt).
 - `public_team_breakdown` — per org -> team: co2 + count.
 - `public_category_breakdown` — per org -> categorie: co2 + count + kleur.
 

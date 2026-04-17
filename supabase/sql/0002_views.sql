@@ -17,6 +17,32 @@
 
 
 -- -----------------------------------------------------------------------------
+-- 0. Helper: actieve gebruikers tellen zonder anon SELECT op user_id --------
+-- -----------------------------------------------------------------------------
+-- `public_dashboard_totals` draait met security_invoker; anon mag geen
+-- SELECT op registrations.user_id hebben (privacy). Deze SECURITY DEFINER
+-- functie leest user_id alleen server-side en telt distinct users voor orgs
+-- met public_share_enabled = true.
+
+create or replace function public.app_public_org_active_user_count(p_org_id uuid)
+returns bigint
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select count(distinct r.user_id)::bigint
+  from public.registrations r
+  inner join public.organizations o on o.id = r.org_id
+  where r.org_id = p_org_id
+    and o.public_share_enabled = true;
+$$;
+
+revoke all on function public.app_public_org_active_user_count(uuid) from public;
+grant execute on function public.app_public_org_active_user_count(uuid) to anon, authenticated;
+
+
+-- -----------------------------------------------------------------------------
 -- 1. Totals per organisatie ---------------------------------------------------
 -- -----------------------------------------------------------------------------
 -- EOD-days-gained = (co2_saved_kg / eod_baseline_kg) * 365, afgekapt op 365.
@@ -32,7 +58,7 @@ select
   o.eod_baseline_date                                  as eod_baseline_date,
   coalesce(sum(r.co2_kg_cached), 0)::numeric(14,3)     as co2_saved_kg,
   count(r.id)::bigint                                  as registration_count,
-  count(distinct r.user_id)::bigint                    as active_user_count,
+  public.app_public_org_active_user_count(o.id)        as active_user_count,
   case
     when o.eod_baseline_kg is null or o.eod_baseline_kg = 0 then null
     else least(

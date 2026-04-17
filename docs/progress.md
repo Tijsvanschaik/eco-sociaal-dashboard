@@ -26,7 +26,7 @@
 - [x] `(app)/[orgSlug]/layout.tsx`: membership-check via RLS + header met
       org-switcher + uitloggen
 - [x] Home dispatcher: authed users worden doorgestuurd naar hun eerste org
-- [ ] RLS integration tests (anon-views, worker cross-team) - aparte commit
+- [x] RLS integration tests (`npm run test:integration`; vereist `.env.local` + geüpdatete `0002_views.sql` in Supabase voor anon + `active_user_count`)
 
 ## Openstaand (later)
 
@@ -43,7 +43,7 @@ Callback- en signout-routes. Middleware uitgebreid met tenant-auth-gate en
 CSP/X-Frame-Options. Org-switcher in navbar. Shadcn form/input/label/card
 toegevoegd. Encoding-sweep-script omdat Cursor's Write-tool op Windows
 soms UTF-16 uitspuugt.
-Wat volgt: Fase 2 (beheer) zodra RLS-tests groen zijn. Service-role key
+Wat volgt: Fase 2 (beheer). Eerst `0002_views.sql` opnieuw draaien in Supabase (active_user_count-fix), daarna `npm run test:integration` — groen. Service-role key
 moet eerst gezet worden in `.env.local` (anon stond er dubbel).
 Blockers: geen. Magic-link end-to-end getest nog door gebruiker.
 
