@@ -1,0 +1,17 @@
+---
+description: Teststrategie
+alwaysApply: true
+---
+
+## Testpiramide
+- **Unit (Vitest)**: pure functies — CO₂-berekening, EOD-dagen, Zod-schema's, date helpers.
+- **Component (Vitest + Testing Library)**: kritieke UI — registratieformulier (valideert, toont errors, disabled submit).
+- **Integration (Vitest + Supabase local)**: RLS-policies — worker kan alleen eigen registraties muteren, anon kan alleen public-views lezen.
+- **E2E (Playwright)**: één happy path — login → registratie toevoegen → verschijnt op dashboard.
+- **Smoke**: `/tv/[slug]` en `/embed/[slug]` renderen zonder errors voor seed-org.
+
+## Regels
+- Voor elke nieuwe business-functie: eerst een failing unit test schrijven, dan de implementatie.
+- Nooit testen uitschakelen zonder TODO + reden.
+- Test-coverage target MVP: 70% op `lib/` (utils/berekeningen), 100% op CO₂- en EOD-logica.
+- CI blokkeert merges bij falende tests of type-errors.

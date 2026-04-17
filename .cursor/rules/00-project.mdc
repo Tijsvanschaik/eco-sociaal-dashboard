@@ -1,0 +1,20 @@
+---
+description: Project context voor Eco-sociaal Dashboard
+alwaysApply: true
+---
+
+# Eco-sociaal Dashboard — LEF Groep
+
+Multi-tenant webapp. Welzijnsorganisaties registreren eco-sociale activiteiten, de tool berekent CO₂-impact en toont resultaten op intern dashboard, TV-scherm, intranet-embed en publieke share-link. Earth Overshoot Day is de centrale impactvertaling.
+
+## Gouden regels
+1. **Veiligheid eerst.** RLS staat altijd aan. Geen service_role key in client-code. Geen geheimen in git.
+2. **Werk iteratief.** Lever per fase, niet alles tegelijk. Check-in met de gebruiker na elke fase.
+3. **Stel vragen bij twijfel.** Raad nooit op specs. Als iets onduidelijk is — stop en vraag.
+4. **Taal van UI = Nederlands.** Code, commits, comments = Engels.
+5. **Mobile-first.** Registratieflow moet op telefoon werken vóór desktop af is.
+6. **Geen scope-creep.** Buiten de huidige fase niets toevoegen zonder expliciet akkoord.
+7. **Commit klein en vaak.** Conventional commits: `feat:`, `fix:`, `chore:`, `test:`, `docs:`, `refactor:`.
+8. **Leg beslissingen vast** in `docs/decisions/NNNN-titel.md` (ADR).
+9. **Update `docs/progress.md`** aan het einde van elke fase.
+10. **Schrijf tests** bij elke nieuwe business-logica (zie `30-testing.mdc`).

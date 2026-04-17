@@ -1,0 +1,25 @@
+---
+description: Supabase, Postgres, RLS
+globs: ["supabase/**", "lib/supabase/**", "**/*.sql"]
+---
+
+- Alle tabellen hebben `org_id` waar relevant en **RLS enabled**.
+- Policies schrijven per tabel: SELECT / INSERT / UPDATE / DELETE apart.
+- `service_role` key alleen in Server Actions / Route Handlers, nooit in Client Components.
+- Gebruik `@supabase/ssr` voor de server client; aparte client voor browser.
+- **Geen CLI-migraties**: de gebruiker plakt alle SQL zelf in de Supabase SQL Editor. Genereer GEEN `supabase migration new` of `supabase db push`.
+- **SQL-bestanden**: schrijf SQL in genummerde files onder `supabase/sql/` (bijv. `0001_init.sql`, `0002_views.sql`, `9000_seed.sql`).
+- **Idempotent waar mogelijk**:
+  - `create table if not exists ...`
+  - `drop policy if exists ...; create policy ...`
+  - `insert ... on conflict do nothing` (seed/fixtures)
+- **Verplichte kop-comment**: elk SQL-bestand begint met een header met doel, datum, afhankelijkheden, en de instructie: “Plak dit volledig in Supabase -> SQL Editor -> Run.”
+- **Structuur**: splits grote SQL-bestanden in logische blokken met comments:
+  - `-- 1. Tabellen`
+  - `-- 2. Policies`
+  - `-- 3. Indexen`
+  - `-- 4. Grants`
+- **Types na elke SQL-run**: vraag na het draaien van SQL om types te regenereren via Supabase dashboard (API -> Generate Types) en te plakken in `supabase/types/supabase.ts`.
+- Storage-buckets: `registrations` voor foto's, RLS-policy per org_id.
+- Publieke data: alleen via Postgres views met `security_invoker = true` + expliciete `grant select to anon`.
+- Test RLS met Vitest integration tests (anon- en worker-client), niet via `supabase test db`.

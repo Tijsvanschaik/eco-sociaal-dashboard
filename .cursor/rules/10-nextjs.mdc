@@ -1,0 +1,14 @@
+---
+description: Next.js + React conventies
+globs: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.ts"]
+---
+
+- Next.js 15 App Router, TypeScript strict mode, ESM only.
+- Server Components by default. Voeg `"use client"` alleen toe als er state/effects/browser-API nodig is.
+- Data fetching server-side via Server Components of Server Actions. Geen client-side fetch voor eigen backend tenzij realtime.
+- Forms: React Hook Form + Zod. Dezelfde Zod-schema's worden zowel client- als server-side gevalideerd.
+- Routing via route groups: `(app)` auth-required, `(public)` geen auth, `(kiosk)` no-chrome + no-auth.
+- Geen `any`, geen `@ts-ignore` zonder TODO + reden.
+- Bestandsnamen: kebab-case. Component-exports: PascalCase. Utility-exports: camelCase.
+- Maximaal 200 regels per file. Splits eerder dan dat.
+- Error boundaries + loading states per route.

@@ -1,0 +1,13 @@
+---
+description: UI/UX conventies
+globs: ["app/**/*.tsx", "components/**/*.tsx"]
+---
+
+- shadcn/ui als component-basis. Installeer per component via CLI, commit de gegenereerde code.
+- Tremor voor charts/metrics op dashboard.
+- Tailwind: mobile-first utilities, geen custom CSS tenzij echt nodig.
+- Tap-targets ≥ 44x44px.
+- Registratieformulier: max 5 velden in de viewport, grote submit-knop onderaan, default datum = vandaag.
+- TV-modus: 1 scherm, geen scroll, refresh elke 60s, donker thema beschikbaar.
+- Empty states + loading skeletons + error states voor elke data-pagina.
+- Taal: NL. Copy-tone: warm, to-the-point, geen jargon.
