@@ -4,7 +4,7 @@ alwaysApply: true
 ---
 
 - Geen geheimen in repo. Alleen `.env.example` committen.
-- CSP-headers op `/embed/*`: `frame-ancestors 'self' https://<lef-intranet-domein>` (whitelist, niet *).
+- CSP-headers op `/embed/*`: `frame-ancestors 'self' https://<lev-intranet-domein>` (whitelist, niet *).
 - `X-Frame-Options` NIET op embed-routes (blokkeert anders iframes); wel op `(app)`-routes.
 - Rate-limit Server Actions die publiek benaderbaar zijn (magic-link request, public dashboard fetches).
 - Input-validatie altijd server-side (Zod). Vertrouw client nooit.

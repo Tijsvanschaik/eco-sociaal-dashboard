@@ -3,7 +3,7 @@ description: Project context voor Eco-sociaal Dashboard
 alwaysApply: true
 ---
 
-# Eco-sociaal Dashboard — LEF Groep
+# Eco-sociaal Dashboard — LEV Groep
 
 Multi-tenant webapp. Welzijnsorganisaties registreren eco-sociale activiteiten, de tool berekent CO₂-impact en toont resultaten op intern dashboard, TV-scherm, intranet-embed en publieke share-link. Earth Overshoot Day is de centrale impactvertaling.
 
