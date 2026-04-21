@@ -61,6 +61,11 @@ share slug + embed whitelist doen.
 Blockers: nog geen echte `.env.local` / Vercel-config in deze repo-sessie, dus
 integratie-tests en live deploy zijn nog handmatige vervolgstappen.
 
+## Tijdelijke auth-opmerking
+
+- [x] Tijdelijke wachtwoord-login toegevoegd op `/login` als fallback voor admins
+      en testgebruikers zolang Supabase magic-link e-mails gelimiteerd zijn
+
 ## SQL-runs per omgeving
 
 | SQL-bestand | Gedraaid op dev | Gedraaid op staging | Gedraaid op productie |

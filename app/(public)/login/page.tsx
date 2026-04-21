@@ -35,7 +35,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
         <CardHeader>
           <CardTitle>Inloggen</CardTitle>
           <CardDescription>
-            Ontvang een magic-link per e-mail. Geen wachtwoord nodig.
+            Gebruik standaard een magic-link. Tijdelijk is er ook een wachtwoord-login voor admins
+            en testgebruikers.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

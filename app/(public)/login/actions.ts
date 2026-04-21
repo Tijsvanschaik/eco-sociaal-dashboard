@@ -9,8 +9,16 @@ const schema = z.object({
   redirectTo: z.string().optional(),
 });
 
+const passwordSchema = schema.extend({
+  password: z.string().min(1, "Voer je wachtwoord in."),
+});
+
 export type SendMagicLinkResult =
   | { status: "ok"; email: string }
+  | { status: "error"; message: string };
+
+export type PasswordLoginResult =
+  | { status: "ok"; redirectTo: string }
   | { status: "error"; message: string };
 
 // Requests a magic-link email for the given address. To avoid leaking which
@@ -49,6 +57,38 @@ export async function sendMagicLink(formData: FormData): Promise<SendMagicLinkRe
 
   // Always respond with success to the client to avoid user-enumeration.
   return { status: "ok", email: parsed.data.email };
+}
+
+export async function signInWithPassword(formData: FormData): Promise<PasswordLoginResult> {
+  const parsed = passwordSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+    redirectTo: formData.get("redirectTo") ?? undefined,
+  });
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: parsed.error.issues[0]?.message ?? "Ongeldige invoer.",
+    };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
+  });
+  if (error) {
+    console.error("signInWithPassword error:", error.message);
+    return {
+      status: "error",
+      message: "Inloggen lukte niet. Controleer je e-mailadres en wachtwoord.",
+    };
+  }
+
+  return {
+    status: "ok",
+    redirectTo: parsed.data.redirectTo || "/",
+  };
 }
 
 async function getRequestOrigin(): Promise<string> {
