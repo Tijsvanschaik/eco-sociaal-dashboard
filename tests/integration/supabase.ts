@@ -1,3 +1,4 @@
+import { assertSupabaseJwtRole } from "@/lib/supabase/jwt-role";
 import type { Database } from "@/supabase/types/supabase";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 
@@ -24,11 +25,15 @@ export function supabaseUrl(): string {
 }
 
 export function anonKey(): string {
-  return requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  const key = requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  assertSupabaseJwtRole(key, "anon", "NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  return key;
 }
 
 export function serviceRoleKey(): string {
-  return requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const key = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  assertSupabaseJwtRole(key, "service_role", "SUPABASE_SERVICE_ROLE_KEY");
+  return key;
 }
 
 // Service-role client bypasses RLS. Use ONLY for fixture setup and teardown.

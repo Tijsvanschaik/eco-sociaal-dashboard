@@ -1,6 +1,7 @@
 import "server-only";
 
-import { getServerEnv, publicEnv } from "@/lib/env";
+import { getPublicSupabaseEnv, getServerEnv } from "@/lib/env";
+import { assertSupabaseJwtRole } from "@/lib/supabase/jwt-role";
 import type { Database } from "@/supabase/types/supabase";
 import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
@@ -12,6 +13,7 @@ type CookieToSet = { name: string; value: string; options: CookieOptions };
 // Honors the user's session via cookies and therefore respects RLS.
 export async function createClient() {
   const cookieStore = await cookies();
+  const publicEnv = getPublicSupabaseEnv();
 
   return createServerClient<Database>(
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
@@ -40,6 +42,7 @@ export async function createClient() {
 // Only use when bypassing RLS is unavoidable (e.g. admin operations, webhooks).
 export function createServiceRoleClient() {
   const env = getServerEnv();
+  assertSupabaseJwtRole(env.SUPABASE_SERVICE_ROLE_KEY, "service_role", "SUPABASE_SERVICE_ROLE_KEY");
   return createSupabaseClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.SUPABASE_SERVICE_ROLE_KEY,

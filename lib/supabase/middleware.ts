@@ -1,4 +1,4 @@
-import { publicEnv } from "@/lib/env";
+import { getPublicSupabaseEnv } from "@/lib/env";
 import type { Database } from "@/supabase/types/supabase";
 import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import type { User } from "@supabase/supabase-js";
@@ -15,6 +15,7 @@ export type SessionUpdate = {
 // Call this from `middleware.ts`.
 export async function updateSession(request: NextRequest): Promise<SessionUpdate> {
   let response = NextResponse.next({ request });
+  const publicEnv = getPublicSupabaseEnv();
 
   const supabase = createServerClient<Database>(
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,

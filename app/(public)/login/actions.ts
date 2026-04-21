@@ -1,7 +1,7 @@
 "use server";
 
-import { publicEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
 import { z } from "zod";
 
 const schema = z.object({
@@ -29,7 +29,7 @@ export async function sendMagicLink(formData: FormData): Promise<SendMagicLinkRe
   }
 
   const supabase = await createClient();
-  const callbackUrl = new URL("/auth/callback", publicEnv.NEXT_PUBLIC_APP_URL);
+  const callbackUrl = new URL("/auth/callback", await getRequestOrigin());
   if (parsed.data.redirectTo) {
     callbackUrl.searchParams.set("next", parsed.data.redirectTo);
   }
@@ -49,4 +49,18 @@ export async function sendMagicLink(formData: FormData): Promise<SendMagicLinkRe
 
   // Always respond with success to the client to avoid user-enumeration.
   return { status: "ok", email: parsed.data.email };
+}
+
+async function getRequestOrigin(): Promise<string> {
+  const headerStore = await headers();
+  const origin = headerStore.get("origin");
+  if (origin) return origin;
+
+  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+  const protocol = headerStore.get("x-forwarded-proto") ?? "http";
+  if (!host) {
+    throw new Error("Cannot determine request origin for magic-link callback.");
+  }
+
+  return `${protocol}://${host}`;
 }
