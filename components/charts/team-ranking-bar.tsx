@@ -9,7 +9,6 @@ type TeamRow = {
   co2SavedKg: number;
   id: string;
   name: string;
-  secondary?: string;
 };
 
 function formatKg(value: number): string {

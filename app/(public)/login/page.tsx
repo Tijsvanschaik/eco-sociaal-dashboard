@@ -44,7 +44,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
   const lede =
     mode === "password"
       ? "Log in met je tijdelijke wachtwoord. Deze fallback is er zolang magic-link e-mails gelimiteerd zijn."
-      : "Log in op jouw persoonlijke omgeving om verder te gaan met het Eco-sociaal Dashboard.";
+      : "Log in met jouw werk-emailadres om verder te gaan.";
 
   return (
     <div className="min-h-dvh bg-background p-4 md:p-6">
@@ -106,6 +106,13 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
                   Neem contact op!
                 </a>
               </p>
+
+              {mode === "password" && (
+                <p className="mt-4 text-center text-sm text-muted-foreground">
+                  Tijdelijke fallback voor admins en testgebruikers zolang magic-link e-mails
+                  gelimiteerd zijn.
+                </p>
+              )}
             </div>
           </div>
         </main>

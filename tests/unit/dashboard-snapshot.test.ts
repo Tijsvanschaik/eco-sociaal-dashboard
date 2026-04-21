@@ -1,0 +1,99 @@
+import { buildDashboardSnapshot } from "@/lib/dashboard";
+import { describe, expect, it } from "vitest";
+
+const categories = [
+  { id: "cat-mob", name: "Mobiliteit", color: "#3b82f6" },
+  { id: "cat-voe", name: "Voeding", color: "#10b981" },
+];
+
+const interventions = [
+  { id: "int-bike", name: "Fietsen", categoryId: "cat-mob" },
+  { id: "int-veggie", name: "Vegetarisch eten", categoryId: "cat-voe" },
+];
+
+const teams = [
+  { id: "team-hel", name: "LEV Helmond" },
+  { id: "team-ast", name: "LEV Asten" },
+];
+
+describe("buildDashboardSnapshot — teamBreakdown", () => {
+  it("aggregeert per team en splitst op interventie met categoriekleur", () => {
+    const snapshot = buildDashboardSnapshot({
+      baselineKg: 10_000,
+      categories,
+      interventions,
+      teams,
+      registrations: [
+        { teamId: "team-hel", interventionId: "int-bike", userId: "u1", co2KgCached: 10 },
+        { teamId: "team-hel", interventionId: "int-bike", userId: "u2", co2KgCached: 5 },
+        { teamId: "team-hel", interventionId: "int-veggie", userId: "u2", co2KgCached: 3 },
+        { teamId: "team-ast", interventionId: "int-bike", userId: "u3", co2KgCached: 4 },
+      ],
+    });
+
+    expect(snapshot.teamBreakdown).toHaveLength(2);
+
+    const helmond = snapshot.teamBreakdown[0];
+    if (!helmond) throw new Error("Helmond row missing");
+    expect(helmond.name).toBe("LEV Helmond");
+    expect(helmond.co2SavedKg).toBe(18);
+    expect(helmond.registrationCount).toBe(3);
+    expect(helmond.segments).toHaveLength(2);
+    // 18 kg / 10000 kg * 365 dagen = 0.657 -> afgerond 1 dag
+    expect(helmond.eodDays).toBe(1);
+
+    const bikeSegment = helmond.segments.find((s) => s.interventionId === "int-bike");
+    expect(bikeSegment).toMatchObject({
+      interventionName: "Fietsen",
+      categoryName: "Mobiliteit",
+      categoryColor: "#3b82f6",
+      co2SavedKg: 15,
+      registrationCount: 2,
+    });
+
+    const veggieSegment = helmond.segments.find((s) => s.interventionId === "int-veggie");
+    expect(veggieSegment).toMatchObject({
+      categoryColor: "#10b981",
+      co2SavedKg: 3,
+    });
+
+    const asten = snapshot.teamBreakdown[1];
+    if (!asten) throw new Error("Asten row missing");
+    expect(asten.name).toBe("LEV Asten");
+    expect(asten.co2SavedKg).toBe(4);
+    expect(asten.segments).toHaveLength(1);
+  });
+
+  it("geeft lege teamBreakdown-inhoud wanneer er geen registraties zijn", () => {
+    const snapshot = buildDashboardSnapshot({
+      baselineKg: null,
+      categories,
+      interventions,
+      teams,
+      registrations: [],
+    });
+
+    expect(snapshot.totalCo2Kg).toBe(0);
+    expect(snapshot.teamBreakdown).toHaveLength(2);
+    for (const team of snapshot.teamBreakdown) {
+      expect(team.co2SavedKg).toBe(0);
+      expect(team.eodDays).toBe(0);
+      expect(team.segments).toHaveLength(0);
+    }
+  });
+
+  it("sorteert teams van hoog naar laag op bespaarde CO2", () => {
+    const snapshot = buildDashboardSnapshot({
+      baselineKg: null,
+      categories,
+      interventions,
+      teams,
+      registrations: [
+        { teamId: "team-ast", interventionId: "int-bike", userId: "u1", co2KgCached: 100 },
+        { teamId: "team-hel", interventionId: "int-bike", userId: "u2", co2KgCached: 50 },
+      ],
+    });
+
+    expect(snapshot.teamBreakdown.map((team) => team.name)).toEqual(["LEV Asten", "LEV Helmond"]);
+  });
+});

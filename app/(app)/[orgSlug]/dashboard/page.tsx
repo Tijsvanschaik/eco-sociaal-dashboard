@@ -23,12 +23,9 @@ export default async function DashboardPage({
 
   return (
     <InternalDashboard
-      categoryTimeseries={data.categoryTimeseries}
       orgName={data.context.org.name}
-      orgSlug={data.context.org.slug}
       period={data.period}
       recentRegistrations={data.recentRegistrations}
-      roleLabel={data.context.role === "admin" ? "admin" : "medewerker"}
       snapshot={data.snapshot}
       timeseries={data.timeseries}
     />

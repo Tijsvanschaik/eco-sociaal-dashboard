@@ -39,9 +39,6 @@ describe("LoginForm", () => {
     expect(screen.getByLabelText(/e-mailadres/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/wachtwoord/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /log in met wachtwoord/i })).toBeInTheDocument();
-    expect(
-      screen.getByText(/tijdelijke fallback voor admins en testgebruikers/i),
-    ).toBeInTheDocument();
   });
 
   it("submits the magic-link flow and shows the sent state", async () => {

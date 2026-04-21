@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { sendMagicLink, signInWithPassword } from "./actions";
 
 const inputClassName =
-  "h-auto w-full rounded-[1.5rem] border-0 bg-input px-6 py-4 text-base text-foreground shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 md:text-lg dark:bg-input";
+  "h-auto w-full rounded-[1.5rem] border-0 bg-input px-6 py-4 text-base text-foreground shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 dark:bg-input";
 
 const labelClassName = "ml-1 text-sm font-semibold text-foreground";
 
@@ -213,10 +213,6 @@ function PasswordLogin({ redirectTo }: { redirectTo?: string }) {
             </FormItem>
           )}
         />
-        <p className="text-sm text-muted-foreground">
-          Tijdelijke fallback voor admins en testgebruikers zolang magic-link e-mails gelimiteerd
-          zijn.
-        </p>
         {errorMessage && (
           <p className="text-sm text-destructive" role="alert">
             {errorMessage}

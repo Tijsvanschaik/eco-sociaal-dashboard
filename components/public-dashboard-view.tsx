@@ -2,6 +2,7 @@ import { CategoryDonutChart } from "@/components/charts/category-donut-chart";
 import { TeamRankingBar } from "@/components/charts/team-ranking-bar";
 import { TrendAreaChart } from "@/components/charts/trend-area-chart";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { eodDaysGained } from "@/lib/impact";
 import type { PublicTimeseriesRow } from "@/lib/public-dashboard";
 import type { Database } from "@/supabase/types/supabase";
 
@@ -88,20 +89,23 @@ export function PublicDashboardView({
           items={teams.map((team) => ({
             id: team.team_id ?? team.team_name ?? "team",
             name: team.team_name ?? "Onbekend team",
-            secondary: team.location_name ?? undefined,
             co2SavedKg: team.co2_saved_kg ?? 0,
           }))}
           title="Top teams"
         />
         <CategoryDonutChart
           description="Verdeling van de besparing over categorieen."
-          items={categories.map((category) => ({
-            id: category.category_id ?? category.category_name ?? "category",
-            name: category.category_name ?? "Onbekende categorie",
-            color: category.category_color ?? undefined,
-            co2SavedKg: category.co2_saved_kg ?? 0,
-            registrationCount: category.registration_count ?? 0,
-          }))}
+          items={categories.map((category) => {
+            const co2SavedKg = category.co2_saved_kg ?? 0;
+            return {
+              id: category.category_id ?? category.category_name ?? "category",
+              name: category.category_name ?? "Onbekende categorie",
+              color: category.category_color ?? undefined,
+              co2SavedKg,
+              eodDays: eodDaysGained(co2SavedKg, totals.eod_baseline_kg ?? 0),
+              registrationCount: category.registration_count ?? 0,
+            };
+          })}
           title="Per categorie"
         />
       </section>

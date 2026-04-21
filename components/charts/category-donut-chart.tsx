@@ -8,6 +8,8 @@ import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 type CategorySlice = {
   co2SavedKg: number;
   color?: string;
+  /** Zelfde maat als team-top: equivalente dagen t.o.v. baseline. Ontbreekt bv. op oude callers → val terug op %. */
+  eodDays?: number;
   id: string;
   name: string;
   registrationCount: number;
@@ -20,6 +22,119 @@ function formatKg(value: number): string {
   }).format(value);
 }
 
+const percentFormatter = new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 0 });
+const integerFormatter = new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 0 });
+
+/**
+ * Kale donut-visual zonder eigen Card-wrapper. Gebruik in combinatie met
+ * `<DashboardPanel>` op het interne dashboard. De Card-variant hieronder
+ * blijft voor de publieke surfaces.
+ */
+export function CategoryDonutChartBody({
+  items,
+  limit = 6,
+  size = 260,
+}: {
+  items: CategorySlice[];
+  limit?: number;
+  size?: number;
+}) {
+  const rows = items.filter((item) => item.registrationCount > 0);
+  const total = rows.reduce((sum, item) => sum + item.co2SavedKg, 0);
+
+  if (rows.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Nog geen categorieverdeling beschikbaar. Registreer eerst een paar acties.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid gap-6 sm:grid-cols-[auto_1fr] sm:items-center">
+      <div className="relative mx-auto sm:mx-0" style={{ width: size, height: size }}>
+        <ChartContainer
+          className="h-full w-full"
+          config={Object.fromEntries(
+            rows.map((item) => [item.id, { label: item.name, color: item.color ?? "#84cc16" }]),
+          )}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Tooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value) => `${formatKg(Number(value ?? 0))} kg`}
+                  />
+                }
+              />
+              <Pie
+                data={rows}
+                dataKey="co2SavedKg"
+                nameKey="name"
+                innerRadius="62%"
+                outerRadius="92%"
+                paddingAngle={2}
+                strokeWidth={0}
+              >
+                {rows.map((item) => (
+                  <Cell key={item.id} fill={item.color ?? "#84cc16"} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Totaal
+          </span>
+          <span className="text-2xl font-extrabold tracking-tight text-foreground">
+            {formatKg(total)}
+          </span>
+          <span className="text-xs font-medium text-muted-foreground">kg CO₂</span>
+        </div>
+      </div>
+
+      <ol className="flex flex-col gap-3">
+        {rows.slice(0, limit).map((item) => {
+          const share = total > 0 ? (item.co2SavedKg / total) * 100 : 0;
+          const eodDays = item.eodDays;
+          const showDays = eodDays !== undefined;
+          const daysLabel = eodDays === 1 ? "dag" : "dagen";
+          return (
+            <li
+              key={item.id}
+              className="flex items-center gap-3 rounded-[1rem] bg-surface-container-low px-3 py-2"
+            >
+              <span
+                aria-hidden
+                className="h-3 w-3 shrink-0 rounded-full"
+                style={{ backgroundColor: item.color ?? "#84cc16" }}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-foreground">{item.name}</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  {formatKg(item.co2SavedKg)} kg
+                </p>
+              </div>
+              {showDays ? (
+                <span className="flex-none text-sm font-bold">
+                  <span className="text-primary">{integerFormatter.format(eodDays)}</span>{" "}
+                  <span className="text-foreground">{daysLabel}</span>
+                </span>
+              ) : (
+                <span className="flex-none text-sm font-bold text-foreground">
+                  {percentFormatter.format(share)}%
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 export function CategoryDonutChart({
   description,
   items,
@@ -29,9 +144,6 @@ export function CategoryDonutChart({
   items: CategorySlice[];
   title: string;
 }) {
-  const rows = items.filter((item) => item.registrationCount > 0);
-  const total = rows.reduce((sum, item) => sum + item.co2SavedKg, 0);
-
   return (
     <Card>
       <CardHeader>
@@ -39,59 +151,7 @@ export function CategoryDonutChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nog geen categorieverdeling beschikbaar. Registreer eerst een paar acties.
-          </p>
-        ) : (
-          <>
-            <ChartContainer
-              className="h-[260px]"
-              config={Object.fromEntries(
-                rows.map((item) => [item.id, { label: item.name, color: item.color ?? "#84cc16" }]),
-              )}
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Tooltip
-                    content={
-                      <ChartTooltipContent
-                        formatter={(value) => `${formatKg(Number(value ?? 0))} kg`}
-                      />
-                    }
-                  />
-                  <Pie
-                    data={rows}
-                    dataKey="co2SavedKg"
-                    nameKey="name"
-                    innerRadius={62}
-                    outerRadius={92}
-                    paddingAngle={2}
-                  >
-                    {rows.map((item) => (
-                      <Cell key={item.id} fill={item.color ?? "#84cc16"} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Totaal {formatKg(total)} kg</p>
-              {rows.slice(0, 5).map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="size-2 rounded-full"
-                      style={{ backgroundColor: item.color ?? "#84cc16" }}
-                    />
-                    <span>{item.name}</span>
-                  </div>
-                  <span className="text-muted-foreground">{formatKg(item.co2SavedKg)} kg</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        <CategoryDonutChartBody items={items} />
       </CardContent>
     </Card>
   );

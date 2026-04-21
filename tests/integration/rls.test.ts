@@ -81,22 +81,15 @@ async function setupFixtures(): Promise<Fixtures> {
     .single();
   if (orgBErr || !orgB) throw orgBErr ?? new Error("orgB insert failed");
 
-  // --- Locations + teams ---
-  const { data: locA } = await admin
-    .from("locations")
-    .insert({ org_id: orgA.id, name: "Loc A" })
-    .select("id")
-    .single();
-  if (!locA) throw new Error("locA insert failed");
-
+  // --- Teams ---
   const { data: teamA1 } = await admin
     .from("teams")
-    .insert({ org_id: orgA.id, location_id: locA.id, name: "Team A1" })
+    .insert({ org_id: orgA.id, name: "Team A1" })
     .select("id")
     .single();
   const { data: teamA2 } = await admin
     .from("teams")
-    .insert({ org_id: orgA.id, location_id: locA.id, name: "Team A2" })
+    .insert({ org_id: orgA.id, name: "Team A2" })
     .select("id")
     .single();
   if (!teamA1 || !teamA2) throw new Error("team insert failed");
@@ -329,7 +322,7 @@ describe("RLS - superadmin", () => {
   it("superadmin cannot write tenant data without explicit org admin rights", async () => {
     const client = await signedInClient(fx.users.superadmin.email, PASSWORD);
 
-    const { error: insertError } = await client.from("locations").insert({
+    const { error: insertError } = await client.from("teams").insert({
       org_id: fx.orgB.id,
       name: "Should Fail",
     });

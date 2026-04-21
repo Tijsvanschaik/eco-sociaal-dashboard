@@ -1,6 +1,7 @@
 import type { DashboardSnapshot } from "@/lib/dashboard";
 import { buildDashboardSnapshot } from "@/lib/dashboard";
 import { getOrgContextBySlug } from "@/lib/organizations";
+import { REGISTRATIONS_BUCKET } from "@/lib/registrations/photo-upload";
 import type { createClient } from "@/lib/supabase/server";
 import {
   type DashboardPeriod,
@@ -11,15 +12,19 @@ import {
   filterRegistrationsByPeriod,
 } from "@/lib/timeseries";
 
+/** Hoe lang een signed URL geldig is. 1 uur dekt een gebruikssessie ruim. */
+const PHOTO_SIGNED_URL_TTL_SECONDS = 60 * 60;
+
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 export type TeamOption = {
   id: string;
-  locationName: string;
   name: string;
 };
 
 export type InterventionOption = {
+  categoryColor: string | null;
+  categoryId: string;
   categoryName: string;
   factorKg: number;
   id: string;
@@ -28,13 +33,17 @@ export type InterventionOption = {
 };
 
 export type RecentRegistration = {
+  categoryColor: string | null;
+  categoryName: string | null;
   co2KgCached: number;
   happenedOn: string;
   id: string;
   interventionLabel: string;
   note: string | null;
+  photoUrl: string | null;
   quantity: number;
   teamLabel: string;
+  unit: string | null;
 };
 
 export type TenantDashboardData = {
@@ -127,7 +136,6 @@ async function loadOrgRows(
 ) {
   const [
     { data: org },
-    { data: locations },
     { data: teams },
     { data: teamMemberships },
     { data: categories },
@@ -136,12 +144,7 @@ async function loadOrgRows(
     { data: recentRegistrations },
   ] = await Promise.all([
     supabase.from("organizations").select("eod_baseline_kg").eq("id", orgId).maybeSingle(),
-    supabase.from("locations").select("id, name").eq("org_id", orgId).eq("is_archived", false),
-    supabase
-      .from("teams")
-      .select("id, name, location_id")
-      .eq("org_id", orgId)
-      .eq("is_archived", false),
+    supabase.from("teams").select("id, name").eq("org_id", orgId).eq("is_archived", false),
     userId
       ? supabase
           .from("team_memberships")
@@ -163,24 +166,26 @@ async function loadOrgRows(
       .from("registrations")
       .select("team_id, intervention_id, user_id, co2_kg_cached, happened_on")
       .eq("org_id", orgId),
-    buildRecentRegistrationsQuery(supabase, orgId, userId),
+    buildRecentRegistrationsQuery(supabase, orgId),
   ]);
 
-  const locationMap = new Map((locations ?? []).map((location) => [location.id, location.name]));
   const categoryMap = new Map((categories ?? []).map((category) => [category.id, category]));
   const teamRows = (teams ?? []).map((team) => ({
     id: team.id,
     name: team.name,
-    locationName: locationMap.get(team.location_id) ?? "Onbekende locatie",
   }));
-  const interventionRows = (interventions ?? []).map((intervention) => ({
-    id: intervention.id,
-    name: intervention.name,
-    unit: intervention.unit,
-    factorKg: intervention.co2_factor_kg,
-    categoryName: categoryMap.get(intervention.category_id)?.name ?? "Onbekende categorie",
-    categoryId: intervention.category_id,
-  }));
+  const interventionRows = (interventions ?? []).map((intervention) => {
+    const category = categoryMap.get(intervention.category_id);
+    return {
+      id: intervention.id,
+      name: intervention.name,
+      unit: intervention.unit,
+      factorKg: intervention.co2_factor_kg,
+      categoryName: category?.name ?? "Onbekende categorie",
+      categoryColor: category?.color ?? null,
+      categoryId: intervention.category_id,
+    };
+  });
   const interventionMap = new Map(
     interventionRows.map((intervention) => [intervention.id, intervention]),
   );
@@ -221,20 +226,37 @@ async function loadOrgRows(
     period,
   });
 
+  const photoUrlByPath = await resolvePhotoUrls(
+    supabase,
+    (recentRegistrations ?? [])
+      .map((row) => row.photo_path)
+      .filter((path): path is string => Boolean(path)),
+  );
+
   return {
     categoryTimeseries,
     interventions: interventionRows,
     recentRegistrations:
-      recentRegistrations?.map((registration) => ({
-        id: registration.id,
-        quantity: registration.quantity,
-        happenedOn: registration.happened_on,
-        note: registration.note,
-        co2KgCached: registration.co2_kg_cached,
-        teamLabel: teamMap.get(registration.team_id)?.name ?? "Onbekend team",
-        interventionLabel:
-          interventionMap.get(registration.intervention_id)?.name ?? "Onbekende interventie",
-      })) ?? [],
+      recentRegistrations?.map((registration) => {
+        const team = teamMap.get(registration.team_id);
+        const intervention = interventionMap.get(registration.intervention_id);
+        const category = intervention ? categoryMap.get(intervention.categoryId) : null;
+        return {
+          id: registration.id,
+          quantity: registration.quantity,
+          happenedOn: registration.happened_on,
+          note: registration.note,
+          co2KgCached: registration.co2_kg_cached,
+          teamLabel: team?.name ?? "Onbekend team",
+          interventionLabel: intervention?.name ?? "Onbekende interventie",
+          unit: intervention?.unit ?? null,
+          categoryName: category?.name ?? null,
+          categoryColor: category?.color ?? null,
+          photoUrl: registration.photo_path
+            ? (photoUrlByPath.get(registration.photo_path) ?? null)
+            : null,
+        };
+      }) ?? [],
     snapshot,
     teams: teamRows,
     teamMembershipIds: new Set((teamMemberships ?? []).map((membership) => membership.team_id)),
@@ -242,17 +264,40 @@ async function loadOrgRows(
   };
 }
 
-function buildRecentRegistrationsQuery(
-  supabase: SupabaseServerClient,
-  orgId: string,
-  userId?: string,
-) {
-  const query = supabase
+function buildRecentRegistrationsQuery(supabase: SupabaseServerClient, orgId: string) {
+  return supabase
     .from("registrations")
-    .select("id, team_id, intervention_id, quantity, happened_on, note, co2_kg_cached")
+    .select("id, team_id, intervention_id, quantity, happened_on, note, photo_path, co2_kg_cached")
     .eq("org_id", orgId)
     .order("created_at", { ascending: false })
-    .limit(8);
+    .limit(12);
+}
 
-  return userId ? query.eq("user_id", userId) : query;
+/**
+ * Haalt in één batch signed URLs op voor de opgegeven storage-paden. Falen
+ * we, dan gebruiken we gewoon geen foto — de UI valt netjes terug op de
+ * placeholder.
+ */
+async function resolvePhotoUrls(
+  supabase: SupabaseServerClient,
+  paths: string[],
+): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(paths.filter((p): p is string => Boolean(p))));
+  if (unique.length === 0) return new Map();
+
+  const { data, error } = await supabase.storage
+    .from(REGISTRATIONS_BUCKET)
+    .createSignedUrls(unique, PHOTO_SIGNED_URL_TTL_SECONDS);
+  if (error) {
+    console.error("[tenant-dashboard] createSignedUrls failed:", error.message);
+    return new Map();
+  }
+
+  const byPath = new Map<string, string>();
+  for (const entry of data ?? []) {
+    if (entry?.path && entry.signedUrl) {
+      byPath.set(entry.path, entry.signedUrl);
+    }
+  }
+  return byPath;
 }

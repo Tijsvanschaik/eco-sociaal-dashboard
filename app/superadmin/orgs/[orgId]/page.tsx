@@ -31,9 +31,12 @@ export default async function SuperadminOrgDetailPage({ params }: { params: Para
             Read-only tenantdetail voor support en kwaliteitscontrole.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
             <Link href="/superadmin">Terug</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href={`/${data.org.slug}/dashboard`}>Tenant-dashboard</Link>
           </Button>
           {data.org.publicShareEnabled && data.org.publicShareSlug && (
             <Button asChild>
@@ -111,7 +114,6 @@ export default async function SuperadminOrgDetailPage({ params }: { params: Para
         <BreakdownCard
           emptyText="Nog geen teamdata beschikbaar."
           items={data.snapshot.teamBreakdown.slice(0, 6)}
-          subtitleKey="secondary"
           title="Top teams"
         />
         <BreakdownCard
@@ -138,7 +140,6 @@ function MetricCard({ label, value }: { label: string; value: string }) {
 function BreakdownCard({
   emptyText,
   items,
-  subtitleKey,
   title,
 }: {
   emptyText: string;
@@ -147,9 +148,7 @@ function BreakdownCard({
     id: string;
     name: string;
     registrationCount: number;
-    secondary?: string;
   }>;
-  subtitleKey?: "secondary";
   title: string;
 }) {
   const rows = items.filter((item) => item.registrationCount > 0);
@@ -170,9 +169,6 @@ function BreakdownCard({
             >
               <div>
                 <p className="font-medium">{item.name}</p>
-                {subtitleKey && item[subtitleKey] && (
-                  <p className="text-sm text-muted-foreground">{item[subtitleKey]}</p>
-                )}
               </div>
               <div className="text-right text-sm">
                 <p className="font-medium">{formatKg(item.co2SavedKg)} kg</p>

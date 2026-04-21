@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { PlatformAppShell } from "@/components/app-shell/platform-app-shell";
 import { isCurrentUserSuperadmin } from "@/lib/organizations";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,27 +22,34 @@ export default async function SuperadminLayout({
     notFound();
   }
 
+  // Via RLS zien we alleen orgs waar de superadmin lid van is. Dat is precies
+  // wat we willen voor de "Terug naar app"-link in de footer.
+  const { data: firstMembership } = await supabase
+    .from("memberships")
+    .select("org_id")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  let fallbackOrgSlug: string | null = null;
+  if (firstMembership?.org_id) {
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("slug")
+      .eq("id", firstMembership.org_id)
+      .maybeSingle();
+    fallbackOrgSlug = org?.slug ?? null;
+  }
+
+  const userDisplayName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    (user.user_metadata?.name as string | undefined) ??
+    user.email ??
+    "Superadmin";
+
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="border-b px-4 py-3">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold tracking-tight">Superadmin</p>
-            <p className="text-xs text-muted-foreground">Platform-overzicht en organisatiebeheer</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link className="text-sm text-muted-foreground hover:text-foreground" href="/">
-              Naar app
-            </Link>
-            <form action="/auth/signout" method="post">
-              <button className="text-sm text-muted-foreground hover:text-foreground" type="submit">
-                Uitloggen
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-      <main className="flex-1">{children}</main>
-    </div>
+    <PlatformAppShell userDisplayName={userDisplayName} fallbackOrgSlug={fallbackOrgSlug}>
+      {children}
+    </PlatformAppShell>
   );
 }

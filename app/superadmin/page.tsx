@@ -89,7 +89,10 @@ export default async function SuperadminPage() {
                     {org.eod_baseline_kg ? `${org.eod_baseline_kg} kg` : "placeholder"}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild size="sm" variant="secondary">
+                    <Link href={`/${org.slug}/dashboard`}>Tenant-dashboard</Link>
+                  </Button>
                   {org.public_share_enabled && org.public_share_slug && (
                     <Button asChild size="sm" variant="outline">
                       <Link href={`/p/${org.public_share_slug}`}>Publieke link</Link>
