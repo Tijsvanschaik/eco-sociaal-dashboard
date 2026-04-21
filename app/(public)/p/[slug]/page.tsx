@@ -17,6 +17,7 @@ export default async function PublicShareLinkPage({ params }: { params: Params }
       mode="public"
       teams={dashboard.teams}
       totals={dashboard.totals}
+      timeseries={dashboard.timeseries}
     />
   );
 }

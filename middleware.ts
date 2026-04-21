@@ -13,6 +13,7 @@ const RESERVED_FIRST_SEGMENTS = new Set([
   "p",
   "tv",
   "embed",
+  "superadmin",
   "_next",
   "favicon.ico",
   "robots.txt",

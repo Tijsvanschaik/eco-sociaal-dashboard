@@ -21,6 +21,7 @@ export default async function TvScreen({ params }: { params: Params }) {
       mode="tv"
       teams={dashboard.teams}
       totals={dashboard.totals}
+      timeseries={dashboard.timeseries}
     />
   );
 }

@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/app/(app)/[orgSlug]/dashboard/actions", () => ({
+vi.mock("@/app/(app)/[orgSlug]/registratie/actions", () => ({
   createRegistration: (...args: unknown[]) => createRegistration(...args),
 }));
 

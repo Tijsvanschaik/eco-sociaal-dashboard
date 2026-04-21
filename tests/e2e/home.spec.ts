@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-test("home page renders the hero copy", async ({ page }) => {
+test("home page redirects guests to login", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Eco-sociaal Dashboard/);
+  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByRole("button", { name: /stuur login-link/i })).toBeVisible();
 });

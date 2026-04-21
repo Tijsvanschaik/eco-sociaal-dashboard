@@ -1,0 +1,113 @@
+"use server";
+
+import { createOrgSchema } from "@/lib/admin-schema";
+import { findOrCreateUserId } from "@/lib/admin-users";
+import { isCurrentUserSuperadmin } from "@/lib/organizations";
+import { getRequestOrigin } from "@/lib/request-origin";
+import { revalidateOrgPaths } from "@/lib/revalidate-org-paths";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
+
+export type CreateOrganizationAndInviteResult =
+  | { message: string; orgId: string; status: "ok" }
+  | { message: string; status: "error" };
+
+export async function createOrganizationAndInviteAdmin(
+  formData: FormData,
+): Promise<CreateOrganizationAndInviteResult> {
+  const supabase = await createClient();
+  if (!(await isCurrentUserSuperadmin(supabase))) {
+    return { status: "error", message: "Alleen superadmins mogen organisaties aanmaken." };
+  }
+
+  const input = createOrgSchema.safeParse({
+    orgName: formData.get("orgName"),
+    orgSlug: formData.get("orgSlug"),
+    adminEmail: formData.get("adminEmail"),
+  });
+  if (!input.success) {
+    return {
+      status: "error",
+      message: input.error.issues[0]?.message ?? "Ongeldige invoer.",
+    };
+  }
+
+  const admin = createServiceRoleClient();
+  const { data: organization, error: orgError } = await admin
+    .from("organizations")
+    .insert({
+      name: input.data.orgName,
+      slug: input.data.orgSlug,
+      public_share_enabled: false,
+      public_share_slug: null,
+    })
+    .select("id, slug")
+    .single();
+  if (orgError || !organization) {
+    console.error("createOrganization error:", orgError?.message);
+    return {
+      status: "error",
+      message:
+        orgError?.code === "23505"
+          ? "Deze slug bestaat al. Kies een andere organisatienaam of slug."
+          : "Organisatie aanmaken lukte niet.",
+    };
+  }
+
+  try {
+    const userId = await findOrCreateUserId(input.data.adminEmail);
+    const { data: membership } = await admin
+      .from("memberships")
+      .select("id")
+      .eq("org_id", organization.id)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!membership) {
+      const { error: membershipError } = await admin.from("memberships").insert({
+        org_id: organization.id,
+        user_id: userId,
+        role: "admin",
+      });
+      if (membershipError) {
+        console.error("createOrganization membership error:", membershipError.message);
+        return {
+          status: "error",
+          message: "Organisatie is aangemaakt, maar admin koppelen lukte niet.",
+        };
+      }
+    }
+
+    const callbackUrl = new URL("/auth/callback", await getRequestOrigin());
+    callbackUrl.searchParams.set("next", `/${organization.slug}/dashboard`);
+
+    const { error: inviteError } = await supabase.auth.signInWithOtp({
+      email: input.data.adminEmail,
+      options: {
+        emailRedirectTo: callbackUrl.toString(),
+        shouldCreateUser: false,
+      },
+    });
+    if (inviteError) {
+      console.error("createOrganization invite error:", inviteError.message);
+      revalidateOrgPaths(organization.slug, null);
+      return {
+        status: "ok",
+        orgId: organization.id,
+        message: "Organisatie is aangemaakt, maar de magic-link kon niet worden verstuurd.",
+      };
+    }
+
+    revalidateOrgPaths(organization.slug, null);
+    return {
+      status: "ok",
+      orgId: organization.id,
+      message: "Organisatie aangemaakt en admin-uitnodiging verstuurd.",
+    };
+  } catch (error) {
+    console.error("createOrganizationAndInviteAdmin unexpected error:", error);
+    return {
+      status: "error",
+      message: "Organisatie is aangemaakt, maar de uitnodiging kon niet volledig worden afgerond.",
+    };
+  }
+}

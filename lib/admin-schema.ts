@@ -62,3 +62,12 @@ export const provisionUserSchema = z
       });
     }
   });
+
+export const createOrgSchema = z.object({
+  adminEmail: z.string().email("Vul een geldig e-mailadres in."),
+  orgName: z.string().trim().min(2, "Naam is te kort.").max(120, "Naam is te lang."),
+  orgSlug: z
+    .string()
+    .trim()
+    .regex(slugPattern, "Gebruik alleen kleine letters, cijfers en koppeltekens."),
+});

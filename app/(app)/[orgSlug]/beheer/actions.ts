@@ -8,9 +8,10 @@ import {
   provisionUserSchema,
   teamSchema,
 } from "@/lib/admin-schema";
+import { findOrCreateUserId } from "@/lib/admin-users";
 import { getOrgContextBySlug } from "@/lib/organizations";
-import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidateOrgPaths } from "@/lib/revalidate-org-paths";
+import { createClient } from "@/lib/supabase/server";
 
 async function requireAdmin(orgSlug: string) {
   const supabase = await createClient();
@@ -21,33 +22,6 @@ async function requireAdmin(orgSlug: string) {
   }
 
   return { context, supabase };
-}
-
-function refreshOrgPaths(orgSlug: string, shareSlug: string | null) {
-  revalidatePath(`/${orgSlug}/dashboard`);
-  revalidatePath(`/${orgSlug}/beheer`);
-  if (shareSlug) {
-    revalidatePath(`/p/${shareSlug}`);
-    revalidatePath(`/tv/${shareSlug}`);
-    revalidatePath(`/embed/${shareSlug}`);
-  }
-}
-
-async function findOrCreateUserId(email: string) {
-  const admin = createServiceRoleClient();
-  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-  const existing = users.users.find((user) => user.email?.toLowerCase() === email.toLowerCase());
-  if (existing) return existing.id;
-
-  const { data, error } = await admin.auth.admin.createUser({
-    email,
-    email_confirm: true,
-  });
-  if (error || !data.user) {
-    throw new Error(error?.message ?? "Gebruiker kon niet worden aangemaakt.");
-  }
-
-  return data.user.id;
 }
 
 export async function createLocation(orgSlug: string, formData: FormData) {
@@ -63,7 +37,7 @@ export async function createLocation(orgSlug: string, formData: FormData) {
     is_internal: input.isInternal,
   });
 
-  refreshOrgPaths(context.org.slug, context.org.publicShareSlug);
+  revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
 }
 
 export async function createTeam(orgSlug: string, formData: FormData) {
@@ -79,7 +53,7 @@ export async function createTeam(orgSlug: string, formData: FormData) {
     name: input.name,
   });
 
-  refreshOrgPaths(context.org.slug, context.org.publicShareSlug);
+  revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
 }
 
 export async function createCategory(orgSlug: string, formData: FormData) {
@@ -95,7 +69,7 @@ export async function createCategory(orgSlug: string, formData: FormData) {
     color: input.color,
   });
 
-  refreshOrgPaths(context.org.slug, context.org.publicShareSlug);
+  revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
 }
 
 export async function createIntervention(orgSlug: string, formData: FormData) {
@@ -115,7 +89,7 @@ export async function createIntervention(orgSlug: string, formData: FormData) {
     co2_factor_kg: input.co2FactorKg,
   });
 
-  refreshOrgPaths(context.org.slug, context.org.publicShareSlug);
+  revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
 }
 
 export async function updateOrgSettings(orgSlug: string, formData: FormData) {
@@ -138,9 +112,9 @@ export async function updateOrgSettings(orgSlug: string, formData: FormData) {
     })
     .eq("id", context.org.id);
 
-  refreshOrgPaths(context.org.slug, context.org.publicShareSlug);
+  revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
   if (shareSlug && shareSlug !== context.org.publicShareSlug) {
-    refreshOrgPaths(context.org.slug, shareSlug);
+    revalidateOrgPaths(context.org.slug, shareSlug);
   }
 }
 
@@ -186,5 +160,5 @@ export async function provisionUser(orgSlug: string, formData: FormData) {
     }
   }
 
-  refreshOrgPaths(context.org.slug, context.org.publicShareSlug);
+  revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
 }

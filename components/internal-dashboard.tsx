@@ -1,20 +1,18 @@
-import { RegistrationForm } from "@/components/registration-form";
+import Link from "next/link";
+
+import { CategoryDonutChart } from "@/components/charts/category-donut-chart";
+import { CategoryWeeklyStack } from "@/components/charts/category-weekly-stack";
+import { TeamRankingBar } from "@/components/charts/team-ranking-bar";
+import { TrendAreaChart } from "@/components/charts/trend-area-chart";
+import { PeriodToggle } from "@/components/period-toggle";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DashboardSnapshot } from "@/lib/dashboard";
-
-type TeamOption = {
-  id: string;
-  locationName: string;
-  name: string;
-};
-
-type InterventionOption = {
-  categoryName: string;
-  factorKg: number;
-  id: string;
-  name: string;
-  unit: string;
-};
+import type {
+  DashboardPeriod,
+  WeeklyCategoryTimeseriesRow,
+  WeeklyTimeseriesRow,
+} from "@/lib/timeseries";
 
 type RecentRegistration = {
   co2KgCached: number;
@@ -34,31 +32,42 @@ function formatKg(value: number): string {
 }
 
 export function InternalDashboard({
-  interventions,
+  categoryTimeseries,
   orgName,
   orgSlug,
+  period,
   recentRegistrations,
   roleLabel,
   snapshot,
-  teams,
+  timeseries,
 }: {
-  interventions: InterventionOption[];
+  categoryTimeseries: WeeklyCategoryTimeseriesRow[];
   orgName: string;
   orgSlug: string;
+  period: DashboardPeriod;
   recentRegistrations: RecentRegistration[];
   roleLabel: string;
   snapshot: DashboardSnapshot;
-  teams: TeamOption[];
+  timeseries: WeeklyTimeseriesRow[];
 }) {
+  const periodLabel =
+    period === "30d" ? "laatste 30 dagen" : period === "90d" ? "laatste 90 dagen" : "alle data";
+
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-      <section className="space-y-2">
-        <p className="text-sm font-medium text-muted-foreground">{orgName}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Registreer acties, volg de impact per team en zie wat jullie samen besparen. Je bent
-          ingelogd als {roleLabel}.
-        </p>
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">{orgName}</p>
+          <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            Volg hoe jullie ervoor staan, per team en per categorie. Je bent ingelogd als{" "}
+            {roleLabel}.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">Periode: {periodLabel}</p>
+          <PeriodToggle current={period} />
+        </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -71,19 +80,20 @@ export function InternalDashboard({
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Nieuwe registratie</CardTitle>
+            <CardTitle>Volgende stap</CardTitle>
             <CardDescription>
-              Houd het simpel: team, interventie, hoeveelheid, datum en eventueel een korte notitie.
+              Houd registreren en analyseren bewust uit elkaar. Nieuwe acties voeg je toe op de
+              aparte registratiepagina.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            {teams.length === 0 || interventions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Voeg eerst teams en interventies toe in beheer voordat je kunt registreren.
-              </p>
-            ) : (
-              <RegistrationForm interventions={interventions} orgSlug={orgSlug} teams={teams} />
-            )}
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Dit dashboard toont de stand over {periodLabel}. Voor een nieuwe registratie ga je
+              naar de aparte invoerflow.
+            </p>
+            <Button asChild className="min-h-11 w-full sm:w-auto">
+              <Link href={`/${orgSlug}/registratie`}>Nieuwe registratie</Link>
+            </Button>
           </CardContent>
         </Card>
 
@@ -121,16 +131,40 @@ export function InternalDashboard({
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <BreakdownCard
-          emptyText="Zodra teams registreren, zie je hier de ranglijst."
-          items={snapshot.teamBreakdown.slice(0, 6)}
-          subtitleKey="secondary"
+        <TrendAreaChart
+          data={timeseries}
+          description={`Wekelijkse CO2-impact over ${periodLabel}.`}
+          title="Trend per week"
+        />
+        <CategoryDonutChart
+          description="Aandeel van elke categorie in de totale besparing."
+          items={snapshot.categoryBreakdown.map((item) => ({
+            id: item.id,
+            name: item.name,
+            color: item.color,
+            co2SavedKg: item.co2SavedKg,
+            registrationCount: item.registrationCount,
+          }))}
+          title="Per categorie"
+        />
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <TeamRankingBar
+          description="De teams met de meeste bespaarde CO2 in deze periode."
+          items={snapshot.teamBreakdown}
           title="Top teams"
         />
-        <BreakdownCard
-          emptyText="Zodra categorieen gebruikt worden, zie je hier de spreiding."
-          items={snapshot.categoryBreakdown}
-          title="Per categorie"
+        <CategoryWeeklyStack
+          categories={snapshot.categoryBreakdown.map((item) => ({
+            id: item.id,
+            name: item.name,
+            color: item.color,
+            registrationCount: item.registrationCount,
+          }))}
+          data={categoryTimeseries}
+          description="Welke categorieen droegen per week bij aan het totaal?"
+          title="Categorieen per week"
         />
       </section>
     </main>
@@ -144,51 +178,6 @@ function MetricCard({ label, value }: { label: string; value: string }) {
         <CardDescription>{label}</CardDescription>
         <CardTitle className="text-3xl">{value}</CardTitle>
       </CardHeader>
-    </Card>
-  );
-}
-
-function BreakdownCard({
-  emptyText,
-  items,
-  subtitleKey,
-  title,
-}: {
-  emptyText: string;
-  items: DashboardSnapshot["teamBreakdown"];
-  subtitleKey?: "secondary";
-  title: string;
-}) {
-  const rows = items.filter((item) => item.registrationCount > 0);
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{emptyText}</p>
-        ) : (
-          rows.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between gap-4 rounded-lg border p-3"
-            >
-              <div>
-                <p className="font-medium">{item.name}</p>
-                {subtitleKey && item[subtitleKey] && (
-                  <p className="text-sm text-muted-foreground">{item[subtitleKey]}</p>
-                )}
-              </div>
-              <div className="text-right text-sm">
-                <p className="font-medium">{formatKg(item.co2SavedKg)} kg</p>
-                <p className="text-muted-foreground">{item.registrationCount} registraties</p>
-              </div>
-            </div>
-          ))
-        )}
-      </CardContent>
     </Card>
   );
 }

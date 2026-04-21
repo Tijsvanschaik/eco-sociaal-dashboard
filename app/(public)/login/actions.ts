@@ -1,7 +1,7 @@
 "use server";
 
+import { getRequestOrigin } from "@/lib/request-origin";
 import { createClient } from "@/lib/supabase/server";
-import { headers } from "next/headers";
 import { z } from "zod";
 
 const schema = z.object({
@@ -89,18 +89,4 @@ export async function signInWithPassword(formData: FormData): Promise<PasswordLo
     status: "ok",
     redirectTo: parsed.data.redirectTo || "/",
   };
-}
-
-async function getRequestOrigin(): Promise<string> {
-  const headerStore = await headers();
-  const origin = headerStore.get("origin");
-  if (origin) return origin;
-
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-  const protocol = headerStore.get("x-forwarded-proto") ?? "http";
-  if (!host) {
-    throw new Error("Cannot determine request origin for magic-link callback.");
-  }
-
-  return `${protocol}://${host}`;
 }

@@ -11,6 +11,7 @@ test.describe("public share surfaces", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByText(/CO2 bespaard/i)).toBeVisible();
     await expect(page.getByText(/Top teams/i)).toBeVisible();
+    await expect(page.getByTestId("trend-chart").locator("svg").first()).toBeVisible();
   });
 
   test("tv dashboard renders in kiosk mode", async ({ page }) => {

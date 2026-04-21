@@ -1,4 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CategoryDonutChart } from "@/components/charts/category-donut-chart";
+import { TeamRankingBar } from "@/components/charts/team-ranking-bar";
+import { TrendAreaChart } from "@/components/charts/trend-area-chart";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import type { PublicTimeseriesRow } from "@/lib/public-dashboard";
 import type { Database } from "@/supabase/types/supabase";
 
 type Totals = Database["public"]["Views"]["public_dashboard_totals"]["Row"];
@@ -16,11 +20,13 @@ export function PublicDashboardView({
   mode,
   teams,
   totals,
+  timeseries,
 }: {
   categories: CategoryRow[];
   mode: "embed" | "public" | "tv";
   teams: TeamRow[];
   totals: Totals;
+  timeseries: PublicTimeseriesRow[];
 }) {
   const isTv = mode === "tv";
   const isEmbed = mode === "embed";
@@ -60,22 +66,41 @@ export function PublicDashboardView({
         />
       </section>
 
-      <section className={`mt-6 grid gap-6 ${isEmbed ? "lg:grid-cols-2" : "lg:grid-cols-2"}`}>
-        <BreakdownCard
+      <section className="mt-6">
+        <TrendAreaChart
+          data={timeseries
+            .filter((row) => row.week_start)
+            .map((row) => ({
+              weekStart: row.week_start ?? "",
+              co2SavedKg: row.co2_saved_kg ?? 0,
+              registrationCount: row.registration_count ?? 0,
+            }))}
+          description="Ontwikkeling van de publieke CO2-impact per week."
+          title="Trend per week"
+        />
+      </section>
+
+      <section
+        className={`mt-6 grid gap-6 ${isTv ? "xl:grid-cols-[1.1fr_0.9fr]" : "lg:grid-cols-2"}`}
+      >
+        <TeamRankingBar
+          description="De teams met de hoogste publieke impact."
           items={teams.map((team) => ({
             id: team.team_id ?? team.team_name ?? "team",
-            label: team.team_name ?? "Onbekend team",
+            name: team.team_name ?? "Onbekend team",
             secondary: team.location_name ?? undefined,
-            value: `${formatNumber(team.co2_saved_kg, " kg")} · ${formatNumber(team.registration_count)} registraties`,
+            co2SavedKg: team.co2_saved_kg ?? 0,
           }))}
           title="Top teams"
         />
-        <BreakdownCard
+        <CategoryDonutChart
+          description="Verdeling van de besparing over categorieen."
           items={categories.map((category) => ({
             id: category.category_id ?? category.category_name ?? "category",
-            label: category.category_name ?? "Onbekende categorie",
-            secondary: undefined,
-            value: `${formatNumber(category.co2_saved_kg, " kg")} · ${formatNumber(category.registration_count)} registraties`,
+            name: category.category_name ?? "Onbekende categorie",
+            color: category.category_color ?? undefined,
+            co2SavedKg: category.co2_saved_kg ?? 0,
+            registrationCount: category.registration_count ?? 0,
           }))}
           title="Per categorie"
         />
@@ -91,35 +116,6 @@ function MetricCard({ label, value }: { label: string; value: string }) {
         <p className="text-sm text-muted-foreground">{label}</p>
         <CardTitle className="text-3xl">{value}</CardTitle>
       </CardHeader>
-    </Card>
-  );
-}
-
-function BreakdownCard({
-  items,
-  title,
-}: {
-  items: Array<{ id: string; label: string; secondary?: string; value: string }>;
-  title: string;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nog geen data beschikbaar.</p>
-        ) : (
-          items.map((item) => (
-            <div key={item.id} className="rounded-lg border p-3">
-              <p className="font-medium">{item.label}</p>
-              {item.secondary && <p className="text-sm text-muted-foreground">{item.secondary}</p>}
-              <p className="mt-2 text-sm">{item.value}</p>
-            </div>
-          ))
-        )}
-      </CardContent>
     </Card>
   );
 }

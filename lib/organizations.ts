@@ -3,6 +3,7 @@ import type { createClient } from "@/lib/supabase/server";
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 export type OrgContext = {
+  isSuperadmin: boolean;
   org: {
     eodBaselineDate: string | null;
     eodBaselineKg: number | null;
@@ -16,6 +17,50 @@ export type OrgContext = {
   userId: string;
 };
 
+export async function isCurrentUserSuperadmin(supabase: SupabaseServerClient): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data } = await supabase
+    .from("platform_admins")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  return Boolean(data?.user_id);
+}
+
+export async function getDefaultAuthedPath(supabase: SupabaseServerClient): Promise<string | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: membership } = await supabase
+    .from("memberships")
+    .select("org_id")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (membership) {
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("slug")
+      .eq("id", membership.org_id)
+      .maybeSingle();
+    if (org?.slug) {
+      return `/${org.slug}/dashboard`;
+    }
+  }
+
+  if (await isCurrentUserSuperadmin(supabase)) {
+    return "/superadmin";
+  }
+
+  return null;
+}
+
 export async function getOrgContextBySlug(
   supabase: SupabaseServerClient,
   orgSlug: string,
@@ -24,6 +69,7 @@ export async function getOrgContextBySlug(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+  const isSuperadmin = await isCurrentUserSuperadmin(supabase);
 
   const { data: org } = await supabase
     .from("organizations")
@@ -43,6 +89,7 @@ export async function getOrgContextBySlug(
   if (!membership) return null;
 
   return {
+    isSuperadmin,
     org: {
       eodBaselineDate: org.eod_baseline_date,
       eodBaselineKg: org.eod_baseline_kg,

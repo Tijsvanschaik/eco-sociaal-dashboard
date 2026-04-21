@@ -1,3 +1,4 @@
+import { getDefaultAuthedPath } from "@/lib/organizations";
 import { createClient } from "@/lib/supabase/server";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -27,27 +28,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Fallback: dispatch to the user's first organisation dashboard.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user) {
-    const { data: membership } = await supabase
-      .from("memberships")
-      .select("org_id")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (membership) {
-      const { data: org } = await supabase
-        .from("organizations")
-        .select("slug")
-        .eq("id", membership.org_id)
-        .maybeSingle();
-      if (org?.slug) {
-        return NextResponse.redirect(`${origin}/${org.slug}/dashboard`);
-      }
-    }
+  const nextPath = await getDefaultAuthedPath(supabase);
+  if (nextPath) {
+    return NextResponse.redirect(new URL(nextPath, origin));
   }
 
   return NextResponse.redirect(`${origin}/`);

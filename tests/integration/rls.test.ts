@@ -17,6 +17,7 @@ type Fixtures = {
     workerA1: { id: string; email: string; password: string };
     workerA2: { id: string; email: string; password: string };
     adminA: { id: string; email: string; password: string };
+    superadmin: { id: string; email: string; password: string };
     workerB: { id: string; email: string; password: string };
   };
   // One registration owned by workerA2 in teamA2 — targeted by other tests.
@@ -136,6 +137,7 @@ async function setupFixtures(): Promise<Fixtures> {
   const workerA1 = await createUser(`${SLUG_PREFIX}-worker-a1`);
   const workerA2 = await createUser(`${SLUG_PREFIX}-worker-a2`);
   const adminA = await createUser(`${SLUG_PREFIX}-admin-a`);
+  const superadmin = await createUser(`${SLUG_PREFIX}-superadmin`);
   const workerB = await createUser(`${SLUG_PREFIX}-worker-b`);
 
   // --- Memberships ---
@@ -151,6 +153,7 @@ async function setupFixtures(): Promise<Fixtures> {
     { org_id: orgA.id, team_id: teamA2.id, user_id: workerA2.id },
     // adminA is NOT in any team - proves admin bypass works via role check.
   ]);
+  await admin.from("platform_admins").insert({ user_id: superadmin.id });
 
   // --- One seed registration so anon-SELECT tests have a row to find ---
   const { data: reg } = await admin
@@ -175,7 +178,7 @@ async function setupFixtures(): Promise<Fixtures> {
     teamA2: { id: teamA2.id },
     interventionA: { id: interventionA.id },
     categoryA: { id: categoryA.id },
-    users: { workerA1, workerA2, adminA, workerB },
+    users: { workerA1, workerA2, adminA, superadmin, workerB },
     registrationA2: { id: reg.id },
   };
 }
@@ -214,12 +217,34 @@ describe("RLS - public views", () => {
     expect(data?.registration_count).toBeGreaterThanOrEqual(1);
   });
 
+  it("anon can read public_dashboard_timeseries for a public-enabled org", async () => {
+    const anon = anonClient();
+    const { data, error } = await anon
+      .from("public_dashboard_timeseries")
+      .select("*")
+      .eq("org_id", fx.orgA.id);
+
+    expect(error).toBeNull();
+    expect((data ?? []).length).toBeGreaterThanOrEqual(1);
+  });
+
   it("anon sees NO rows in public views for a non-public org", async () => {
     const anon = anonClient();
     const { data, error } = await anon
       .from("public_dashboard_totals")
       .select("*")
       .eq("org_id", fx.orgB.id);
+    expect(error).toBeNull();
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  it("anon sees no timeseries rows for a non-public org", async () => {
+    const anon = anonClient();
+    const { data, error } = await anon
+      .from("public_dashboard_timeseries")
+      .select("*")
+      .eq("org_id", fx.orgB.id);
+
     expect(error).toBeNull();
     expect(data ?? []).toHaveLength(0);
   });
@@ -277,6 +302,60 @@ describe("RLS - tenant isolation", () => {
       .from("memberships")
       .select("id, org_id, user_id")
       .eq("org_id", fx.orgB.id);
+    expect(error).toBeNull();
+    expect(data ?? []).toHaveLength(0);
+  });
+});
+
+describe("RLS - superadmin", () => {
+  it("superadmin can read organizations and memberships across orgs", async () => {
+    const client = await signedInClient(fx.users.superadmin.email, PASSWORD);
+    const [{ data: orgs, error: orgError }, { data: memberships, error: membershipsError }] =
+      await Promise.all([
+        client.from("organizations").select("id, slug").in("id", [fx.orgA.id, fx.orgB.id]),
+        client.from("memberships").select("org_id, user_id").in("org_id", [fx.orgA.id, fx.orgB.id]),
+      ]);
+
+    expect(orgError).toBeNull();
+    expect(membershipsError).toBeNull();
+    expect((orgs ?? []).map((org) => org.slug)).toEqual(
+      expect.arrayContaining([fx.orgA.slug, fx.orgB.slug]),
+    );
+    expect((memberships ?? []).map((membership) => membership.org_id)).toEqual(
+      expect.arrayContaining([fx.orgA.id, fx.orgB.id]),
+    );
+  });
+
+  it("superadmin cannot write tenant data without explicit org admin rights", async () => {
+    const client = await signedInClient(fx.users.superadmin.email, PASSWORD);
+
+    const { error: insertError } = await client.from("locations").insert({
+      org_id: fx.orgB.id,
+      name: "Should Fail",
+    });
+    expect(insertError).toBeTruthy();
+
+    const { data: updatedOrgs, error: updateError } = await client
+      .from("organizations")
+      .update({ public_share_enabled: true })
+      .eq("id", fx.orgB.id)
+      .select("id");
+    expect(updateError).toBeNull();
+    expect(updatedOrgs ?? []).toHaveLength(0);
+
+    const { data: deletedMemberships, error: deleteError } = await client
+      .from("memberships")
+      .delete()
+      .eq("org_id", fx.orgB.id)
+      .select("id");
+    expect(deleteError).toBeNull();
+    expect(deletedMemberships ?? []).toHaveLength(0);
+  });
+
+  it("non-superadmin cannot read platform_admin rows", async () => {
+    const client = await signedInClient(fx.users.adminA.email, PASSWORD);
+    const { data, error } = await client.from("platform_admins").select("user_id");
+
     expect(error).toBeNull();
     expect(data ?? []).toHaveLength(0);
   });

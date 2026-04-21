@@ -21,6 +21,7 @@ export default async function EmbedView({ params }: { params: Params }) {
       mode="embed"
       teams={dashboard.teams}
       totals={dashboard.totals}
+      timeseries={dashboard.timeseries}
     />
   );
 }

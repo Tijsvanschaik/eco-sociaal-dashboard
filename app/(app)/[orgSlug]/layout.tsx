@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { OrgSwitcher } from "@/components/org-switcher";
+import { getOrgContextBySlug } from "@/lib/organizations";
 import { createClient } from "@/lib/supabase/server";
 
 type Params = Promise<{ orgSlug: string }>;
@@ -26,24 +27,8 @@ export default async function OrgLayout({
     redirect(`/login?redirectTo=${encodeURIComponent(`/${orgSlug}`)}`);
   }
 
-  const { data: currentOrg } = await supabase
-    .from("organizations")
-    .select("id, name, slug")
-    .eq("slug", orgSlug)
-    .maybeSingle();
-  if (!currentOrg) {
-    notFound();
-  }
-
-  const { data: membership } = await supabase
-    .from("memberships")
-    .select("role")
-    .eq("org_id", currentOrg.id)
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!membership) {
-    notFound();
-  }
+  const context = await getOrgContextBySlug(supabase, orgSlug);
+  if (!context) notFound();
 
   const { data: allOrgs } = await supabase
     .from("organizations")
@@ -59,7 +44,7 @@ export default async function OrgLayout({
             <span aria-hidden className="text-muted-foreground/50">
               /
             </span>
-            <OrgSwitcher current={currentOrg} orgs={allOrgs ?? []} />
+            <OrgSwitcher current={context.org} orgs={allOrgs ?? []} />
             <nav className="flex items-center gap-1 rounded-lg bg-muted p-1 text-sm">
               <Link
                 className="rounded-md px-3 py-1.5 hover:bg-background"
@@ -67,19 +52,33 @@ export default async function OrgLayout({
               >
                 Dashboard
               </Link>
-              {membership.role === "admin" && (
+              <Link
+                className="rounded-md px-3 py-1.5 hover:bg-background"
+                href={`/${orgSlug}/registratie`}
+              >
+                Registratie
+              </Link>
+              {context.role === "admin" && (
                 <Link
                   className="rounded-md px-3 py-1.5 hover:bg-background"
-                  href={`/${orgSlug}/beheer`}
+                  href={`/${orgSlug}/instellingen`}
                 >
-                  Beheer
+                  Instellingen
                 </Link>
               )}
             </nav>
           </div>
           <div className="flex items-center gap-3">
+            {context.isSuperadmin && (
+              <Link
+                className="text-sm text-muted-foreground hover:text-foreground"
+                href="/superadmin"
+              >
+                Superadmin
+              </Link>
+            )}
             <span className="text-xs text-muted-foreground">
-              {membership.role === "admin" ? "Admin" : "Medewerker"}
+              {context.role === "admin" ? "Admin" : "Medewerker"}
             </span>
             <form action="/auth/signout" method="post">
               <button type="submit" className="text-sm text-muted-foreground hover:text-foreground">

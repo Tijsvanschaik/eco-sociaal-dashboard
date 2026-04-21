@@ -293,6 +293,21 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       registrations: {
         Row: {
           co2_kg_cached: number
@@ -542,6 +557,16 @@ export type Database = {
         }
         Relationships: []
       }
+      public_dashboard_timeseries: {
+        Row: {
+          co2_saved_kg: number | null
+          org_id: string | null
+          registration_count: number | null
+          share_slug: string | null
+          week_start: string | null
+        }
+        Relationships: []
+      }
       public_team_breakdown: {
         Row: {
           co2_saved_kg: number | null
@@ -559,6 +584,11 @@ export type Database = {
       app_is_admin: { Args: { p_org: string }; Returns: boolean }
       app_is_in_team: { Args: { p_team: string }; Returns: boolean }
       app_is_member: { Args: { p_org: string }; Returns: boolean }
+      app_is_superadmin: { Args: never; Returns: boolean }
+      app_public_org_active_user_count: {
+        Args: { p_org_id: string }
+        Returns: number
+      }
     }
     Enums: {
       intervention_unit:
