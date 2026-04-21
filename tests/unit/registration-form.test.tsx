@@ -15,9 +15,7 @@ vi.mock("@/app/(app)/[orgSlug]/registratie/actions", () => ({
   createRegistration: (...args: unknown[]) => createRegistration(...args),
 }));
 
-const teams = [
-  { id: "11111111-1111-1111-1111-111111111111", name: "Team Helmond", locationName: "Binnenstad" },
-];
+const teams = [{ id: "11111111-1111-1111-1111-111111111111", name: "Team Helmond" }];
 const interventions = [
   {
     id: "22222222-2222-2222-2222-222222222222",
@@ -25,6 +23,8 @@ const interventions = [
     unit: "km",
     factorKg: 0.15,
     categoryName: "Mobiliteit",
+    categoryColor: "#22aa66",
+    categoryId: "33333333-3333-3333-3333-333333333333",
   },
 ];
 
@@ -36,9 +36,17 @@ describe("RegistrationForm", () => {
   });
 
   it("keeps submit disabled until the form is valid", async () => {
-    render(<RegistrationForm interventions={interventions} orgSlug="lev-groep" teams={teams} />);
+    render(
+      <RegistrationForm
+        interventions={interventions}
+        orgId="99999999-9999-9999-9999-999999999999"
+        orgSlug="lev-groep"
+        teams={teams}
+        userId="44444444-4444-4444-4444-444444444444"
+      />,
+    );
 
-    const submit = screen.getByRole("button", { name: /registratie opslaan/i });
+    const submit = screen.getByRole("button", { name: /impact opslaan/i });
     expect(submit).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText(/hoeveelheid/i), { target: { value: "3" } });
@@ -47,7 +55,15 @@ describe("RegistrationForm", () => {
   });
 
   it("shows an error when a negative quantity is entered", async () => {
-    render(<RegistrationForm interventions={interventions} orgSlug="lev-groep" teams={teams} />);
+    render(
+      <RegistrationForm
+        interventions={interventions}
+        orgId="99999999-9999-9999-9999-999999999999"
+        orgSlug="lev-groep"
+        teams={teams}
+        userId="44444444-4444-4444-4444-444444444444"
+      />,
+    );
 
     fireEvent.change(screen.getByLabelText(/hoeveelheid/i), { target: { value: "-2" } });
     fireEvent.blur(screen.getByLabelText(/hoeveelheid/i));
@@ -56,10 +72,18 @@ describe("RegistrationForm", () => {
   });
 
   it("submits and refreshes the page on success", async () => {
-    render(<RegistrationForm interventions={interventions} orgSlug="lev-groep" teams={teams} />);
+    render(
+      <RegistrationForm
+        interventions={interventions}
+        orgId="99999999-9999-9999-9999-999999999999"
+        orgSlug="lev-groep"
+        teams={teams}
+        userId="44444444-4444-4444-4444-444444444444"
+      />,
+    );
 
     fireEvent.change(screen.getByLabelText(/hoeveelheid/i), { target: { value: "2.5" } });
-    const submit = screen.getByRole("button", { name: /registratie opslaan/i });
+    const submit = screen.getByRole("button", { name: /impact opslaan/i });
 
     await waitFor(() => expect(submit).toBeEnabled());
     fireEvent.click(submit);
