@@ -1,3 +1,8 @@
+import { PublicDashboardView } from "@/components/public-dashboard-view";
+import { getPublicDashboardBySlug } from "@/lib/public-dashboard";
+import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+
 type Params = Promise<{ slug: string }>;
 
 // Refresh the full page every 60s so the TV always shows live data.
@@ -6,15 +11,16 @@ export const revalidate = 60;
 
 export default async function TvScreen({ params }: { params: Params }) {
   const { slug } = await params;
+  const supabase = await createClient();
+  const dashboard = await getPublicDashboardBySlug(supabase, slug);
+  if (!dashboard) notFound();
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-12 text-center">
-      <meta httpEquiv="refresh" content="60" />
-      <p className="text-sm uppercase tracking-widest text-muted-foreground">TV-modus - {slug}</p>
-      <h1 className="text-balance text-6xl font-semibold tracking-tight">Eco-sociaal Dashboard</h1>
-      <p className="max-w-2xl text-pretty text-xl text-muted-foreground">
-        Placeholder voor het TV-scherm. Wordt elke 60 seconden ververst.
-      </p>
-    </main>
+    <PublicDashboardView
+      categories={dashboard.categories}
+      mode="tv"
+      teams={dashboard.teams}
+      totals={dashboard.totals}
+    />
   );
 }

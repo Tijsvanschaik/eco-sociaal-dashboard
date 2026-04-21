@@ -1,3 +1,8 @@
+import { PublicDashboardView } from "@/components/public-dashboard-view";
+import { getPublicDashboardBySlug } from "@/lib/public-dashboard";
+import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+
 type Params = Promise<{ slug: string }>;
 
 // Intranet embed view. Security headers (CSP frame-ancestors) are set in
@@ -6,16 +11,16 @@ export const revalidate = 60;
 
 export default async function EmbedView({ params }: { params: Params }) {
   const { slug } = await params;
+  const supabase = await createClient();
+  const dashboard = await getPublicDashboardBySlug(supabase, slug);
+  if (!dashboard) notFound();
 
   return (
-    <main className="flex min-h-dvh flex-col items-start justify-center gap-3 p-6">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground">
-        Intranet embed - {slug}
-      </p>
-      <h1 className="text-2xl font-semibold tracking-tight">Eco-sociaal Dashboard</h1>
-      <p className="text-muted-foreground">
-        Placeholder voor de intranet-embed. Toont alleen publieke cijfers.
-      </p>
-    </main>
+    <PublicDashboardView
+      categories={dashboard.categories}
+      mode="embed"
+      teams={dashboard.teams}
+      totals={dashboard.totals}
+    />
   );
 }

@@ -18,7 +18,7 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
-    "test:e2e:install": "playwright install --with-deps chromium"
+    "test:e2e:install": "playwright install --with-deps chromium webkit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

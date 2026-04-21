@@ -7,7 +7,7 @@ Database: Supabase Postgres met RLS voor multi-tenancy (handmatige SQL-workflow 
 Hosting: Vercel (app) + Supabase (DB/auth/storage).
 
 ## Route groups
-- `(app)` — auth-required, tenant-scoped via `/[org]`.
+- `(app)` — auth-required, tenant-scoped via `/[orgSlug]`, met intern dashboard en beheer.
 - `(public)` — read-only share-links via `/p/[slug]`.
 - `(kiosk)` — TV/embed, no-chrome, no-auth.
 
@@ -24,4 +24,4 @@ User -> Server Action -> Zod -> Supabase (RLS) -> Postgres.
 2. Regenereer types in Supabase dashboard en plak ze in `supabase/types/supabase.ts`.
 
 ## Open vragen
-- [ ] ...
+- [ ] Deploy-URL en embed-whitelist definitief zetten voor productie.

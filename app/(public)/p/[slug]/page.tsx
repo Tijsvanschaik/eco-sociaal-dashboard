@@ -1,15 +1,22 @@
+import { PublicDashboardView } from "@/components/public-dashboard-view";
+import { getPublicDashboardBySlug } from "@/lib/public-dashboard";
+import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+
 type Params = Promise<{ slug: string }>;
 
 export default async function PublicShareLinkPage({ params }: { params: Params }) {
   const { slug } = await params;
+  const supabase = await createClient();
+  const dashboard = await getPublicDashboardBySlug(supabase, slug);
+  if (!dashboard) notFound();
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 px-4 py-8">
-      <h1 className="text-3xl font-semibold tracking-tight">Publieke dashboard</h1>
-      <p className="text-muted-foreground">
-        Placeholder voor share-link <span className="font-mono">{slug}</span>. Leest uitsluitend uit
-        de publieke Postgres-views.
-      </p>
-    </main>
+    <PublicDashboardView
+      categories={dashboard.categories}
+      mode="public"
+      teams={dashboard.teams}
+      totals={dashboard.totals}
+    />
   );
 }

@@ -28,6 +28,18 @@
 - [x] Home dispatcher: authed users worden doorgestuurd naar hun eerste org
 - [x] RLS integration tests (`npm run test:integration`; vereist `.env.local` + geüpdatete `0002_views.sql` in Supabase voor anon + `active_user_count`)
 
+## Fase 2 - MVP-oppervlak
+
+- [x] Registratieflow op `/(app)/[orgSlug]/dashboard` met server-side CO2-berekening
+- [x] "Mijn recente registraties" + KPI-kaarten + team/categorie-breakdown
+- [x] `/(app)/[orgSlug]/beheer` voor org-instellingen, locaties, teams,
+      categorieen, interventies en user-provisioning
+- [x] Publieke dashboardpagina op `/p/[slug]`
+- [x] TV- en embedvarianten op `/tv/[slug]` en `/embed/[slug]`
+- [x] Unit tests voor impactlogica en registratieschema
+- [x] Component test voor registratieformulier
+- [x] Playwright smoke voor public share-surfaces
+
 ## Openstaand (later)
 
 - [ ] EOD-baseline van LEV opvragen
@@ -36,15 +48,18 @@
 
 ## Laatste sessie
 
-Datum: 2026-04-17
-Wat gedaan: Fase 1. Drie SQL-bestanden (init, views, seed) gerund op dev
-Supabase. Types gegenereerd. Magic-link login met RHF + Zod + Server Action.
-Callback- en signout-routes. Middleware uitgebreid met tenant-auth-gate en
-CSP/X-Frame-Options. Org-switcher in navbar. Shadcn form/input/label/card
-toegevoegd. Encoding-sweep-script omdat Cursor's Write-tool op Windows
-soms UTF-16 uitspuugt.
-Wat volgt: **Fase 2 — beheer** (`/[orgSlug]/beheer`, instellingen, server actions, commits per resource). Zeg `go Fase 2` om te starten.
-Blockers: geen. `0002_views.sql` (incl. `app_public_org_active_user_count`) op dev gerund; `npm run test:integration` groen (12/12).
+Datum: 2026-04-21
+Wat gedaan: MVP-oppervlak gebouwd. Intern dashboard vervangt placeholder met
+registratieformulier, recente registraties en KPI/breakdown-kaarten. Nieuwe
+beheerpagina voor org-instellingen, locaties, teams, categorieen,
+interventies en gebruikers. Publieke share-link, TV en embed renderen nu live
+uit de public views. Unit/component tests toegevoegd; lint, typecheck en unit
+tests groen. CI draait nu ook Playwright smoke.
+Wat volgt: echte Supabase `.env.local` koppelen, `npm run test:integration`
+tegen dev draaien, Vercel deploy afronden en daarna een productie-check op
+share slug + embed whitelist doen.
+Blockers: nog geen echte `.env.local` / Vercel-config in deze repo-sessie, dus
+integratie-tests en live deploy zijn nog handmatige vervolgstappen.
 
 ## SQL-runs per omgeving
 

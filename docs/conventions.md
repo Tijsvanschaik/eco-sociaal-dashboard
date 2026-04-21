@@ -1,13 +1,13 @@
 # Conventions
 
-Dit document is de "snelle instap" voor nieuwe teamleden -n de AI. Houd dit sync met de Cursor project rules in `.cursor/rules/`.
+Dit document is de "snelle instap" voor nieuwe teamleden en de AI. Houd dit sync met de Cursor project rules in `.cursor/rules/`.
 
 ## Werkafspraken (project)
 
 - **Security-first**: RLS staat altijd aan. Nooit een `service_role` key in client-code. Geen geheimen in git.
 - **Iteratief werken**: lever per fase; check-in na elke fase.
 - **UI-taal**: UI is **Nederlands**. Code/commits/comments zijn **Engels**.
-- **Mobile-first**: registratieflow moet op telefoon werken v--r desktop af is.
+- **Mobile-first**: registratieflow moet op telefoon werken voor desktop af is.
 - **Geen scope-creep**: buiten huidige fase niets toevoegen zonder expliciet akkoord.
 - **ADR's**: beslissingen vastleggen in `docs/decisions/NNNN-titel.md`.
 - **Progress log**: update `docs/progress.md` aan het einde van elke fase/sessie.
@@ -35,5 +35,5 @@ Zie `docs/testing.md` voor de concrete MVP teststrategie.
 
 ## Sessiestart (Memory Bank)
 
-Vraag v--r elke sessie:
+Vraag voor elke sessie:
 "Lees eerst `docs/progress.md` en `docs/architecture.md` voor je begint."

@@ -28,3 +28,11 @@
 3. Refactor zonder de test te breken.
 4. Commit.
 
+## Praktische MVP-gates
+
+- `npm run lint`, `npm run typecheck` en `npm test` draaien bij elke CI-run.
+- `npm run test:e2e` draait smoke-tests voor de app-shell; publieke share-smokes
+  draaien mee zodra `PLAYWRIGHT_SHARE_SLUG` is gezet.
+- `npm run test:integration` blijft een handmatige pre-release gate zolang de
+  repo nog niet aan een dedicated test-Supabase omgeving in CI hangt.
+
