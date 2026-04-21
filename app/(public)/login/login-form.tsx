@@ -135,7 +135,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
       </div>
 
       {mode === "magic" ? (
-        <Form {...magicLinkForm}>
+        <Form key="magic-login-form" {...magicLinkForm}>
           <form
             onSubmit={magicLinkForm.handleSubmit(onMagicLinkSubmit)}
             className="space-y-4"
@@ -175,7 +175,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           </form>
         </Form>
       ) : (
-        <Form {...passwordForm}>
+        <Form key="password-login-form" {...passwordForm}>
           <form
             onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
             className="space-y-4"

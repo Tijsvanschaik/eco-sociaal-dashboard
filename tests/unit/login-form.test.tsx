@@ -35,15 +35,22 @@ describe("LoginForm", () => {
     expect(screen.getByRole("button", { name: /log in met wachtwoord/i })).toBeInTheDocument();
   });
 
-  it("shows temporary password fallback copy in password mode", async () => {
+  it("allows typing in the temporary password mode", async () => {
     render(<LoginForm redirectTo="/lev-groep/dashboard" />);
 
     fireEvent.click(screen.getByRole("button", { name: /tijdelijk wachtwoord/i }));
 
+    const emailInput = await screen.findByLabelText(/e-mailadres/i);
+    const passwordInput = await screen.findByLabelText(/wachtwoord/i);
+
+    fireEvent.change(emailInput, { target: { value: "admin@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "Welkom123!" } });
+
+    expect(emailInput).toHaveValue("admin@example.com");
+    expect(passwordInput).toHaveValue("Welkom123!");
     expect(
       screen.getByText(/tijdelijke fallback voor admins en testgebruikers/i),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /log in met wachtwoord/i })).toBeDisabled();
   });
 
   it("keeps the magic-link flow available", async () => {
