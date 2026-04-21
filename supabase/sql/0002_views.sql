@@ -83,15 +83,13 @@ select
   o.public_share_slug                                  as share_slug,
   t.id                                                 as team_id,
   t.name                                               as team_name,
-  l.name                                               as location_name,
   coalesce(sum(r.co2_kg_cached), 0)::numeric(14,3)     as co2_saved_kg,
   count(r.id)::bigint                                  as registration_count
 from public.organizations o
 join public.teams t        on t.org_id = o.id and t.is_archived = false
-join public.locations l    on l.id     = t.location_id
 left join public.registrations r on r.team_id = t.id
 where o.public_share_enabled = true
-group by o.id, o.public_share_slug, t.id, t.name, l.name;
+group by o.id, o.public_share_slug, t.id, t.name;
 
 
 -- -----------------------------------------------------------------------------

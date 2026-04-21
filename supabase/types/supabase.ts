@@ -61,6 +61,13 @@ export type Database = {
             foreignKeyName: "categories_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
+            referencedRelation: "public_dashboard_timeseries"
+            referencedColumns: ["org_id"]
+          },
+          {
+            foreignKeyName: "categories_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
             referencedRelation: "public_dashboard_totals"
             referencedColumns: ["org_id"]
           },
@@ -133,70 +140,18 @@ export type Database = {
             foreignKeyName: "interventions_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
-            referencedRelation: "public_dashboard_totals"
+            referencedRelation: "public_dashboard_timeseries"
             referencedColumns: ["org_id"]
           },
           {
             foreignKeyName: "interventions_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
-            referencedRelation: "public_team_breakdown"
-            referencedColumns: ["org_id"]
-          },
-        ]
-      }
-      locations: {
-        Row: {
-          created_at: string
-          id: string
-          is_archived: boolean
-          is_internal: boolean
-          name: string
-          org_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_archived?: boolean
-          is_internal?: boolean
-          name: string
-          org_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_archived?: boolean
-          is_internal?: boolean
-          name?: string
-          org_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "locations_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "locations_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "public_category_breakdown"
-            referencedColumns: ["org_id"]
-          },
-          {
-            foreignKeyName: "locations_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
             referencedRelation: "public_dashboard_totals"
             referencedColumns: ["org_id"]
           },
           {
-            foreignKeyName: "locations_org_id_fkey"
+            foreignKeyName: "interventions_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "public_team_breakdown"
@@ -245,6 +200,13 @@ export type Database = {
             foreignKeyName: "memberships_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
+            referencedRelation: "public_dashboard_timeseries"
+            referencedColumns: ["org_id"]
+          },
+          {
+            foreignKeyName: "memberships_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
             referencedRelation: "public_dashboard_totals"
             referencedColumns: ["org_id"]
           },
@@ -260,9 +222,11 @@ export type Database = {
       organizations: {
         Row: {
           created_at: string
+          description: string | null
           eod_baseline_date: string | null
           eod_baseline_kg: number | null
           id: string
+          logo_url: string | null
           name: string
           public_share_enabled: boolean
           public_share_slug: string | null
@@ -271,9 +235,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           eod_baseline_date?: string | null
           eod_baseline_kg?: number | null
           id?: string
+          logo_url?: string | null
           name: string
           public_share_enabled?: boolean
           public_share_slug?: string | null
@@ -282,9 +248,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           eod_baseline_date?: string | null
           eod_baseline_kg?: number | null
           id?: string
+          logo_url?: string | null
           name?: string
           public_share_enabled?: boolean
           public_share_slug?: string | null
@@ -370,6 +338,13 @@ export type Database = {
             foreignKeyName: "registrations_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
+            referencedRelation: "public_dashboard_timeseries"
+            referencedColumns: ["org_id"]
+          },
+          {
+            foreignKeyName: "registrations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
             referencedRelation: "public_dashboard_totals"
             referencedColumns: ["org_id"]
           },
@@ -437,6 +412,13 @@ export type Database = {
             foreignKeyName: "team_memberships_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
+            referencedRelation: "public_dashboard_timeseries"
+            referencedColumns: ["org_id"]
+          },
+          {
+            foreignKeyName: "team_memberships_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
             referencedRelation: "public_dashboard_totals"
             referencedColumns: ["org_id"]
           },
@@ -468,7 +450,6 @@ export type Database = {
           created_at: string
           id: string
           is_archived: boolean
-          location_id: string
           name: string
           org_id: string
           updated_at: string
@@ -477,7 +458,6 @@ export type Database = {
           created_at?: string
           id?: string
           is_archived?: boolean
-          location_id: string
           name: string
           org_id: string
           updated_at?: string
@@ -486,19 +466,11 @@ export type Database = {
           created_at?: string
           id?: string
           is_archived?: boolean
-          location_id?: string
           name?: string
           org_id?: string
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "teams_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "teams_org_id_fkey"
             columns: ["org_id"]
@@ -511,6 +483,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "public_category_breakdown"
+            referencedColumns: ["org_id"]
+          },
+          {
+            foreignKeyName: "teams_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "public_dashboard_timeseries"
             referencedColumns: ["org_id"]
           },
           {
@@ -543,6 +522,16 @@ export type Database = {
         }
         Relationships: []
       }
+      public_dashboard_timeseries: {
+        Row: {
+          co2_saved_kg: number | null
+          org_id: string | null
+          registration_count: number | null
+          share_slug: string | null
+          week_start: string | null
+        }
+        Relationships: []
+      }
       public_dashboard_totals: {
         Row: {
           active_user_count: number | null
@@ -557,20 +546,9 @@ export type Database = {
         }
         Relationships: []
       }
-      public_dashboard_timeseries: {
-        Row: {
-          co2_saved_kg: number | null
-          org_id: string | null
-          registration_count: number | null
-          share_slug: string | null
-          week_start: string | null
-        }
-        Relationships: []
-      }
       public_team_breakdown: {
         Row: {
           co2_saved_kg: number | null
-          location_name: string | null
           org_id: string | null
           registration_count: number | null
           share_slug: string | null

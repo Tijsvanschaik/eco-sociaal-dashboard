@@ -5,8 +5,7 @@
 -- Datum:          2026-04-17
 -- Afhankelijkheden: 0001_init.sql, 0002_views.sql
 -- Doel:           Een speelbare dataset voor development: 1 organisatie
---                 (LEV Groep), de 9 locaties van de echte LEV-website, 4 teams
---                 in LEV Helmond, 6 categorieen en 10 interventies met
+--                 (LEV Groep), 10 teams, 6 categorieen en 10 interventies met
 --                 placeholder CO2-factoren (LEV nog door te geven).
 --
 -- INSTRUCTIE:     Plak dit volledig in Supabase -> SQL Editor -> Run. Alle
@@ -31,53 +30,29 @@ on conflict (slug) do nothing;
 
 
 -- -----------------------------------------------------------------------------
--- 2. Locaties (bron: afbeelding LEVgroep-gemeenten)
+-- 2. Teams
 -- -----------------------------------------------------------------------------
 with org as (select id from public.organizations where slug = 'lev-groep')
-insert into public.locations (org_id, name, is_internal)
-select org.id, loc.name, loc.is_internal
+insert into public.teams (org_id, name)
+select org.id, team.name
 from org
 cross join (values
-  ('LEV Asten',          false),
-  ('LEV Best',           false),
-  ('LEV Deurne',         false),
-  ('LEV Geldrop-Mierlo', false),
-  ('LEV Helmond',        false),
-  ('LEV Laarbeek',       false),
-  ('LEV Nuenen',         false),
-  ('LEV Son en Breugel', false),
-  ('WIJzer Oirschot',    false),
-  ('LEV-groep centraal', true)
-) as loc(name, is_internal)
+  ('LEV Asten'),
+  ('LEV Best'),
+  ('LEV Deurne'),
+  ('LEV Geldrop-Mierlo'),
+  ('LEV Helmond'),
+  ('LEV Laarbeek'),
+  ('LEV Nuenen'),
+  ('LEV Son en Breugel'),
+  ('WIJzer Oirschot'),
+  ('LEV-groep centraal')
+) as team(name)
 on conflict (org_id, name) do nothing;
 
 
 -- -----------------------------------------------------------------------------
--- 3. Teams in LEV Helmond (4)
--- -----------------------------------------------------------------------------
-with org as (
-  select id from public.organizations where slug = 'lev-groep'
-),
-loc as (
-  select l.id, l.org_id
-  from public.locations l
-  join org on l.org_id = org.id
-  where l.name = 'LEV Helmond'
-)
-insert into public.teams (org_id, location_id, name)
-select loc.org_id, loc.id, t.name
-from loc
-cross join (values
-  ('Dagbesteding'),
-  ('Wonen'),
-  ('Ambulant'),
-  ('Kantoor')
-) as t(name)
-on conflict (org_id, location_id, name) do nothing;
-
-
--- -----------------------------------------------------------------------------
--- 4. Categorieen (6)
+-- 3. Categorieen (6)
 -- -----------------------------------------------------------------------------
 with org as (select id from public.organizations where slug = 'lev-groep')
 insert into public.categories (org_id, name, color)
@@ -95,7 +70,7 @@ on conflict (org_id, name) do nothing;
 
 
 -- -----------------------------------------------------------------------------
--- 5. Interventies (10) - PLACEHOLDER CO2-factoren
+-- 4. Interventies (10) - PLACEHOLDER CO2-factoren
 -- LEV moet deze vervangen door factoren uit CO2emissiefactoren.nl / eigen
 -- metingen. Tot die tijd is co2_factor_kg indicatief.
 -- -----------------------------------------------------------------------------
@@ -135,8 +110,7 @@ on conflict (org_id, name) do nothing;
 --
 -- Controle-queries:
 --   select slug, name from public.organizations;
---   select name from public.locations order by name;
---   select t.name from public.teams t join public.locations l on l.id=t.location_id where l.name='LEV Helmond';
+--   select name from public.teams order by name;
 --   select name, color from public.categories order by name;
 --   select name, unit, co2_factor_kg from public.interventions order by name;
 -- =============================================================================

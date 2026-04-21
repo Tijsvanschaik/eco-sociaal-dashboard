@@ -73,11 +73,6 @@ create policy "memberships_select" on public.memberships
   for select to authenticated
   using (user_id = auth.uid() or public.app_is_admin(org_id) or public.app_is_superadmin());
 
-drop policy if exists "locations_select_member" on public.locations;
-create policy "locations_select_member" on public.locations
-  for select to authenticated
-  using (public.app_is_member(org_id) or public.app_is_superadmin());
-
 drop policy if exists "teams_select_member" on public.teams;
 create policy "teams_select_member" on public.teams
   for select to authenticated

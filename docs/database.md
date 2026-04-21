@@ -9,7 +9,10 @@ Update dit document bij **elke migratie** (iedere nieuwe file in `supabase/sql/`
 | `supabase/sql/0001_init.sql` | Tabellen, enums, helper-functies, RLS, storage bucket `registrations` |
 | `supabase/sql/0002_views.sql` | Publieke aggregate-views (security_invoker) voor share-links |
 | `supabase/sql/0003_platform_admins.sql` | Platform-brede superadminrol + read-only cross-tenant RLS-uitbreiding |
-| `supabase/sql/9000_seed.sql` | Dev-seed: LEV Groep + 9 locaties + 4 teams Helmond + 6 cat + 10 interventies |
+| `supabase/sql/0004_public_dashboard_timeseries.sql` | Publieke weektijdreeks-view voor `/p`, `/tv`, `/embed` |
+| `supabase/sql/0005_registration_photos_storage.sql` | Idempotente reset van de `registrations`-bucket + storage-RLS (incl. superadmin) |
+| `supabase/sql/0006_org_profile.sql` | `organizations.description` + `organizations.logo_url` |
+| `supabase/sql/9000_seed.sql` | Dev-seed: LEV Groep + 10 teams + 6 cat + 10 interventies |
 
 ## Schema (export)
 
@@ -19,11 +22,10 @@ Update dit document bij **elke migratie** (iedere nieuwe file in `supabase/sql/`
 
 ### Tabellen
 
-- **organizations** (`id` pk, `name`, `slug` uniek, `public_share_enabled`, `public_share_slug` uniek, `eod_baseline_kg`, `eod_baseline_date`, timestamps)
+- **organizations** (`id` pk, `name`, `slug` uniek, `description`, `logo_url`, `public_share_enabled`, `public_share_slug` uniek, `eod_baseline_kg`, `eod_baseline_date`, timestamps)
 - **platform_admins** (`user_id` pk/fk -> `auth.users`, `created_at`; platform-brede superadminrol)
 - **memberships** (`id` pk, `org_id` fk, `user_id` fk -> `auth.users`, `role`, `created_at`; uniek op `(org_id, user_id)`)
-- **locations** (`id` pk, `org_id` fk, `name`, `is_internal`, `is_archived`, timestamps; uniek op `(org_id, name)`)
-- **teams** (`id` pk, `org_id` fk, `location_id` fk, `name`, `is_archived`, timestamps; uniek op `(org_id, location_id, name)` en `(org_id, id)` voor composite FK)
+- **teams** (`id` pk, `org_id` fk, `name`, `is_archived`, timestamps; uniek op `(org_id, name)` en `(org_id, id)` voor composite FK)
 - **team_memberships** (`id` pk, `org_id` fk, `team_id` fk, `user_id` fk, `created_at`; uniek op `(team_id, user_id)`)
 - **categories** (`id` pk, `org_id` fk, `name`, `color` `#RRGGBB`, `is_archived`, timestamps; uniek op `(org_id, name)`)
 - **interventions** (`id` pk, `org_id` fk, `category_id` fk via `(org_id, category_id) -> categories(org_id, id)`, `name`, `unit`, `co2_factor_kg`, `is_archived`, timestamps; uniek op `(org_id, name)`)
@@ -38,12 +40,10 @@ Waarom `co2_kg_cached`: snapshot van `quantity * interventions.co2_factor_kg` op
 ```mermaid
 erDiagram
   organizations ||--o{ memberships : has
-  organizations ||--o{ locations : has
   organizations ||--o{ categories : has
   organizations ||--o{ interventions : has
   organizations ||--o{ teams : has
   organizations ||--o{ registrations : has
-  locations ||--o{ teams : contains
   categories ||--o{ interventions : groups
   teams ||--o{ team_memberships : has
   teams ||--o{ registrations : for
@@ -53,6 +53,8 @@ erDiagram
     uuid id PK
     text name
     text slug UK
+    text description
+    text logo_url
     bool public_share_enabled
     text public_share_slug UK
     numeric eod_baseline_kg
@@ -64,17 +66,9 @@ erDiagram
     uuid user_id FK
     user_role role
   }
-  locations {
-    uuid id PK
-    uuid org_id FK
-    text name
-    bool is_internal
-    bool is_archived
-  }
   teams {
     uuid id PK
     uuid org_id FK
-    uuid location_id FK
     text name
     bool is_archived
   }
@@ -133,7 +127,6 @@ Helper-functies (`security definer`, bypassen RLS op `memberships` om recursie t
 | `organizations` | member or superadmin (auth), `public_share_enabled=true` (anon) | - (via service-role) | admin | - (via service-role) |
 | `platform_admins` | superadmin | superadmin | superadmin | superadmin |
 | `memberships` | self, admin of superadmin | admin | admin | admin |
-| `locations` | member or superadmin; anon als org publiek | admin | admin | admin |
 | `teams` | member or superadmin; anon als org publiek | admin | admin | admin |
 | `team_memberships` | member or superadmin | admin | admin | admin |
 | `categories` | member or superadmin; anon als org publiek | admin | admin | admin |
@@ -142,11 +135,12 @@ Helper-functies (`security definer`, bypassen RLS op `memberships` om recursie t
 
 Anon-kolombeperking op `registrations`: `revoke select on registrations from anon` + `grant select (id, org_id, team_id, intervention_id, quantity, happened_on, co2_kg_cached, created_at)`. `user_id`, `photo_path` en `note` zijn dus nooit publiek.
 
-Storage `registrations` bucket:
-- Path-conventie: `<org_id>/<registration_id>/<filename>`.
+Storage `registrations` bucket (zie `0001_init.sql` + idempotente reset in `0005_registration_photos_storage.sql`):
+- Path-conventie: `<org_id>/<user_id>/<uuid>.<ext>` — eerste segment MOET de org-UUID zijn zodat RLS tenant-isolatie kan afdwingen.
 - SELECT: member van de org of superadmin (gebaseerd op eerste path-segment).
-- INSERT: member van de org.
-- UPDATE/DELETE: uploader (`owner = auth.uid()`) of admin van die org.
+- INSERT: member van de org of superadmin.
+- UPDATE/DELETE: uploader (`owner = auth.uid()`), admin van die org, of superadmin.
+- File-size-limit en MIME-whitelist staan bewust uit op de bucket zodat client-side validatie (JPG/PNG/WEBP/HEIC, max 5 MB) leidend blijft en makkelijk aan te passen is zonder SQL-wijziging.
 
 ## Publieke views (0002)
 

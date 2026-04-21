@@ -4,8 +4,8 @@
 --
 -- Datum:          2026-04-17
 -- Afhankelijkheden: geen (dit is het eerste bestand)
--- Doel:           Multi-tenant schema (organizations -> memberships, locations,
---                 teams, categories, interventions, registrations) inclusief
+-- Doel:           Multi-tenant schema (organizations -> memberships, teams,
+--                 categories, interventions, registrations) inclusief
 --                 Row Level Security zodat elke org geisoleerd werkt. Een
 --                 beperkte leesset voor de 'anon' rol wordt alleen toegestaan
 --                 voor organisaties met public_share_enabled = true.
@@ -68,18 +68,6 @@ create table if not exists public.memberships (
   unique (org_id, user_id)
 );
 
--- Locations -------------------------------------------------------------------
-create table if not exists public.locations (
-  id          uuid primary key default gen_random_uuid(),
-  org_id      uuid not null references public.organizations(id) on delete cascade,
-  name        text not null,
-  is_internal boolean not null default false,
-  is_archived boolean not null default false,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now(),
-  unique (org_id, name)
-);
-
 -- Teams -----------------------------------------------------------------------
 -- Composite unique (id, org_id) enables composite FK from registrations so
 -- you can't register against a team from a different org even if the FK on
@@ -87,13 +75,12 @@ create table if not exists public.locations (
 create table if not exists public.teams (
   id          uuid primary key default gen_random_uuid(),
   org_id      uuid not null references public.organizations(id) on delete cascade,
-  location_id uuid not null references public.locations(id) on delete restrict,
   name        text not null,
   is_archived boolean not null default false,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),
   unique (org_id, id),
-  unique (org_id, location_id, name)
+  unique (org_id, name)
 );
 
 -- Team memberships: user <-> team (M:N) ---------------------------------------
@@ -166,7 +153,6 @@ create index if not exists idx_memberships_org          on public.memberships(or
 create index if not exists idx_team_memberships_user    on public.team_memberships(user_id);
 create index if not exists idx_team_memberships_team    on public.team_memberships(team_id);
 create index if not exists idx_teams_org                on public.teams(org_id);
-create index if not exists idx_locations_org            on public.locations(org_id);
 create index if not exists idx_categories_org           on public.categories(org_id);
 create index if not exists idx_interventions_org        on public.interventions(org_id);
 create index if not exists idx_interventions_category   on public.interventions(category_id);
@@ -235,7 +221,6 @@ grant execute on function public.app_is_in_team(uuid) to authenticated;
 -- -----------------------------------------------------------------------------
 alter table public.organizations    enable row level security;
 alter table public.memberships      enable row level security;
-alter table public.locations        enable row level security;
 alter table public.teams            enable row level security;
 alter table public.team_memberships enable row level security;
 alter table public.categories       enable row level security;
@@ -280,25 +265,6 @@ drop policy if exists "memberships_delete_admin" on public.memberships;
 create policy "memberships_delete_admin" on public.memberships
   for delete to authenticated
   using (public.app_is_admin(org_id));
-
--- locations -------------------------------------------------------------------
-drop policy if exists "locations_select_member" on public.locations;
-create policy "locations_select_member" on public.locations
-  for select to authenticated using (public.app_is_member(org_id));
-
-drop policy if exists "locations_write_admin" on public.locations;
-create policy "locations_write_admin" on public.locations
-  for all to authenticated
-  using (public.app_is_admin(org_id))
-  with check (public.app_is_admin(org_id));
-
-drop policy if exists "locations_select_anon_public" on public.locations;
-create policy "locations_select_anon_public" on public.locations
-  for select to anon
-  using (exists (
-    select 1 from public.organizations o
-    where o.id = locations.org_id and o.public_share_enabled = true
-  ));
 
 -- teams -----------------------------------------------------------------------
 drop policy if exists "teams_select_member" on public.teams;
@@ -413,8 +379,31 @@ create policy "registrations_select_anon_public" on public.registrations
 
 
 -- -----------------------------------------------------------------------------
--- 7. Column-level grants for anon (privacy: no user_id / photo / note)
+-- 7. Schema + role grants
 -- -----------------------------------------------------------------------------
+-- Na `drop schema public cascade; create schema public;` zijn de Supabase
+-- default-ACLs weg. We herbouwen ze hier expliciet zodat PostgREST (met role
+-- service_role / authenticated / anon) de tabellen kan benaderen. RLS blijft
+-- de daadwerkelijke rij-filtering doen.
+grant usage on schema public to anon, authenticated, service_role;
+
+grant all on all tables    in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+grant all on all functions in schema public to service_role;
+
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+
+alter default privileges in schema public
+  grant all on tables to service_role;
+alter default privileges in schema public
+  grant all on sequences to service_role;
+alter default privileges in schema public
+  grant all on functions to service_role;
+alter default privileges in schema public
+  grant select, insert, update, delete on tables to authenticated;
+
+-- Column-level grants for anon (privacy: no user_id / photo / note).
 revoke all on public.registrations   from anon;
 grant select (id, org_id, team_id, intervention_id, quantity, happened_on,
               co2_kg_cached, created_at)
@@ -422,7 +411,6 @@ grant select (id, org_id, team_id, intervention_id, quantity, happened_on,
 
 -- Other tables: full SELECT for anon is filtered by RLS to public orgs only.
 grant select on public.organizations to anon;
-grant select on public.locations     to anon;
 grant select on public.teams         to anon;
 grant select on public.categories    to anon;
 grant select on public.interventions to anon;
@@ -488,7 +476,7 @@ declare
   t text;
 begin
   foreach t in array array[
-    'organizations','locations','teams','categories','interventions','registrations'
+    'organizations','teams','categories','interventions','registrations'
   ]
   loop
     execute format('drop trigger if exists set_updated_at on public.%I;', t);
@@ -504,7 +492,7 @@ end $$;
 -- Einde 0001_init.sql
 -- Controle-queries na de run (optioneel, in Supabase SQL Editor):
 --   select relname, relrowsecurity from pg_class
---     where relname in ('organizations','memberships','locations','teams',
+--     where relname in ('organizations','memberships','teams',
 --                       'team_memberships','categories','interventions',
 --                       'registrations');
 --   -- alle rijen moeten relrowsecurity = t hebben.
