@@ -318,19 +318,17 @@ Wat gedaan:
   aan nieuwe schemas/signatures.
 
 Openstaand / bewuste tech-debt:
-- `0005_registration_photos_storage.sql` en `0006_org_profile.sql` nog
-  handmatig draaien in Supabase SQL Editor (dev -> staging -> prod), daarna
-  Supabase types regenereren tegen het live schema.
-- `components/dashboard/registrations-filters.tsx` staat leeg — ofwel
-  implementatie afronden ofwel bestand verwijderen voor commit.
+- `0005_registration_photos_storage.sql` en `0006_org_profile.sql` staan op
+  dev (2026-04-21). Nog uitrollen naar staging + prod en daarna Supabase
+  types regenereren tegen het live schema.
 - `photo_path` blijft voorlopig alleen een string in de DB; er is nog geen
   UI om een bestaande registratie-foto te bekijken of te vervangen.
 - Foto-cleanup bij mislukte inserts is best-effort; echte cleanup (vb. cron
   die weesobjecten verwijdert) is nog niet ingericht.
 
 Wat volgt:
-- SQL 0005 + 0006 op dev draaien, `npm run test:integration` opnieuw groen
-  krijgen, types regenereren.
+- `npm run test:integration` opnieuw groen krijgen tegen dev (0005 + 0006
+  staan nu live) en types regenereren via CLI.
 - Slice D deel 2 (bento-grid charts + activiteitenfeed) oppakken, daarna
   Slice E (registratie-pagina redesign) en F (instellingen-redesign, deels
   al gedaan door de tabs-rework).
@@ -348,6 +346,6 @@ Wat volgt:
 | `0002_views.sql` | 2026-04-17 |  |  |
 | `0003_platform_admins.sql` |  |  |  |
 | `0004_public_dashboard_timeseries.sql` |  |  |  |
-| `0005_registration_photos_storage.sql` |  |  |  |
-| `0006_org_profile.sql` |  |  |  |
+| `0005_registration_photos_storage.sql` | 2026-04-21 |  |  |
+| `0006_org_profile.sql` | 2026-04-21 |  |  |
 | `9000_seed.sql` | 2026-04-17 |  |  |
