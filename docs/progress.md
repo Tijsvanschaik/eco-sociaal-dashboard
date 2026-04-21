@@ -8,8 +8,8 @@
 - [x] Supabase clients (`@supabase/ssr` server + browser + middleware) + Zod env
 - [x] Security headers (X-Frame-Options op (app), frame-ancestors whitelist op /embed/*)
 - [x] CI workflow (install, lint, typecheck, unit tests, build)
-- [ ] Vercel deploy
-- [ ] Supabase project aan `.env.local` koppelen (door gebruiker)
+- [x] Vercel deploy
+- [x] Supabase project aan `.env.local` koppelen (door gebruiker)
 
 ## Fase 1 - Database + auth
 
@@ -42,7 +42,11 @@
 
 ## Openstaand (later)
 
-- [ ] EOD-baseline van LEV opvragen
+- [ ] EOD-baseline van LEV opvragen (blijft voorlopig placeholder-waarde)
+- [ ] Embed-whitelist aanscherpen: `EMBED_FRAME_ANCESTORS` staat op Vercel
+      nu open (`*`) zolang we de definitieve intranet-/partnerdomeinen niet
+      kennen. Zodra bekend: terug naar expliciete whitelist conform
+      `40-security.mdc`.
 - [ ] PWA (manifest + icons + service worker) - pas als we het praktisch nodig hebben
 - [ ] Tremor toevoegen wanneer dashboard charts krijgt
 
@@ -60,6 +64,28 @@ tegen dev draaien, Vercel deploy afronden en daarna een productie-check op
 share slug + embed whitelist doen.
 Blockers: nog geen echte `.env.local` / Vercel-config in deze repo-sessie, dus
 integratie-tests en live deploy zijn nog handmatige vervolgstappen.
+
+## Sessie 2026-04-21 (ochtend)
+
+Wat gedaan:
+- `fix(login)`: unieke `key`-props op magic-link- en wachtwoord-`Form` zodat
+  RHF-state niet blijft hangen bij modeswitch; bijhorende unit test bijgewerkt
+  zodat typen in wachtwoord-mode daadwerkelijk wordt gevalideerd.
+- Supabase dev-project gekoppeld aan `.env.local`; `npm run test:integration`
+  tegen dev gedraaid en bevestigd groen (RLS-suite voor worker/admin/anon).
+- Vercel deploy live. Env-vars voor Supabase en `EMBED_FRAME_ANCESTORS`
+  staan daar ingesteld.
+- Productie-check: share-slug `/p/[slug]` rendert correct op prod.
+
+Openstaand / bewuste tech-debt:
+- Embed-whitelist staat bewust open (`*`) op Vercel tot de definitieve
+  intranet-/partnerdomeinen bekend zijn. Daarna: terug naar expliciete
+  whitelist per `40-security.mdc`.
+- EOD-baseline blijft voorlopig placeholder.
+
+Wat volgt: wachten op LEV voor (a) EOD-baseline en (b) embed-whitelist
+domeinen. Verder mogelijk starten met volgende fase zodra prioriteit
+gezet is (PWA, charts via Tremor, of nieuwe product-features).
 
 ## Tijdelijke auth-opmerking
 
