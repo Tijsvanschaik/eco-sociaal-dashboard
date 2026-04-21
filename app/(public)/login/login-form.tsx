@@ -15,9 +15,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 
 import { sendMagicLink, signInWithPassword } from "./actions";
+
+const inputClassName =
+  "h-auto w-full rounded-[1.5rem] border-0 bg-input px-6 py-4 text-base text-foreground shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 md:text-lg dark:bg-input";
+
+const labelClassName = "ml-1 text-sm font-semibold text-foreground";
 
 const magicLinkSchema = z.object({
   email: z.string().email("Voer een geldig e-mailadres in."),
@@ -30,213 +36,201 @@ const passwordSchema = z.object({
 });
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
-type UiState =
-  | { status: "idle" }
-  | { status: "sent"; email: string }
-  | { status: "error"; message: string };
+export type LoginFormMode = "magic" | "password";
 
-export function LoginForm({ redirectTo }: { redirectTo?: string }) {
-  const router = useRouter();
-  const [mode, setMode] = useState<"magic" | "password">("magic");
-  const magicLinkForm = useForm<MagicLinkFormValues>({
+type LoginFormProps = {
+  mode?: LoginFormMode;
+  redirectTo?: string;
+};
+
+export function LoginForm({ mode = "magic", redirectTo }: LoginFormProps) {
+  if (mode === "password") {
+    return <PasswordLogin redirectTo={redirectTo} />;
+  }
+  return <MagicLinkLogin redirectTo={redirectTo} />;
+}
+
+function MagicLinkLogin({ redirectTo }: { redirectTo?: string }) {
+  const [status, setStatus] = useState<"idle" | "sent" | "error">("idle");
+  const [sentEmail, setSentEmail] = useState<string>();
+  const [errorMessage, setErrorMessage] = useState<string>();
+  const [isPending, startTransition] = useTransition();
+
+  const form = useForm<MagicLinkFormValues>({
     resolver: zodResolver(magicLinkSchema),
     defaultValues: { email: "" },
     mode: "onTouched",
   });
-  const passwordForm = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: { email: "", password: "" },
-    mode: "onTouched",
-  });
-  const [state, setState] = useState<UiState>({ status: "idle" });
-  const [isPending, startTransition] = useTransition();
 
-  function onMagicLinkSubmit(values: MagicLinkFormValues) {
+  function onSubmit(values: MagicLinkFormValues) {
     startTransition(async () => {
       const fd = new FormData();
       fd.set("email", values.email);
       if (redirectTo) fd.set("redirectTo", redirectTo);
       const result = await sendMagicLink(fd);
       if (result.status === "ok") {
-        setState({ status: "sent", email: result.email });
-        magicLinkForm.reset();
+        setSentEmail(result.email);
+        setStatus("sent");
+        form.reset();
       } else {
-        setState({ status: "error", message: result.message });
+        setErrorMessage(result.message);
+        setStatus("error");
       }
     });
   }
 
-  function onPasswordSubmit(values: PasswordFormValues) {
-    startTransition(async () => {
-      const fd = new FormData();
-      fd.set("email", values.email);
-      fd.set("password", values.password);
-      if (redirectTo) fd.set("redirectTo", redirectTo);
-
-      const result = await signInWithPassword(fd);
-      if (result.status === "ok") {
-        setState({ status: "idle" });
-        passwordForm.reset({ email: "", password: "" });
-        router.push(result.redirectTo);
-        router.refresh();
-      } else {
-        setState({ status: "error", message: result.message });
-      }
-    });
-  }
-
-  if (state.status === "sent" && mode === "magic") {
+  if (status === "sent") {
     return (
-      <div className="space-y-2 rounded-md border bg-muted/40 p-4 text-sm" aria-live="polite">
-        <p className="font-medium">Check je inbox</p>
+      <div
+        className="space-y-2 rounded-[1.5rem] border border-primary/15 bg-primary-container/40 p-5 text-sm"
+        aria-live="polite"
+      >
+        <p className="font-semibold text-on-primary-container">Check je inbox</p>
         <p className="text-muted-foreground">
           We hebben een login-link gestuurd naar{" "}
-          <span className="font-medium text-foreground">{state.email}</span>. Klik de link om in te
-          loggen. Hij werkt eenmalig en verloopt na een uur.
+          <span className="font-medium text-foreground">{sentEmail}</span>. Hij werkt eenmalig en
+          verloopt na een uur.
         </p>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() => {
-            setState({ status: "idle" });
-            setMode("password");
-          }}
-        >
-          Gebruik tijdelijk wachtwoord
-        </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2 rounded-md bg-muted p-1">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelClassName}>Uw e-mailadres</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  placeholder="bijv. hallo@organisatie.nl"
+                  className={inputClassName}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {status === "error" && errorMessage && (
+          <p className="text-sm text-destructive" role="alert">
+            {errorMessage}
+          </p>
+        )}
         <Button
-          type="button"
-          variant={mode === "magic" ? "default" : "ghost"}
-          onClick={() => {
-            setMode("magic");
-            setState({ status: "idle" });
-          }}
+          type="submit"
+          variant="brand"
+          className="mt-2 h-auto w-full gap-2 py-4 text-base md:text-lg"
+          disabled={isPending || !form.formState.isValid}
         >
-          Magic link
+          {isPending ? (
+            "Versturen..."
+          ) : (
+            <>
+              <span>Magic link versturen</span>
+              <Icon name="arrow_forward" className="text-xl" />
+            </>
+          )}
         </Button>
-        <Button
-          type="button"
-          variant={mode === "password" ? "default" : "ghost"}
-          onClick={() => {
-            setMode("password");
-            setState({ status: "idle" });
-          }}
-        >
-          Tijdelijk wachtwoord
-        </Button>
-      </div>
+      </form>
+    </Form>
+  );
+}
 
-      {mode === "magic" ? (
-        <Form key="magic-login-form" {...magicLinkForm}>
-          <form
-            onSubmit={magicLinkForm.handleSubmit(onMagicLinkSubmit)}
-            className="space-y-4"
-            noValidate
-          >
-            <FormField
-              control={magicLinkForm.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>E-mailadres</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      autoComplete="email"
-                      inputMode="email"
-                      placeholder="jij@lev-groep.nl"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {state.status === "error" && (
-              <p className="text-sm text-destructive" role="alert">
-                {state.message}
-              </p>
-            )}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isPending || !magicLinkForm.formState.isValid}
-            >
-              {isPending ? "Versturen..." : "Stuur login-link"}
-            </Button>
-          </form>
-        </Form>
-      ) : (
-        <Form key="password-login-form" {...passwordForm}>
-          <form
-            onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
-            className="space-y-4"
-            noValidate
-          >
-            <FormField
-              control={passwordForm.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>E-mailadres</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      autoComplete="email"
-                      inputMode="email"
-                      placeholder="jij@lev-groep.nl"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={passwordForm.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Wachtwoord</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      autoComplete="current-password"
-                      placeholder="Vul je tijdelijke wachtwoord in"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <p className="text-sm text-muted-foreground">
-              Tijdelijke fallback voor admins en testgebruikers zolang magic-link e-mails
-              gelimiteerd zijn.
-            </p>
-            {state.status === "error" && (
-              <p className="text-sm text-destructive" role="alert">
-                {state.message}
-              </p>
-            )}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isPending || !passwordForm.formState.isValid}
-            >
-              {isPending ? "Inloggen..." : "Log in met wachtwoord"}
-            </Button>
-          </form>
-        </Form>
-      )}
-    </div>
+function PasswordLogin({ redirectTo }: { redirectTo?: string }) {
+  const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string>();
+  const [isPending, startTransition] = useTransition();
+
+  const form = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: { email: "", password: "" },
+    mode: "onTouched",
+  });
+
+  function onSubmit(values: PasswordFormValues) {
+    startTransition(async () => {
+      const fd = new FormData();
+      fd.set("email", values.email);
+      fd.set("password", values.password);
+      if (redirectTo) fd.set("redirectTo", redirectTo);
+      const result = await signInWithPassword(fd);
+      if (result.status === "ok") {
+        form.reset({ email: "", password: "" });
+        router.push(result.redirectTo);
+        router.refresh();
+      } else {
+        setErrorMessage(result.message);
+      }
+    });
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelClassName}>Uw e-mailadres</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  placeholder="bijv. hallo@organisatie.nl"
+                  className={inputClassName}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelClassName}>Wachtwoord</FormLabel>
+              <FormControl>
+                <Input
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Vul je tijdelijke wachtwoord in"
+                  className={inputClassName}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <p className="text-sm text-muted-foreground">
+          Tijdelijke fallback voor admins en testgebruikers zolang magic-link e-mails gelimiteerd
+          zijn.
+        </p>
+        {errorMessage && (
+          <p className="text-sm text-destructive" role="alert">
+            {errorMessage}
+          </p>
+        )}
+        <Button
+          type="submit"
+          variant="brand"
+          className="mt-2 h-auto w-full py-4 text-base md:text-lg"
+          disabled={isPending || !form.formState.isValid}
+        >
+          {isPending ? "Inloggen..." : "Log in met wachtwoord"}
+        </Button>
+      </form>
+    </Form>
   );
 }
