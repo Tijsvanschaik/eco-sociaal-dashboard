@@ -1,8 +1,8 @@
 export {
   createCategory,
   createIntervention,
-  createLocation,
   createTeam,
   provisionUser,
+  updateOrgProfile,
   updateOrgSettings,
 } from "../beheer/actions";

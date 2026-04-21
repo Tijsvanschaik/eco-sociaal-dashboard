@@ -3,7 +3,7 @@
 import {
   categorySchema,
   interventionSchema,
-  locationSchema,
+  orgProfileSchema,
   orgSettingsSchema,
   provisionUserSchema,
   teamSchema,
@@ -11,45 +11,41 @@ import {
 import { findOrCreateUserId } from "@/lib/admin-users";
 import { getOrgContextBySlug } from "@/lib/organizations";
 import { revalidateOrgPaths } from "@/lib/revalidate-org-paths";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 
+/**
+ * Zorgt dat de huidige user beheer-acties in deze org mag uitvoeren. Dat mag
+ * als je admin van de org bent, OF als je platform-superadmin bent (ook zonder
+ * membership). Omdat de RLS-write-policies alleen tenant-admins toelaten,
+ * krijgt een superadmin zonder admin-membership een service-role client terug
+ * (`writer`) die RLS omzeilt. Org-admins blijven de gewone client gebruiken
+ * zodat RLS als laatste verdedigingslinie actief blijft.
+ */
 async function requireAdmin(orgSlug: string) {
   const supabase = await createClient();
   const context = await getOrgContextBySlug(supabase, orgSlug);
 
-  if (!context || context.role !== "admin") {
+  if (!context) {
+    throw new Error("Je sessie is verlopen. Log opnieuw in.");
+  }
+
+  const isOrgAdmin = context.role === "admin";
+  if (!isOrgAdmin && !context.isSuperadmin) {
     throw new Error("Alleen admins mogen deze actie uitvoeren.");
   }
 
-  return { context, supabase };
-}
-
-export async function createLocation(orgSlug: string, formData: FormData) {
-  const { context, supabase } = await requireAdmin(orgSlug);
-  const input = locationSchema.parse({
-    name: formData.get("name"),
-    isInternal: formData.get("isInternal") === "on",
-  });
-
-  await supabase.from("locations").insert({
-    org_id: context.org.id,
-    name: input.name,
-    is_internal: input.isInternal,
-  });
-
-  revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
+  const writer = isOrgAdmin ? supabase : createServiceRoleClient();
+  return { context, supabase, writer };
 }
 
 export async function createTeam(orgSlug: string, formData: FormData) {
-  const { context, supabase } = await requireAdmin(orgSlug);
+  const { context, writer } = await requireAdmin(orgSlug);
   const input = teamSchema.parse({
     name: formData.get("name"),
-    locationId: formData.get("locationId"),
   });
 
-  await supabase.from("teams").insert({
+  await writer.from("teams").insert({
     org_id: context.org.id,
-    location_id: input.locationId,
     name: input.name,
   });
 
@@ -57,13 +53,13 @@ export async function createTeam(orgSlug: string, formData: FormData) {
 }
 
 export async function createCategory(orgSlug: string, formData: FormData) {
-  const { context, supabase } = await requireAdmin(orgSlug);
+  const { context, writer } = await requireAdmin(orgSlug);
   const input = categorySchema.parse({
     name: formData.get("name"),
     color: formData.get("color"),
   });
 
-  await supabase.from("categories").insert({
+  await writer.from("categories").insert({
     org_id: context.org.id,
     name: input.name,
     color: input.color,
@@ -73,7 +69,7 @@ export async function createCategory(orgSlug: string, formData: FormData) {
 }
 
 export async function createIntervention(orgSlug: string, formData: FormData) {
-  const { context, supabase } = await requireAdmin(orgSlug);
+  const { context, writer } = await requireAdmin(orgSlug);
   const input = interventionSchema.parse({
     name: formData.get("name"),
     categoryId: formData.get("categoryId"),
@@ -81,7 +77,7 @@ export async function createIntervention(orgSlug: string, formData: FormData) {
     co2FactorKg: formData.get("co2FactorKg"),
   });
 
-  await supabase.from("interventions").insert({
+  await writer.from("interventions").insert({
     org_id: context.org.id,
     category_id: input.categoryId,
     name: input.name,
@@ -92,8 +88,28 @@ export async function createIntervention(orgSlug: string, formData: FormData) {
   revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
 }
 
+export async function updateOrgProfile(orgSlug: string, formData: FormData) {
+  const { context, writer } = await requireAdmin(orgSlug);
+  const input = orgProfileSchema.parse({
+    description: formData.get("description") ?? "",
+    logoUrl: formData.get("logoUrl") ?? "",
+    name: formData.get("name"),
+  });
+
+  await writer
+    .from("organizations")
+    .update({
+      name: input.name,
+      description: input.description ? input.description : null,
+      logo_url: input.logoUrl ? input.logoUrl : null,
+    })
+    .eq("id", context.org.id);
+
+  revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
+}
+
 export async function updateOrgSettings(orgSlug: string, formData: FormData) {
-  const { context, supabase } = await requireAdmin(orgSlug);
+  const { context, writer } = await requireAdmin(orgSlug);
   const input = orgSettingsSchema.parse({
     publicShareEnabled: formData.get("publicShareEnabled") === "on",
     publicShareSlug: formData.get("publicShareSlug"),
@@ -102,7 +118,7 @@ export async function updateOrgSettings(orgSlug: string, formData: FormData) {
   });
 
   const shareSlug = input.publicShareEnabled ? input.publicShareSlug : "";
-  await supabase
+  await writer
     .from("organizations")
     .update({
       public_share_enabled: input.publicShareEnabled,
@@ -119,7 +135,7 @@ export async function updateOrgSettings(orgSlug: string, formData: FormData) {
 }
 
 export async function provisionUser(orgSlug: string, formData: FormData) {
-  const { context, supabase } = await requireAdmin(orgSlug);
+  const { context, writer } = await requireAdmin(orgSlug);
   const input = provisionUserSchema.parse({
     email: formData.get("email"),
     role: formData.get("role"),
@@ -127,7 +143,7 @@ export async function provisionUser(orgSlug: string, formData: FormData) {
   });
 
   const userId = await findOrCreateUserId(input.email);
-  const { data: membership } = await supabase
+  const { data: membership } = await writer
     .from("memberships")
     .select("id")
     .eq("org_id", context.org.id)
@@ -135,7 +151,7 @@ export async function provisionUser(orgSlug: string, formData: FormData) {
     .maybeSingle();
 
   if (!membership) {
-    await supabase.from("memberships").insert({
+    await writer.from("memberships").insert({
       org_id: context.org.id,
       user_id: userId,
       role: input.role,
@@ -143,7 +159,7 @@ export async function provisionUser(orgSlug: string, formData: FormData) {
   }
 
   if (input.teamId) {
-    const { data: teamMembership } = await supabase
+    const { data: teamMembership } = await writer
       .from("team_memberships")
       .select("id")
       .eq("org_id", context.org.id)
@@ -152,7 +168,7 @@ export async function provisionUser(orgSlug: string, formData: FormData) {
       .maybeSingle();
 
     if (!teamMembership) {
-      await supabase.from("team_memberships").insert({
+      await writer.from("team_memberships").insert({
         org_id: context.org.id,
         user_id: userId,
         team_id: input.teamId,

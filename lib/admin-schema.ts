@@ -2,13 +2,7 @@ import { z } from "zod";
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export const locationSchema = z.object({
-  isInternal: z.boolean().default(false),
-  name: z.string().trim().min(1, "Naam is verplicht.").max(80, "Naam is te lang."),
-});
-
 export const teamSchema = z.object({
-  locationId: z.string().uuid("Kies een locatie."),
   name: z.string().trim().min(1, "Naam is verplicht.").max(80, "Naam is te lang."),
 });
 
@@ -22,6 +16,20 @@ export const interventionSchema = z.object({
   co2FactorKg: z.coerce.number().min(0, "CO2-factor mag niet negatief zijn."),
   name: z.string().trim().min(1, "Naam is verplicht.").max(80, "Naam is te lang."),
   unit: z.enum(["kg", "km", "maaltijd", "kwh", "stuk", "uur", "liter", "dag"]),
+});
+
+export const orgProfileSchema = z.object({
+  description: z
+    .string()
+    .trim()
+    .max(280, "Beschrijving is te lang (max 280 tekens).")
+    .optional()
+    .or(z.literal("")),
+  logoUrl: z.union([
+    z.literal(""),
+    z.string().trim().url("Geef een geldige URL op (inclusief https://)."),
+  ]),
+  name: z.string().trim().min(2, "Naam is te kort.").max(120, "Naam is te lang."),
 });
 
 export const orgSettingsSchema = z
