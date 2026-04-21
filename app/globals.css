@@ -1,76 +1,182 @@
 @import "tailwindcss";
 
 @theme inline {
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    sans-serif;
+  --font-icon: "Material Symbols Outlined";
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-dim: var(--primary-dim);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-foreground: var(--tertiary-foreground);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--muted);
+  --color-surface-container-high: var(--input);
+  --color-surface-container-highest: var(--border);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.15 0.02 240);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 240);
-  --primary: oklch(0.55 0.15 150);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.96 0.01 240);
-  --secondary-foreground: oklch(0.2 0.02 240);
-  --muted: oklch(0.96 0.01 240);
-  --muted-foreground: oklch(0.5 0.02 240);
-  --accent: oklch(0.94 0.03 150);
-  --accent-foreground: oklch(0.2 0.05 150);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.9 0.01 240);
-  --input: oklch(0.9 0.01 240);
-  --ring: oklch(0.55 0.15 150);
-  --radius: 0.625rem;
+  /* Brand foundation - afgeleid van Stitch MD3-palette, gemapt op shadcn-tokens. */
+  --background: #fff8f3;
+  --foreground: #36322d;
+  --card: #ffffff;
+  --card-foreground: #36322d;
+  --popover: #ffffff;
+  --popover-foreground: #36322d;
+
+  --primary: #af1e7b;
+  --primary-foreground: #fff7f8;
+  --primary-dim: #9f096e;
+  --primary-container: #ffa6d2;
+  --on-primary-container: #780052;
+
+  --secondary: #efe7e0;
+  --secondary-foreground: #36322d;
+
+  --tertiary: #3d6b00;
+  --tertiary-foreground: #eeffd6;
+  --tertiary-container: #befa7f;
+  --on-tertiary-container: #294b00;
+
+  --muted: #f4ece6;
+  --muted-foreground: #645e58;
+  --accent: #ffdcc6;
+  --accent-foreground: #823f00;
+  --destructive: #ac3149;
+  --destructive-foreground: #fff7f7;
+
+  --border: #eae1d9;
+  --input: #efe7e0;
+  --ring: #af1e7b;
+
+  --surface-container-low: #faf2ed;
+
+  --chart-1: #af1e7b;
+  --chart-2: #3d6b00;
+  --chart-3: #974a00;
+  --chart-4: #ffa6d2;
+  --chart-5: #befa7f;
+
+  --radius: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
 }
 
 .dark {
-  --background: oklch(0.15 0.02 240);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.18 0.02 240);
-  --card-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.65 0.15 150);
-  --primary-foreground: oklch(0.12 0.02 240);
-  --secondary: oklch(0.22 0.02 240);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.22 0.02 240);
-  --muted-foreground: oklch(0.65 0.02 240);
-  --accent: oklch(0.25 0.05 150);
-  --accent-foreground: oklch(0.95 0.05 150);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.25 0.02 240);
-  --input: oklch(0.25 0.02 240);
-  --ring: oklch(0.65 0.15 150);
+  /* Pragmatische inverse, tot er een dark-Stitch-ontwerp is. */
+  --background: #100e0b;
+  --foreground: #eae1d9;
+  --card: #1a1815;
+  --card-foreground: #eae1d9;
+  --popover: #1a1815;
+  --popover-foreground: #eae1d9;
+
+  --primary: #ff64bd;
+  --primary-foreground: #520037;
+  --primary-dim: #ff8fc9;
+  --primary-container: #88005d;
+  --on-primary-container: #ffa6d2;
+
+  --secondary: #2a2622;
+  --secondary-foreground: #eae1d9;
+
+  --tertiary: #b0eb73;
+  --tertiary-foreground: #1a2600;
+  --tertiary-container: #345d00;
+  --on-tertiary-container: #befa7f;
+
+  --muted: #22201d;
+  --muted-foreground: #a19c98;
+  --accent: #3a2d22;
+  --accent-foreground: #ffdcc6;
+  --destructive: #f76a80;
+  --destructive-foreground: #68001f;
+
+  --border: #2a2622;
+  --input: #2a2622;
+  --ring: #ff64bd;
+
+  --surface-container-low: #17140f;
+
+  --chart-1: #ff64bd;
+  --chart-2: #b0eb73;
+  --chart-3: #ffc9a7;
+  --chart-4: #ffa6d2;
+  --chart-5: #befa7f;
 }
 
 @layer base {
   * {
     border-color: var(--border);
   }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
+    font-family: var(--font-sans);
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+/* Material Symbols Outlined icon class.
+   Beschikbaar overal waar <Icon /> wordt gebruikt. Font wordt geladen via
+   <link> in app/layout.tsx (Google Fonts CDN). */
+.material-symbols-outlined {
+  font-family: var(--font-icon);
+  font-weight: normal;
+  font-style: normal;
+  font-size: 1em;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+.material-symbols-outlined.is-filled {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }

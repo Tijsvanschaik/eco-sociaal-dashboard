@@ -67,6 +67,19 @@
 - [x] Unit/component/integration/e2e dekking uitgebreid voor tijdreeks,
       periodefilter en publieke trend-surface
 
+## Fase 5 - UI/UX-restyle (Stitch-gedreven)
+
+- [x] Slice A - Brand-foundation: magenta/cream-tokens in `app/globals.css`,
+      Plus Jakarta Sans via `next/font`, Material Symbols Outlined via `<link>`,
+      `next-themes` provider, `<Icon>`-wrapper, `brand` button-variant,
+      `docs/design-system.md` + ADR 0005
+- [ ] Slice B - `/login` split-layout + hero (op basis van Stitch HTML-export)
+- [ ] Slice C - Intern dashboard + app-shell (sidebar/topbar + theme-toggle)
+- [ ] Slice D - Registratie-pagina
+- [ ] Slice E - Instellingen
+- [ ] Slice F - Superadmin-surfaces
+- [ ] Slice G - Publieke surfaces (`/p`, `/tv`, `/embed`)
+
 ## Openstaand (later)
 
 - [ ] EOD-baseline van LEV opvragen (blijft voorlopig placeholder-waarde)
