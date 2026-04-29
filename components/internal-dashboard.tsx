@@ -1,12 +1,7 @@
-import { CategoryDonutChartBody } from "@/components/charts/category-donut-chart";
-import { TrendAreaChartBody } from "@/components/charts/trend-area-chart";
-import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
-import { ImpactOverviewCard } from "@/components/dashboard/impact-overview-card";
-import {
-  RegistrationCard,
-  type RegistrationCardData,
-} from "@/components/dashboard/registration-card";
-import { Icon } from "@/components/ui/icon";
+import type { RegistrationCardData } from "@/components/dashboard/registration-card";
+import { ProgressSlide } from "@/components/public/progress-slide";
+import { RecentRegistrationsSlide } from "@/components/public/recent-registrations-slide";
+import { TotalImpactSlide } from "@/components/public/total-impact-slide";
 import type { DashboardSnapshot } from "@/lib/dashboard";
 import type { DashboardPeriod, WeeklyTimeseriesRow } from "@/lib/timeseries";
 
@@ -37,65 +32,11 @@ export function InternalDashboard({
         </p>
       </header>
 
-      <ImpactOverviewCard
-        eodDays={snapshot.eodDays}
-        teamBreakdown={snapshot.teamBreakdown}
-        periodLabel={periodLabel}
-        registrationCount={snapshot.registrationCount}
-        totalCo2Kg={snapshot.totalCo2Kg}
-      />
+      <TotalImpactSlide periodLabel={periodLabel} snapshot={snapshot} />
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <DashboardPanel
-          description={`Cumulatieve CO₂-besparing · ${periodLabel}`}
-          icon="trending_up"
-          iconTone="tertiary"
-          title="Voortgang 2026"
-        >
-          <TrendAreaChartBody cumulative data={timeseries} />
-        </DashboardPanel>
-        <DashboardPanel
-          description="Aandeel van elke categorie in de totale besparing"
-          icon="donut_small"
-          iconTone="primary"
-          title="Impact per categorie"
-        >
-          <CategoryDonutChartBody
-            items={snapshot.categoryBreakdown.map((item) => ({
-              id: item.id,
-              name: item.name,
-              color: item.color,
-              co2SavedKg: item.co2SavedKg,
-              registrationCount: item.registrationCount,
-            }))}
-          />
-        </DashboardPanel>
-      </section>
+      <ProgressSlide periodLabel={periodLabel} snapshot={snapshot} timeseries={timeseries} />
 
-      <DashboardPanel
-        description="De laatste acties van de hele organisatie — elke kaart telt direct mee in het overzicht bovenaan."
-        icon="history"
-        iconTone="primary"
-        title="Recente registraties"
-      >
-        {recentRegistrations.length === 0 ? (
-          <div className="flex flex-col items-start gap-2 rounded-[1.5rem] bg-surface-container-low p-6 text-sm text-muted-foreground">
-            <Icon name="inbox" className="text-2xl text-primary" filled />
-            <p>
-              Nog geen registraties binnen deze organisatie. Voeg via de registratie-pagina de
-              eerste actie toe.
-            </p>
-          </div>
-        ) : (
-          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {recentRegistrations.map((registration) => (
-              <li key={registration.id} className="h-full">
-                <RegistrationCard registration={registration} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </DashboardPanel>
+      <RecentRegistrationsSlide registrations={recentRegistrations} />
     </main>
   );
 }

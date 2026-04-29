@@ -90,7 +90,11 @@
 - [ ] Slice E - Registratie-pagina
 - [ ] Slice F - Instellingen
 - [ ] Slice G - Superadmin-surfaces (content)
-- [ ] Slice H - Publieke surfaces (`/p`, `/tv`, `/embed`)
+- [x] Slice H - Publieke surfaces (`/p`, `/tv`, `/embed`): drie gedeelde
+      slide-componenten, `KioskSlideshow` voor TV/embed-rotate, `KioskStack`
+      voor share/embed-stack. Embed configureerbaar via `?mode=`, `?screens=`,
+      `?interval=`. Recente registraties via nieuwe SQL-view
+      `public_recent_registrations` + service-role signed URLs voor foto's.
 
 ## Openstaand (later)
 
@@ -333,6 +337,48 @@ Wat volgt:
   Slice E (registratie-pagina redesign) en F (instellingen-redesign, deels
   al gedaan door de tabs-rework).
 
+## Sessie 2026-04-29 (TV + embed slideshow)
+
+Wat gedaan:
+- **Slice H gestart**: nieuwe SQL-view `public_recent_registrations` (0007),
+  bewust met `security_invoker = false` zodat anon `note` + `photo_path` mag
+  zien op publieke surfaces, gefilterd op `o.public_share_enabled = true`.
+  Toegevoegd aan `supabase/types/supabase.ts` (handmatig).
+- **Loader gerefactord**: `lib/public-dashboard.ts` levert nu een
+  `PublicDashboardData` met `totals`, `snapshot` (identieke shape als intern),
+  `timeseries` (camelCase WeeklyTimeseriesRow) en `recentRegistrations`. Foto's
+  via `createServiceRoleClient().storage.createSignedUrls` met TTL 1 uur.
+- **Slide-componenten gedeeld**: `components/public/total-impact-slide.tsx`,
+  `progress-slide.tsx` en `recent-registrations-slide.tsx`. Intern dashboard
+  refactored om dezelfde drie slides te gebruiken (geen visuele wijziging).
+- **Kiosk-shells**: `KioskSlideshow` (client, fade-rotatie, default 8s) en
+  `KioskStack` (responsive verticale stack). `PublicSurface` mapt mode op
+  shell met automatische `< lg`-fallback naar stack zodat mobiel scrollt.
+- **Embed-querystring**: `lib/embed/query-schema.ts` (Zod). `mode=stack|rotate`,
+  `screens=1,2,3`, `interval=3-60` met veilige defaults.
+- **Pages**: `/tv`, `/embed`, `/p` gebruiken nu allemaal `<PublicSurface>`. De
+  oude `components/public-dashboard-view.tsx` is verwijderd.
+- **Tests**: 11 nieuwe unit-/component-tests (`embed-query-schema`,
+  `kiosk-slideshow`, `recent-registrations-slide`); RLS-suite uitgebreid voor
+  de nieuwe view; Playwright e2e gespecialiseerd op slideshow + querystring.
+  Alle 85 unit-tests groen, lint + typecheck + build groen.
+
+Openstaand / bewuste tech-debt:
+- `0007_public_recent_registrations.sql` nog draaien op dev/staging/prod.
+- Daarna `npm run test:integration` opnieuw groen krijgen tegen dev.
+- Embed-whitelist `EMBED_FRAME_ANCESTORS` blijft open totdat LEV de
+  definitieve intranet-/partnerdomeinen aanlevert.
+- Geen donker thema voor TV nog (rule zegt "beschikbaar"; vereist eigen
+  Stitch-mock).
+- Recente registraties zijn altijd publiek zodra de share-slug aanstaat
+  (zie ADR 0006); per-registratie of org-level publish-toggle is niet
+  geïmplementeerd.
+
+Wat volgt: `0007` op dev draaien, integratie-tests bevestigen, daarna LEV
+laten kijken naar slideshow-look op een echt TV-scherm + embed-querystring
+in het LEV-intranet uitproberen.
+
+
 ## Tijdelijke auth-opmerking
 
 - [x] Tijdelijke wachtwoord-login toegevoegd op `/login` als fallback voor admins
@@ -348,4 +394,5 @@ Wat volgt:
 | `0004_public_dashboard_timeseries.sql` |  |  |  |
 | `0005_registration_photos_storage.sql` | 2026-04-21 |  |  |
 | `0006_org_profile.sql` | 2026-04-21 |  |  |
+| `0007_public_recent_registrations.sql` |  |  |  |
 | `9000_seed.sql` | 2026-04-17 |  |  |

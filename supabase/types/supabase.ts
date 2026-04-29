@@ -546,6 +546,25 @@ export type Database = {
         }
         Relationships: []
       }
+      public_recent_registrations: {
+        Row: {
+          category_color: string | null
+          category_name: string | null
+          co2_kg_cached: number | null
+          created_at: string | null
+          happened_on: string | null
+          intervention_name: string | null
+          intervention_unit: Database["public"]["Enums"]["intervention_unit"] | null
+          note: string | null
+          org_id: string | null
+          photo_path: string | null
+          quantity: number | null
+          registration_id: string | null
+          share_slug: string | null
+          team_name: string | null
+        }
+        Relationships: []
+      }
       public_team_breakdown: {
         Row: {
           co2_saved_kg: number | null

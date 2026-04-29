@@ -33,9 +33,20 @@ User -> Server Action -> Zod -> Supabase (RLS) -> Postgres.
 
 ## Chart-architectuur
 - Intern dashboard: weekreeksen en stacked category-series worden server-side opgebouwd uit `registrations` via `lib/timeseries.ts`.
-- Publieke surfaces (`/p`, `/tv`, `/embed`) lezen aggregates uit `public_dashboard_totals`, `public_team_breakdown`, `public_category_breakdown` en `public_dashboard_timeseries`.
+- Publieke surfaces (`/p`, `/tv`, `/embed`) lezen via `lib/public-dashboard.ts` één gedeelde data-loader die totals (`public_dashboard_totals`), aggregaat-kolommen op `registrations`, `public_recent_registrations` en optioneel `public_dashboard_timeseries` combineert tot een `DashboardSnapshot` met dezelfde shape als het interne dashboard.
 - De UI gebruikt `recharts` met kleine gedeelde wrappers in `components/ui/chart.tsx` en `components/charts/*`.
-- Hierdoor blijft anon-toegang beperkt tot aggregates en hoeft geen public surface direct uit `registrations` te lezen.
+- De drie hoofdsecties (`TotalImpactSlide`, `ProgressSlide`, `RecentRegistrationsSlide`) leven in `components/public/` en worden zowel intern als op publieke surfaces hergebruikt.
+
+## Publieke surface-shells (kiosk)
+- `<KioskSlideshow>` (`"use client"`) rouleert client-side tussen slides met fade-overgang. TV-default = 8s; configureerbaar via embed-querystring tot 60s.
+- `<KioskStack>` rendert dezelfde slides verticaal achter elkaar voor stacked layouts (default voor `/p` en `/embed`).
+- `<PublicSurface>` is de centrale renderer die mode (`tv | embed-rotate | embed-stack | share`) op shell mapt en op `< lg`-viewports altijd terugvalt op stack-modus zodat mobiel scrollbaar blijft.
+
+## Embed-querystring (`/embed/[slug]`)
+- `mode=stack|rotate` (default `stack`).
+- `screens=1,2,3` — comma-separated subset/volgorde van slides (1 = totale impact, 2 = voortgang + categorie, 3 = recente registraties). Default = alle.
+- `interval=8` — secondes tussen slides in `mode=rotate` (3-60). Default 8.
+- Onbekende waarden vallen netjes terug op defaults via `embedQuerySchema` (Zod). Geen 4xx.
 
 ## Handmatige SQL-workflow (Supabase)
 - We beheren schema/policies in genummerde SQL-bestanden onder `supabase/sql/`.

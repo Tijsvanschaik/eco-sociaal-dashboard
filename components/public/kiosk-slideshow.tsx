@@ -1,0 +1,96 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import type { KioskSlide } from "@/components/public/kiosk-stack";
+import { cn } from "@/lib/utils";
+
+export type KioskSlideshowProps = {
+  /**
+   * Tijd in milliseconden tussen slide-overgangen. Default = 8000.
+   * Caller-page valideert reeds bovengrens via `embedQuerySchema`.
+   */
+  intervalMs?: number;
+  /** Klas voor de buitenste container (vb. om hoogte te bepalen). */
+  className?: string;
+  /** Slides die elkaar afwisselen. Slides < 2 -> renderen we statisch. */
+  slides: KioskSlide[];
+};
+
+const DEFAULT_INTERVAL_MS = 8000;
+
+/**
+ * Kiosk-slideshow voor `/tv` en (optioneel) `/embed?mode=rotate`. Toont één
+ * slide tegelijk fullscreen, met een rustige fade-overgang. Pause op hover is
+ * bewust niet ingebouwd — TV-modus is non-interactief.
+ *
+ * Dataverversing blijft de verantwoordelijkheid van de page (`revalidate=60`
+ * + `<meta http-equiv="refresh">`); deze component rouleert alleen de UI.
+ */
+export function KioskSlideshow({
+  intervalMs = DEFAULT_INTERVAL_MS,
+  className,
+  slides,
+}: KioskSlideshowProps) {
+  const slideCount = slides.length;
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (slideCount <= 1) return;
+    const id = window.setInterval(
+      () => {
+        setActiveIndex((index) => (index + 1) % slideCount);
+      },
+      Math.max(intervalMs, 1000),
+    );
+    return () => window.clearInterval(id);
+  }, [intervalMs, slideCount]);
+
+  if (slideCount === 0) return null;
+
+  return (
+    <div
+      aria-roledescription="carousel"
+      className={cn("relative isolate flex min-h-0 flex-1 flex-col overflow-hidden", className)}
+      data-testid="kiosk-slideshow"
+    >
+      <div className="relative flex flex-1 min-h-0">
+        {slides.map((slide, index) => {
+          const isActive = index === activeIndex;
+          return (
+            <div
+              aria-hidden={!isActive}
+              className={cn(
+                "absolute inset-0 flex min-h-0 flex-col transition-opacity duration-700 ease-in-out",
+                isActive ? "opacity-100" : "pointer-events-none opacity-0",
+              )}
+              data-active={isActive}
+              data-testid={`kiosk-slide-${slide.id}`}
+              key={slide.id}
+            >
+              {slide.node}
+            </div>
+          );
+        })}
+      </div>
+
+      {slideCount > 1 ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-4 flex items-center justify-center gap-2"
+          data-testid="kiosk-slideshow-indicators"
+        >
+          {slides.map((slide, index) => (
+            <span
+              className={cn(
+                "h-1.5 rounded-full transition-all duration-500",
+                index === activeIndex ? "w-8 bg-primary" : "w-2 bg-border",
+              )}
+              key={`indicator-${slide.id}`}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}

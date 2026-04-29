@@ -241,6 +241,38 @@ describe("RLS - public views", () => {
     expect(error).toBeNull();
     expect(data ?? []).toHaveLength(0);
   });
+
+  it("anon can read public_recent_registrations for a public-enabled org including note + photo_path", async () => {
+    const anon = anonClient();
+    const { data, error } = await anon
+      .from("public_recent_registrations")
+      .select("*")
+      .eq("org_id", fx.orgA.id);
+
+    expect(error).toBeNull();
+    expect((data ?? []).length).toBeGreaterThanOrEqual(1);
+    // The public view is the curated exception: it MUST expose note + photo_path
+    // for the TV/embed slide, even though anon cannot read those columns from
+    // the underlying `registrations` table directly.
+    const first = data?.[0];
+    expect(first).toBeTruthy();
+    expect(first).toHaveProperty("note");
+    expect(first).toHaveProperty("photo_path");
+    expect(first?.intervention_name).toBeTruthy();
+    expect(first?.team_name).toBeTruthy();
+    expect(first?.category_name).toBeTruthy();
+  });
+
+  it("anon sees no public_recent_registrations rows for a non-public org", async () => {
+    const anon = anonClient();
+    const { data, error } = await anon
+      .from("public_recent_registrations")
+      .select("*")
+      .eq("org_id", fx.orgB.id);
+
+    expect(error).toBeNull();
+    expect(data ?? []).toHaveLength(0);
+  });
 });
 
 describe("RLS - sensitive columns", () => {

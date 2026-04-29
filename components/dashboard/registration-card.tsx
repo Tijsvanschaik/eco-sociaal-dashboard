@@ -1,5 +1,6 @@
 import { RegistrationPlaceholder } from "@/components/dashboard/registration-placeholder";
 import { Icon } from "@/components/ui/icon";
+import { cn } from "@/lib/utils";
 
 export type RegistrationCardData = {
   categoryColor: string | null;
@@ -38,7 +39,13 @@ function formatDate(isoDate: string): string {
   }).format(date);
 }
 
-export function RegistrationCard({ registration }: { registration: RegistrationCardData }) {
+export function RegistrationCard({
+  compact = false,
+  registration,
+}: {
+  compact?: boolean;
+  registration: RegistrationCardData;
+}) {
   const {
     categoryColor,
     categoryName,
@@ -54,8 +61,13 @@ export function RegistrationCard({ registration }: { registration: RegistrationC
   } = registration;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[2rem] bg-card shadow-[0_20px_40px_rgba(54,50,45,0.04)] transition-transform hover:-translate-y-0.5">
-      <div className="relative aspect-[5/3] w-full overflow-hidden">
+    <article className="group flex h-full min-h-0 flex-col overflow-hidden rounded-[2rem] bg-card shadow-[0_20px_40px_rgba(54,50,45,0.04)] transition-transform hover:-translate-y-0.5">
+      <div
+        className={cn(
+          "relative w-full shrink-0 overflow-hidden",
+          compact ? "aspect-[3/1]" : "aspect-[5/3]",
+        )}
+      >
         {photoUrl ? (
           <img
             alt={interventionLabel}
@@ -88,9 +100,14 @@ export function RegistrationCard({ registration }: { registration: RegistrationC
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 p-5">
+      <div className={cn("flex min-h-0 flex-1 flex-col", compact ? "gap-2 p-4" : "gap-3 p-5")}>
         <div>
-          <h3 className="line-clamp-2 text-lg font-extrabold tracking-tight text-foreground">
+          <h3
+            className={cn(
+              "line-clamp-2 font-extrabold tracking-tight text-foreground",
+              compact ? "text-base" : "text-lg",
+            )}
+          >
             {interventionLabel}
           </h3>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -100,12 +117,22 @@ export function RegistrationCard({ registration }: { registration: RegistrationC
         </div>
 
         {note ? (
-          <p className="line-clamp-2 rounded-[1rem] bg-surface-container-low px-3 py-2 text-sm text-muted-foreground">
+          <p
+            className={cn(
+              "line-clamp-2 rounded-[1rem] bg-surface-container-low px-3 text-muted-foreground",
+              compact ? "py-1.5 text-xs" : "py-2 text-sm",
+            )}
+          >
             <span className="italic">"{note}"</span>
           </p>
         ) : null}
 
-        <dl className="mt-auto grid grid-cols-1 gap-2 border-t border-border pt-3 text-sm">
+        <dl
+          className={cn(
+            "mt-auto grid grid-cols-1 border-t border-border text-sm",
+            compact ? "gap-1.5 pt-2" : "gap-2 pt-3",
+          )}
+        >
           <MetaRow icon="groups" label={teamLabel} />
           <MetaRow icon="event" label={formatDate(happenedOn)} />
         </dl>

@@ -1,4 +1,4 @@
-import { PublicDashboardView } from "@/components/public-dashboard-view";
+import { PublicSurface } from "@/components/public/public-surface";
 import { getPublicDashboardBySlug } from "@/lib/public-dashboard";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
@@ -6,7 +6,8 @@ import { notFound } from "next/navigation";
 type Params = Promise<{ slug: string }>;
 
 // Refresh the full page every 60s so the TV always shows live data.
-// We also hint the browser via a meta refresh as a belt-and-braces fallback.
+// We hint the browser via a meta refresh as a belt-and-braces fallback for
+// browsers that ignore Next.js revalidate semantics on long-lived kiosk tabs.
 export const revalidate = 60;
 
 export default async function TvScreen({ params }: { params: Params }) {
@@ -16,12 +17,9 @@ export default async function TvScreen({ params }: { params: Params }) {
   if (!dashboard) notFound();
 
   return (
-    <PublicDashboardView
-      categories={dashboard.categories}
-      mode="tv"
-      teams={dashboard.teams}
-      totals={dashboard.totals}
-      timeseries={dashboard.timeseries}
-    />
+    <>
+      <meta content="60" httpEquiv="refresh" />
+      <PublicSurface data={dashboard} mode="tv" />
+    </>
   );
 }

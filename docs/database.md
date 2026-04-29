@@ -12,6 +12,7 @@ Update dit document bij **elke migratie** (iedere nieuwe file in `supabase/sql/`
 | `supabase/sql/0004_public_dashboard_timeseries.sql` | Publieke weektijdreeks-view voor `/p`, `/tv`, `/embed` |
 | `supabase/sql/0005_registration_photos_storage.sql` | Idempotente reset van de `registrations`-bucket + storage-RLS (incl. superadmin) |
 | `supabase/sql/0006_org_profile.sql` | `organizations.description` + `organizations.logo_url` |
+| `supabase/sql/0007_public_recent_registrations.sql` | Publieke view voor recente registraties op `/tv` en `/embed` (incl. note + photo_path) |
 | `supabase/sql/9000_seed.sql` | Dev-seed: LEV Groep + 10 teams + 6 cat + 10 interventies |
 
 ## Schema (export)
@@ -149,6 +150,14 @@ Alle drie met `security_invoker = true`, `grant select to anon, authenticated`:
 - `public_dashboard_totals` — per org: `co2_saved_kg`, `registration_count`, `active_user_count` (via `app_public_org_active_user_count`: SECURITY DEFINER, zodat `anon` geen directe SELECT op `registrations.user_id` nodig heeft), `eod_days_gained` (= `min(365, round((co2/baseline)*365, 2))` of `null` als baseline ontbreekt).
 - `public_team_breakdown` — per org -> team: co2 + count.
 - `public_category_breakdown` — per org -> categorie: co2 + count + kleur.
+
+## Publieke view (0007) — recente registraties
+
+`public_recent_registrations` (`security_invoker = false`, `grant select to anon, authenticated`) is de bewuste uitzondering op de column-level revoke uit `0001_init.sql`: anon mag op de tabel `registrations` géén `note` of `photo_path` lezen, maar deze view exposeert ze wél, gefilterd op `o.public_share_enabled = true`.
+
+We draaien hem als security_definer (`security_invoker = false`) zodat de definer-privileges van de view-eigenaar de column-level revoke omzeilen, terwijl het rij-filter `o.public_share_enabled = true` als enige autorisatielaag fungeert. Foto's blijven storage-RLS-afgeschermd; signed URLs voor anon worden in de Next.js loader gegenereerd met de service-role key.
+
+Kolommen: `org_id, share_slug, registration_id, happened_on, created_at, quantity, note, photo_path, co2_kg_cached, intervention_name, intervention_unit, team_name, category_name, category_color`.
 
 ## Migrations (legacy veld, niet gebruikt)
 

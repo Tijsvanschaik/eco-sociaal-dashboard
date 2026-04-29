@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import type { TeamBreakdownRow } from "@/lib/dashboard";
 import { treesEquivalent } from "@/lib/impact";
+import { cn } from "@/lib/utils";
 
 const MAX_VISIBLE_TEAMS = 5;
 
@@ -28,7 +29,11 @@ function formatKg(kg: number): string {
 }
 
 export type ImpactOverviewCardProps = {
+  className?: string;
   eodDays: number;
+  fitToContainer?: boolean;
+  forceShowAllTeams?: boolean;
+  showTeamRanks?: boolean;
   teamBreakdown: TeamBreakdownRow[];
   periodLabel: string;
   registrationCount: number;
@@ -36,7 +41,11 @@ export type ImpactOverviewCardProps = {
 };
 
 export function ImpactOverviewCard({
+  className,
   eodDays,
+  fitToContainer = false,
+  forceShowAllTeams = false,
+  showTeamRanks = false,
   teamBreakdown,
   periodLabel,
   registrationCount,
@@ -45,9 +54,9 @@ export function ImpactOverviewCard({
   const [showAllTeams, setShowAllTeams] = useState(false);
 
   const visibleTeams = useMemo(() => {
-    if (showAllTeams) return teamBreakdown;
+    if (forceShowAllTeams || showAllTeams) return teamBreakdown;
     return teamBreakdown.slice(0, MAX_VISIBLE_TEAMS);
-  }, [teamBreakdown, showAllTeams]);
+  }, [forceShowAllTeams, teamBreakdown, showAllTeams]);
 
   const grandTotalKg = useMemo(
     () => teamBreakdown.reduce((sum, team) => sum + team.co2SavedKg, 0),
@@ -64,9 +73,18 @@ export function ImpactOverviewCard({
   return (
     <section
       aria-labelledby="impact-overview-heading"
-      className="relative overflow-hidden rounded-[2rem] bg-surface-container-low p-6 shadow-[0_20px_40px_rgba(54,50,45,0.04)] sm:p-10"
+      className={cn(
+        "relative overflow-hidden rounded-[2rem] bg-surface-container-low p-6 shadow-[0_20px_40px_rgba(54,50,45,0.04)] sm:p-10",
+        fitToContainer && "flex h-full min-h-0 flex-col",
+        className,
+      )}
     >
-      <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch lg:gap-12">
+      <div
+        className={cn(
+          "relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch lg:gap-12",
+          fitToContainer && "min-h-0 flex-1",
+        )}
+      >
         <ImpactHero
           eodDays={eodDays}
           hasData={hasData}
@@ -76,12 +94,13 @@ export function ImpactOverviewCard({
         />
         <TeamBreakdownPanel
           grandTotalKg={grandTotalKg}
-          hasMore={teamBreakdown.length > MAX_VISIBLE_TEAMS}
+          hasMore={!forceShowAllTeams && teamBreakdown.length > MAX_VISIBLE_TEAMS}
           teams={visibleTeams}
           maxTeamKg={maxTeamKg}
           onToggleShowAll={() => setShowAllTeams((value) => !value)}
           periodLabel={periodLabel}
           showAll={showAllTeams}
+          showRanks={showTeamRanks}
           totalTeamCount={teamBreakdown.length}
         />
       </div>
@@ -209,6 +228,7 @@ function TeamBreakdownPanel({
   onToggleShowAll,
   periodLabel,
   showAll,
+  showRanks,
   totalTeamCount,
 }: {
   grandTotalKg: number;
@@ -218,6 +238,7 @@ function TeamBreakdownPanel({
   onToggleShowAll: () => void;
   periodLabel: string;
   showAll: boolean;
+  showRanks: boolean;
   totalTeamCount: number;
 }) {
   return (
@@ -240,9 +261,15 @@ function TeamBreakdownPanel({
           impact per team.
         </p>
       ) : (
-        <ol className="flex flex-col gap-4">
-          {teams.map((team) => (
-            <TeamBar grandTotalKg={grandTotalKg} key={team.id} team={team} maxTeamKg={maxTeamKg} />
+        <ol className="flex min-h-0 flex-col gap-4">
+          {teams.map((team, index) => (
+            <TeamBar
+              grandTotalKg={grandTotalKg}
+              key={team.id}
+              maxTeamKg={maxTeamKg}
+              rank={showRanks ? index + 1 : undefined}
+              team={team}
+            />
           ))}
         </ol>
       )}
@@ -268,10 +295,12 @@ function TeamBar({
   grandTotalKg,
   team,
   maxTeamKg,
+  rank,
 }: {
   grandTotalKg: number;
   team: TeamBreakdownRow;
   maxTeamKg: number;
+  rank?: number;
 }) {
   const fillPercent = maxTeamKg > 0 ? (team.co2SavedKg / maxTeamKg) * 100 : 0;
   const sharePercent = grandTotalKg > 0 ? (team.co2SavedKg / grandTotalKg) * 100 : 0;
@@ -280,7 +309,14 @@ function TeamBar({
   return (
     <li className="space-y-2">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="truncate text-sm font-semibold text-foreground">{team.name}</span>
+        <span className="flex min-w-0 items-baseline gap-2 text-sm font-semibold text-foreground">
+          {rank ? (
+            <span className="flex-none text-xs font-extrabold text-primary">
+              #{integerFormatter.format(rank)}
+            </span>
+          ) : null}
+          <span className="truncate">{team.name}</span>
+        </span>
         <span className="flex-none text-xs font-semibold text-muted-foreground">
           {formatKg(team.co2SavedKg)} kg ·{" "}
           <span className="font-bold text-primary">

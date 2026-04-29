@@ -1,4 +1,4 @@
-import { PublicDashboardView } from "@/components/public-dashboard-view";
+import { PublicSurface } from "@/components/public/public-surface";
 import { getPublicDashboardBySlug } from "@/lib/public-dashboard";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
@@ -11,13 +11,5 @@ export default async function PublicShareLinkPage({ params }: { params: Params }
   const dashboard = await getPublicDashboardBySlug(supabase, slug);
   if (!dashboard) notFound();
 
-  return (
-    <PublicDashboardView
-      categories={dashboard.categories}
-      mode="public"
-      teams={dashboard.teams}
-      totals={dashboard.totals}
-      timeseries={dashboard.timeseries}
-    />
-  );
+  return <PublicSurface data={dashboard} mode="share" />;
 }
