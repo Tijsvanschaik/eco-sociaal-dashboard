@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { SuperadminResetRegistrationsPanel } from "@/components/superadmin-reset-registrations-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +10,13 @@ import { getSuperadminOrgOverview } from "@/lib/tenant-dashboard-data";
 type Params = Promise<{ orgId: string }>;
 
 function formatKg(value: number) {
+  return new Intl.NumberFormat("nl-NL", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: value >= 100 ? 0 : 1,
+  }).format(value);
+}
+
+function formatSocialScoreMetric(value: number) {
   return new Intl.NumberFormat("nl-NL", {
     maximumFractionDigits: 1,
     minimumFractionDigits: value >= 100 ? 0 : 1,
@@ -46,8 +54,12 @@ export default async function SuperadminOrgDetailPage({ params }: { params: Para
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         <MetricCard label="CO2 bespaard" value={`${formatKg(data.snapshot.totalCo2Kg)} kg`} />
+        <MetricCard
+          label="Sociale score"
+          value={formatSocialScoreMetric(data.snapshot.totalSocialScore)}
+        />
         <MetricCard label="Registraties" value={`${data.snapshot.registrationCount}`} />
         <MetricCard label="Actieve collega's" value={`${data.snapshot.activeUserCount}`} />
         <MetricCard label="EOD opgeschoven" value={`${data.snapshot.eodDays} dagen`} />
@@ -97,7 +109,10 @@ export default async function SuperadminOrgDetailPage({ params }: { params: Para
                       <p className="font-medium">{registration.interventionLabel}</p>
                       <p className="text-sm text-muted-foreground">{registration.teamLabel}</p>
                     </div>
-                    <p className="text-sm font-medium">{formatKg(registration.co2KgCached)} kg</p>
+                    <p className="text-sm font-medium text-right">
+                      {formatKg(registration.co2KgCached)} kg ·{" "}
+                      {formatSocialScoreMetric(registration.socialScoreCached)} score
+                    </p>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
                     {registration.quantity} op {registration.happenedOn}
@@ -120,6 +135,12 @@ export default async function SuperadminOrgDetailPage({ params }: { params: Para
           emptyText="Nog geen categoriedata beschikbaar."
           items={data.snapshot.categoryBreakdown}
           title="Per categorie"
+        />
+      </section>
+      <section>
+        <SuperadminResetRegistrationsPanel
+          orgId={data.org.id}
+          registrationCount={data.snapshot.registrationCount}
         />
       </section>
     </main>
@@ -148,6 +169,7 @@ function BreakdownCard({
     id: string;
     name: string;
     registrationCount: number;
+    socialScoreTotal: number;
   }>;
   title: string;
 }) {
@@ -171,7 +193,10 @@ function BreakdownCard({
                 <p className="font-medium">{item.name}</p>
               </div>
               <div className="text-right text-sm">
-                <p className="font-medium">{formatKg(item.co2SavedKg)} kg</p>
+                <p className="font-medium">
+                  {formatKg(item.co2SavedKg)} kg · {formatSocialScoreMetric(item.socialScoreTotal)}{" "}
+                  score
+                </p>
                 <p className="text-muted-foreground">{item.registrationCount} registraties</p>
               </div>
             </div>
