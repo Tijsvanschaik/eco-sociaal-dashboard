@@ -85,9 +85,15 @@
       `lib/dashboard.ts#teamBreakdown`, `treesEquivalent` in `lib/impact.ts`).
       Top-5 met inline "Toon alle teams"-expand. Vervangt de oude 4 metric
       cards + "Volgende stap"-kaart bovenaan.
-- [ ] Slice D (deel 2) - Bento-grid voor charts + activiteitenfeed stylen
+- [x] Slice D (deel 2, gedeeltelijk) - Dashboard charts + recente registraties
+      UX: categorie-donut met Eco/Sociaal-tabs, trendgrafiek met
+      Eco/Sociaal/Eco-sociaal-selector, impact-rotator met registratiefoto's,
+      registratiekaarten (kleuren, copy, notities, foto-placeholders). *(Zie
+      **Sessie 2026-05-21 (avond)**.)*
+- [ ] Slice D (deel 2, rest) - Bento-grid layout + activiteitenfeed-filters
 - [ ] Slice E - Registratie-pagina
-- [ ] Slice F - Instellingen
+- [x] Slice F - Instellingen (tabs: inline-edit tables/rijen, modals voor create,
+      gedeelde `components/settings/*`, full-width layout; zie **Sessie 2026-05-21 (instellingen)**)
 - [ ] Slice G - Superadmin-surfaces (content)
 - [x] Slice H - Publieke surfaces (`/p`, `/tv`, `/embed`): drie gedeelde
       slide-componenten, `KioskSlideshow` voor TV/embed-rotate, `KioskStack`
@@ -115,10 +121,8 @@
       `/instellingen -> Medewerkers -> Toevoegen` end-to-end valideren op dev
       (nieuwe e-mail ontvangt link, kan inloggen, ziet juiste org/rol, kan
       registreren). Nu nog niet expliciet getest sinds de settings-rework.
-- [ ] **Instellingen-UI/UX verfijnen**: tabs staan er, maar per tab nog polish
-      nodig (empty-states, bevestigingen na save, validatie-feedback inline,
-      betere copy, mobile layout, preview van logo/beschrijving zoals op het
-      publieke dashboard).
+- [ ] **Instellingen — resterende polish**: user-invite E2E, logo-upload-bucket
+      (zie openstaand), mobile layout nalopen op kleine schermen.
 - [ ] **Registration-filters implementeren**: `components/dashboard/registrations-filters.tsx`
       bestaat nog niet (werd voorheen leeg ingecheckt, nu verwijderd). Filters
       op team / categorie / periode voor de "Recente registraties"-lijst op
@@ -166,12 +170,88 @@
 - Orphan foto's in bucket `registrations` na bulk delete desgewenst opruimen.
 - FACTOR-herschaling LEV na harde databronnen (Milieu Centraal / gemeente).
 
+Intern dashboard (`internal-dashboard.tsx`) en publieke stack blijven slide 2 in **twee kolommen**.
+
+
+## Sessie 2026-05-21 (avond) — dashboard UX-polish (impact, charts, registraties)
+
+**Doel:** intern dashboard visueel en qua copy consistenter maken rond eco vs.
+sociaal (`kg CO₂` / `punten`), en registratiekaarten + impact-hero aantrekkelijker.
+
+### Impact-overzicht (`impact-overview-card.tsx`, `impact-story-rotator.tsx`, `lib/impact-stories.ts`)
+
+- Rotator uitgeknipt naar **`ImpactStoryRotator`**; verhalen via **`buildImpactStories`** (bomen, mensen bereikt, km vermeden).
+- Copy/fact-tiles: duidelijkere eco/sociale omschrijvingen; teamlegenda **`Sociaal · punten`**; per-team samenvatting onder balken verwijderd.
+- **Registratiefoto's** i.p.v. iconen in de rotator: **`attachStoryImages`** kiest uit recente registraties (eco-slides → hoogste CO₂, hearts → hoogste sociale score; fallback picsum-placeholder).
+- Layout-fix foto-thumb: **`absolute inset-0`** + **`max-h-[9.5rem]`** zodat grote picsum-afbeeldingen de hero niet meer opblazen.
+
+### Charts (`category-donut-chart.tsx`, `trend-area-chart.tsx`, `progress-slide.tsx`)
+
+- Categorie-donut: **Eco | Sociaal tabs** (één donut tegelijk), gesorteerde legende, center-label met eenheid eronder; responsive legende onder chart op smalle breedtes.
+- Trendgrafiek: **Eco | Sociaal | Eco-sociaal** (default beide lijnen); Y-as headroom; **`fillContainer`** zodat grafiek meegroeit met categoriekaart op dashboard/TV.
+- Subtitles aligned: cumulatieve kg CO₂ en sociale punten.
+
+### Recente registraties (`registration-card.tsx`, `registration-placeholder.tsx`, `registration-featured-hero.tsx`)
+
+- Eco/sociaal-kleuren gecorrigeerd (eco = groen/`tertiary`, sociaal = paars/`primary`); **`score` → `punten`**; sociaal-icoon **`favorite`** (consistent met rest van dashboard).
+- Impact-badges compacter (`w-fit`); notitieveld: geen clamp/quotes/cursief, meer padding; eenheden sentence case via **`formatRegistrationUnit`**.
+- Geen foto: **picsum-placeholder** per registratie-id i.p.v. abstracte SVG-vormen (`registrationPlaceholderPhotoUrl` + unit test).
+
+### Tests & status
+
+- Unit-suite: **111 tests groen** (`npm test`), incl. nieuwe **`impact-stories`**, **`registration-placeholder`**, **`category-donut-chart`** tests.
+**Gecommit** in `feat: inline-edit Instellingen tabs and polish dashboard UX` (2026-05-21).
+
+**Wat volgt (volgende sessie):**
+
+- Visueel nalopen impact-rotator thumb op verschillende breakpoints (grootte vs. tekstblok).
+- Optioneel: vaste lokale placeholder i.p.v. externe picsum (offline/CSP).
+- Slice D rest: bento-layout + **`registrations-filters`** (team/categorie/periode).
+
+## Sessie 2026-05-21 (instellingen) — tabs harmoniseren met inline-edit
+
+**Doel:** Instellingen consistent maken met click-to-edit (zoals Interventies), zonder statuskolom en zonder bulk submit-knoppen.
+
+### Gedeelde infrastructuur (`components/settings/`)
+
+- **`settings-styles.ts`**: gedeelde CSS-class constants.
+- **`editable-cells.tsx`**: `EditableTextCell`, `EditableTextareaCell`, `EditableSelectCell`, `EditableNumberCell`.
+- **`form-fields.tsx`**: `Field`, `FormSection`, `FormError`, `EmptyState`.
+- **`settings-ui.tsx`**: `SettingsSection`, `ConfirmArchiveModal`, `MemberCountBadge`, `getErrorMessage`.
+- **`components/ui/modal.tsx`**: gedeelde modal (sticky footer, backdrop blur).
+
+### Per tab
+
+| Tab | Component | Patroon |
+| --- | --- | --- |
+| Interventies | `interventions-tab.tsx` | Tabel + inline edit + modals create/delete |
+| Teams | `teams-tab.tsx` | Tabel + inline naam + modal create + archive |
+| Medewerkers | `members-tab.tsx` | Tabel + inline rol/team + modal provision + hard delete |
+| Algemeen | `general-tab.tsx` | Instellingen-rijen + inline save on blur + share-toggle |
+
+### Backend (`beheer/actions.ts`, `lib/admin-schema.ts`)
+
+- Teams: `updateTeam`, `archiveTeam` + `teamUpdateSchema`.
+- Medewerkers: `updateMembership`, `updateMemberTeam`, `removeMember` + guards (laatste admin).
+- Bestaande `updateOrgProfile` / `updateOrgSettings` hergebruikt vanuit client (FormData per veld).
+
+### Settings shell (`settings-page.tsx`)
+
+- Full-width layout; tab-nav zonder per-tab beschrijving.
+- Monolithische inline tabs/helpers verwijderd (~900 regels minder).
+
+### Tests
+
+- `interventions-tab`, `teams-tab`, `members-tab`, `general-tab` unit tests — **11 tests groen** op settings-tabs.
+
+**Wat volgt:** user-invite E2E; logo-upload-bucket; mobile layout Instellingen nalopen.
+
 ## Laatste sessie
 
-Datum: 2026-05-21  
-Wat gedaan: Impact-architectuur eco/sociaal gesplitst (`0009` + app + ADR 0008). Registratie vraagt nu eco-hoeveelheid en sociale hoeveelheid met labels per interventie. Dev gevuld met `seed-fake-data` (180 registraties op `lev-groep`).  
-Wat volgt: UI/visualisatie op nieuw model; `0009` uitrollen buiten dev; interventie-eenheden inhoudelijk afstemmen met LEV.  
-Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (workers:zelfde wachtwoord).
+Datum: 2026-05-21 (instellingen)  
+Wat gedaan: Instellingen volledig geharmoniseerd (4 tabs inline-edit) + dashboard UX-polish (charts, rotator, registratiekaarten). Unit tests groen.  
+Wat volgt: bento-grid + registratiefilters; rotator-thumb fine-tunen; user-invite E2E.  
+Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (workers: zelfde wachtwoord).
 
 ## Sessie 2026-04-21 (ochtend)
 

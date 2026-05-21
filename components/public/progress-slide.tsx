@@ -44,7 +44,7 @@ export function ProgressSlide({
         <DashboardPanel
           className="flex h-full min-h-0 flex-col rounded-[2rem] lg:min-h-0"
           contentClassName="mt-5 flex min-h-0 flex-1 flex-col"
-          description={`Cumulatieve CO₂-besparing en sociale score · ${periodLabel}`}
+          description={`Cumulatieve kg CO₂ en sociale punten · ${periodLabel}`}
           icon="trending_up"
           iconTone="tertiary"
           title={`Voortgang ${yearLabel}`}
@@ -56,17 +56,19 @@ export function ProgressSlide({
   }
 
   return (
-    <section className={cn("grid gap-6 lg:grid-cols-2")}>
+    <section className={cn("grid gap-6 lg:grid-cols-2 lg:items-stretch")}>
       <DashboardPanel
-        description={`Cumulatieve CO₂-besparing en sociale score · ${periodLabel}`}
+        className="flex h-full flex-col"
+        contentClassName="mt-5 flex min-h-0 flex-1 flex-col"
+        description={`Cumulatieve kg CO₂ en sociale punten · ${periodLabel}`}
         icon="trending_up"
         iconTone="tertiary"
         title={`Voortgang ${yearLabel}`}
       >
-        <TrendAreaChartBody cumulative data={timeseries} />
+        <TrendAreaChartBody cumulative data={timeseries} fillContainer />
       </DashboardPanel>
       <DashboardPanel
-        description="Aandeel per categorie: CO₂ (kg) en sociale score (eenheid vrij)"
+        description={`Verdeling per categorie · kg CO₂ en sociale punten · ${periodLabel}`}
         icon="donut_small"
         iconTone="primary"
         title="Impact per categorie"
@@ -81,6 +83,7 @@ export function ProgressSlide({
             registrationCount: item.registrationCount,
             eodDays: item.eodDays,
           }))}
+          periodLabel={periodLabel}
         />
       </DashboardPanel>
     </section>

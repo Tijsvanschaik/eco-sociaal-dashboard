@@ -7,29 +7,37 @@ import { TotalImpactSlide } from "@/components/public/total-impact-slide";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import type { DashboardSnapshot } from "@/lib/dashboard";
-import type { DashboardPeriod, WeeklyTimeseriesRow } from "@/lib/timeseries";
+import type { WeeklyTimeseriesRow } from "@/lib/timeseries";
+
+function toStoryPhotoSources(registrations: RegistrationCardData[]) {
+  return registrations.map(({ id, photoUrl, co2KgCached, socialScoreCached }) => ({
+    id,
+    photoUrl: photoUrl ?? null,
+    co2KgCached,
+    socialScoreCached,
+  }));
+}
 
 export function InternalDashboard({
   orgSlug,
   orgName,
-  period,
+  year,
   recentRegistrations,
   snapshot,
   timeseries,
 }: {
   orgSlug: string;
   orgName: string;
-  period: DashboardPeriod;
+  year: number;
   recentRegistrations: RegistrationCardData[];
   snapshot: DashboardSnapshot;
   timeseries: WeeklyTimeseriesRow[];
 }) {
-  const periodLabel =
-    period === "30d" ? "laatste 30 dagen" : period === "90d" ? "laatste 90 dagen" : "alle data";
+  const periodLabel = String(year);
 
   return (
     <main className="relative min-h-dvh w-full min-w-0 space-y-8 bg-[color-mix(in_srgb,var(--card)_92%,var(--background)_8%)] px-10 pt-6 pb-28 sm:pt-10 sm:pb-28 md:py-10">
-      <header className="w-full space-y-3 p-6 sm:p-10">
+      <header className="w-full space-y-3 px-6 sm:px-10">
         <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
           Welkom op het <span className="text-primary">{orgName}</span> impact dashboard
         </h1>
@@ -38,9 +46,18 @@ export function InternalDashboard({
         </p>
       </header>
 
-      <TotalImpactSlide periodLabel={periodLabel} snapshot={snapshot} />
+      <TotalImpactSlide
+        periodLabel={periodLabel}
+        snapshot={snapshot}
+        storyPhotoSources={toStoryPhotoSources(recentRegistrations)}
+      />
 
-      <ProgressSlide periodLabel={periodLabel} snapshot={snapshot} timeseries={timeseries} />
+      <ProgressSlide
+        periodLabel={periodLabel}
+        progressYear={year}
+        snapshot={snapshot}
+        timeseries={timeseries}
+      />
 
       <RecentRegistrationsSlide registrations={recentRegistrations} />
 

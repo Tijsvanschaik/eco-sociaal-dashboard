@@ -14,6 +14,10 @@ Eén `quantity` en één `unit` per interventie forceerden dezelfde telwijze voo
 - **Berekening:** `co2_kg_cached = quantity × co2_factor_kg`; `social_score_cached = social_quantity × social_score_factor`.
 - **Migratie:** bestaande registraties: `social_quantity = 0`, `social_score_cached = 0` (bewuste eenmalige breuk; reseed later).
 
+### Sociale score = gewogen bereik (dashboard-copy)
+
+`social_quantity` is in de praktijk het aantal personen/deelnemers. `social_score_factor` weegt de **sociale intensiteit** per interventie (bijv. 3× voor diep contact, 0,5× voor lichte betrokkenheid). De som `social_score_cached` tonen we in de UI als **harten bereikt** — geen unieke personen-telling, wel een consistente interne proxy. Zie [`docs/architecture.md`](../architecture.md#sociale-score-als-gewogen-bereik).
+
 ## Gevolgen
 
 - Enum `intervention_unit` blijft in de DB maar wordt niet meer gebruikt op `interventions` (kan later worden opgeruimd).

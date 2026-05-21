@@ -12,7 +12,7 @@ type Params = Promise<{ orgSlug: string }>;
 export default async function RegistratiePage({ params }: { params: Params }) {
   const { orgSlug } = await params;
   const supabase = await createClient();
-  const data = await getTenantDashboardData(supabase, orgSlug, "all");
+  const data = await getTenantDashboardData(supabase, orgSlug);
   if (!data) notFound();
 
   const canRegister = data.teams.length > 0 && data.interventions.length > 0;

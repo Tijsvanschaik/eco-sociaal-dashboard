@@ -6,9 +6,21 @@ export const teamSchema = z.object({
   name: z.string().trim().min(1, "Naam is verplicht.").max(80, "Naam is te lang."),
 });
 
+export const teamUpdateSchema = teamSchema.extend({
+  id: z.string().uuid("Ongeldig team."),
+});
+
 export const categorySchema = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Kies een geldige kleur."),
   name: z.string().trim().min(1, "Naam is verplicht.").max(80, "Naam is te lang."),
+});
+
+export const categoryUpdateSchema = categorySchema.extend({
+  id: z.string().uuid("Ongeldige categorie."),
+});
+
+export const archiveEntitySchema = z.object({
+  id: z.string().uuid("Ongeldige id."),
 });
 
 const unitLabelSchema = z
@@ -24,6 +36,10 @@ export const interventionSchema = z.object({
   name: z.string().trim().min(1, "Naam is verplicht.").max(80, "Naam is te lang."),
   socialScoreFactor: z.coerce.number().min(0, "Sociale score-factor mag niet negatief zijn."),
   socialUnit: unitLabelSchema,
+});
+
+export const interventionUpdateSchema = interventionSchema.extend({
+  id: z.string().uuid("Ongeldige interventie."),
 });
 
 export const orgProfileSchema = z.object({
@@ -62,6 +78,20 @@ export const orgSettingsSchema = z
       });
     }
   });
+
+export const membershipUpdateSchema = z.object({
+  role: z.enum(["admin", "worker"]),
+  userId: z.string().uuid("Ongeldige gebruiker."),
+});
+
+export const memberTeamUpdateSchema = z.object({
+  teamId: z.string().uuid("Kies een team."),
+  userId: z.string().uuid("Ongeldige gebruiker."),
+});
+
+export const removeMemberSchema = z.object({
+  userId: z.string().uuid("Ongeldige gebruiker."),
+});
 
 export const provisionUserSchema = z
   .object({

@@ -34,14 +34,14 @@ function makeTeam(
 }
 
 describe("<ImpactOverviewCard />", () => {
-  it("toont hero-datapunten en bars per team met categoriekleuren", () => {
+  it("toont hero-datapunten en eco/sociale teambalken", () => {
     render(
       <ImpactOverviewCard
         eodDays={5}
         registrationCount={42}
         totalCo2Kg={4_200}
         totalSocialScore={120}
-        periodLabel="laatste 90 dagen"
+        periodLabel="2026"
         teamBreakdown={[
           makeTeam(
             "team-a",
@@ -65,23 +65,19 @@ describe("<ImpactOverviewCard />", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /5\s*dagen gewonnen/i, level: 2 }),
+      screen.getByRole("heading", { name: /191\s*bomen geplant/i, level: 2 }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/4,2 ton/)).toBeInTheDocument();
-    expect(screen.getByText(/sociale score bij elkaar/i)).toBeInTheDocument();
+    expect(screen.getByText("Eco score")).toBeInTheDocument();
+    expect(screen.getByText("Sociale score")).toBeInTheDocument();
+    expect(screen.getByText(/Dit is de som van de CO2 impact/i)).toBeInTheDocument();
+    expect(screen.getByText(/Dit is de som van alle sociale impact/i)).toBeInTheDocument();
+    expect(screen.getByText("4.200")).toBeInTheDocument();
     expect(screen.getByText("LEV Helmond")).toBeInTheDocument();
     expect(screen.getByText("LEV Asten")).toBeInTheDocument();
-    expect(screen.getByText(/12\s*dagen/)).toBeInTheDocument();
-    expect(screen.getByText(/5\s*dagen/)).toBeInTheDocument();
-
-    const progressbars = screen.getAllByRole("progressbar");
-    const helmondBar = progressbars[0];
-    if (!helmondBar) throw new Error("progressbar missing");
-    expect(helmondBar.getAttribute("aria-valuenow")).toBe("71");
-
-    const bikeSegment = screen.getAllByTitle(/bike.*—/i)[0];
-    if (!bikeSegment) throw new Error("segment missing");
-    expect(bikeSegment.getAttribute("style")).toContain("rgb(59, 130, 246)");
+    expect(screen.getByTitle("3.000 kg CO₂")).toBeInTheDocument();
+    expect(screen.getByTitle("40 punten")).toBeInTheDocument();
+    expect(screen.getByText(/Eco · kg CO/i)).toBeInTheDocument();
+    expect(screen.getByText("Sociaal · punten")).toBeInTheDocument();
   });
 
   it("toont 'Toon alle'-knop pas bij meer dan 5 teams", () => {

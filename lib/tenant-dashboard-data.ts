@@ -4,12 +4,13 @@ import { getOrgContextBySlug } from "@/lib/organizations";
 import { REGISTRATIONS_BUCKET } from "@/lib/registrations/photo-upload";
 import type { createClient } from "@/lib/supabase/server";
 import {
-  type DashboardPeriod,
   type WeeklyCategoryTimeseriesRow,
   type WeeklyTimeseriesRow,
   buildWeeklyCategoryTimeseries,
   buildWeeklyTimeseries,
+  filterRegistrationsByCalendarYear,
   filterRegistrationsByPeriod,
+  getDashboardCalendarYear,
 } from "@/lib/timeseries";
 
 /** Hoe lang een signed URL geldig is. 1 uur dekt een gebruikssessie ruim. */
@@ -55,7 +56,7 @@ export type TenantDashboardData = {
   context: NonNullable<Awaited<ReturnType<typeof getOrgContextBySlug>>>;
   interventions: InterventionOption[];
   categoryTimeseries: WeeklyCategoryTimeseriesRow[];
-  period: DashboardPeriod;
+  year: number;
   recentRegistrations: RecentRegistration[];
   snapshot: DashboardSnapshot;
   teams: TeamOption[];
@@ -78,11 +79,11 @@ export type SuperadminOrgOverview = {
 export async function getTenantDashboardData(
   supabase: SupabaseServerClient,
   orgSlug: string,
-  period: DashboardPeriod,
 ): Promise<TenantDashboardData | null> {
   const context = await getOrgContextBySlug(supabase, orgSlug);
   if (!context) return null;
 
+  const year = getDashboardCalendarYear();
   const {
     interventions,
     categoryTimeseries,
@@ -91,13 +92,13 @@ export async function getTenantDashboardData(
     teams,
     teamMembershipIds,
     timeseries,
-  } = await loadOrgRows(supabase, context.org.id, period, context.userId);
+  } = await loadOrgRows(supabase, context.org.id, { userId: context.userId, year });
 
   return {
     context,
     interventions,
     categoryTimeseries,
-    period,
+    year,
     recentRegistrations,
     snapshot,
     teams:
@@ -136,9 +137,22 @@ export async function getSuperadminOrgOverview(
 async function loadOrgRows(
   supabase: SupabaseServerClient,
   orgId: string,
-  period: DashboardPeriod = "all",
-  userId?: string,
+  options: { period?: "30d" | "90d" | "all"; userId?: string; year?: number } = {},
 ) {
+  const { period = "all", userId, year } = options;
+  const yearStart = year !== undefined ? `${year}-01-01` : null;
+  const yearEnd = year !== undefined ? `${year}-12-31` : null;
+
+  let orgRegistrationsQuery = supabase
+    .from("registrations")
+    .select("team_id, intervention_id, user_id, co2_kg_cached, social_score_cached, happened_on")
+    .eq("org_id", orgId);
+  if (yearStart && yearEnd) {
+    orgRegistrationsQuery = orgRegistrationsQuery
+      .gte("happened_on", yearStart)
+      .lte("happened_on", yearEnd);
+  }
+
   const [
     { data: org },
     { data: teams },
@@ -167,11 +181,8 @@ async function loadOrgRows(
       .select("id, name, eco_unit, social_unit, co2_factor_kg, social_score_factor, category_id")
       .eq("org_id", orgId)
       .eq("is_archived", false),
-    supabase
-      .from("registrations")
-      .select("team_id, intervention_id, user_id, co2_kg_cached, social_score_cached, happened_on")
-      .eq("org_id", orgId),
-    buildRecentRegistrationsQuery(supabase, orgId),
+    orgRegistrationsQuery,
+    buildRecentRegistrationsQuery(supabase, orgId, year),
   ]);
 
   const categoryMap = new Map((categories ?? []).map((category) => [category.id, category]));
@@ -209,7 +220,10 @@ async function loadOrgRows(
   const filteredRegistrations = timeseriesRegistrations.filter(
     (registration) => registration.categoryId,
   );
-  const snapshotRegistrations = filterRegistrationsByPeriod(timeseriesRegistrations, { period });
+  const snapshotRegistrations =
+    year !== undefined
+      ? filterRegistrationsByCalendarYear(timeseriesRegistrations, year)
+      : filterRegistrationsByPeriod(timeseriesRegistrations, { period });
   const snapshot = buildDashboardSnapshot({
     baselineKg: org?.eod_baseline_kg ?? null,
     categories: categories ?? [],
@@ -231,10 +245,14 @@ async function loadOrgRows(
     quantity: 1,
     socialScoreCached: registration.socialScoreCached,
   }));
-  const timeseries = buildWeeklyTimeseries(timeseriesRegistrations, { period });
-  const categoryTimeseries = buildWeeklyCategoryTimeseries(chartRegistrations, categories ?? [], {
-    period,
-  });
+  const timeseries =
+    year !== undefined
+      ? buildWeeklyTimeseries(timeseriesRegistrations, { year })
+      : buildWeeklyTimeseries(timeseriesRegistrations, { period });
+  const categoryTimeseries =
+    year !== undefined
+      ? buildWeeklyCategoryTimeseries(chartRegistrations, categories ?? [], { year })
+      : buildWeeklyCategoryTimeseries(chartRegistrations, categories ?? [], { period });
 
   const photoUrlByPath = await resolvePhotoUrls(
     supabase,
@@ -277,15 +295,23 @@ async function loadOrgRows(
   };
 }
 
-function buildRecentRegistrationsQuery(supabase: SupabaseServerClient, orgId: string) {
-  return supabase
+function buildRecentRegistrationsQuery(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  year?: number,
+) {
+  let query = supabase
     .from("registrations")
     .select(
       "id, team_id, intervention_id, quantity, social_quantity, happened_on, note, photo_path, co2_kg_cached, social_score_cached",
     )
-    .eq("org_id", orgId)
-    .order("created_at", { ascending: false })
-    .limit(12);
+    .eq("org_id", orgId);
+
+  if (year !== undefined) {
+    query = query.gte("happened_on", `${year}-01-01`).lte("happened_on", `${year}-12-31`);
+  }
+
+  return query.order("created_at", { ascending: false }).limit(12);
 }
 
 /**

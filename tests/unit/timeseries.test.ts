@@ -32,6 +32,26 @@ describe("buildWeeklyTimeseries", () => {
     expect(buildWeeklyTimeseries([], { period: "all" })).toEqual([]);
   });
 
+  it("filters rows outside the selected calendar year", () => {
+    const result = buildWeeklyTimeseries(
+      [
+        { happenedOn: "2025-12-31", co2KgCached: 10, quantity: 1 },
+        { happenedOn: "2026-04-10", co2KgCached: 5, quantity: 1 },
+        { happenedOn: "2027-01-01", co2KgCached: 8, quantity: 1 },
+      ],
+      { year: 2026 },
+    );
+
+    expect(result).toEqual([
+      {
+        weekStart: "2026-04-06",
+        co2SavedKg: 5,
+        socialScoreSaved: 0,
+        registrationCount: 1,
+      },
+    ]);
+  });
+
   it("filters rows outside the selected 30 day period", () => {
     const result = buildWeeklyTimeseries(
       [

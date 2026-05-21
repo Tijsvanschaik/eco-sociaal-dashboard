@@ -2,9 +2,15 @@
 
 import { useMemo, useState } from "react";
 
+import { registrationPlaceholderPhotoUrl } from "@/components/dashboard/registration-placeholder";
+import { ImpactStoryRotator } from "@/components/dashboard/impact-story-rotator";
 import { Icon } from "@/components/ui/icon";
 import type { TeamBreakdownRow } from "@/lib/dashboard";
-import { treesEquivalent } from "@/lib/impact";
+import {
+  attachStoryImages,
+  buildImpactStories,
+  type ImpactStoryPhotoSource,
+} from "@/lib/impact-stories";
 import { cn } from "@/lib/utils";
 
 const MAX_VISIBLE_TEAMS = 5;
@@ -13,14 +19,6 @@ const MAX_VISIBLE_TEAMS = 5;
 const impactInsetPanelClassName = "rounded-[2rem] bg-card shadow-[0_20px_40px_rgba(54,50,45,0.04)]";
 
 const integerFormatter = new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 0 });
-
-function formatTons(kg: number): string {
-  const tons = kg / 1000;
-  return new Intl.NumberFormat("nl-NL", {
-    maximumFractionDigits: tons >= 10 ? 0 : 1,
-    minimumFractionDigits: tons >= 10 ? 0 : 1,
-  }).format(tons);
-}
 
 function formatKg(kg: number): string {
   return new Intl.NumberFormat("nl-NL", {
@@ -43,6 +41,7 @@ export type ImpactOverviewCardProps = {
   teamBreakdown: TeamBreakdownRow[];
   periodLabel: string;
   registrationCount: number;
+  storyPhotoSources?: ImpactStoryPhotoSource[];
   totalCo2Kg: number;
   totalSocialScore: number;
 };
@@ -56,6 +55,7 @@ export function ImpactOverviewCard({
   teamBreakdown,
   periodLabel,
   registrationCount,
+  storyPhotoSources = [],
   totalCo2Kg,
   totalSocialScore,
 }: ImpactOverviewCardProps) {
@@ -66,16 +66,15 @@ export function ImpactOverviewCard({
     return teamBreakdown.slice(0, MAX_VISIBLE_TEAMS);
   }, [forceShowAllTeams, teamBreakdown, showAllTeams]);
 
-  const grandTotalKg = useMemo(
-    () => teamBreakdown.reduce((sum, team) => sum + team.co2SavedKg, 0),
-    [teamBreakdown],
-  );
-  const maxTeamKg = useMemo(
-    () => teamBreakdown.reduce((max, team) => Math.max(max, team.co2SavedKg), 0),
+  const maxCombinedImpact = useMemo(
+    () =>
+      teamBreakdown.reduce(
+        (max, team) => Math.max(max, team.co2SavedKg + team.socialScoreTotal),
+        0,
+      ),
     [teamBreakdown],
   );
 
-  const trees = treesEquivalent(totalCo2Kg);
   const hasData =
     totalCo2Kg > 0 ||
     totalSocialScore > 0 ||
@@ -97,19 +96,16 @@ export function ImpactOverviewCard({
         )}
       >
         <ImpactHero
-          eodDays={eodDays}
           hasData={hasData}
-          registrationCount={registrationCount}
+          storyPhotoSources={storyPhotoSources}
           totalCo2Kg={totalCo2Kg}
           totalSocialScore={totalSocialScore}
-          trees={trees}
         />
         <TeamBreakdownPanel
           fitToContainer={fitToContainer}
-          grandTotalKg={grandTotalKg}
           hasMore={!forceShowAllTeams && teamBreakdown.length > MAX_VISIBLE_TEAMS}
+          maxCombinedImpact={maxCombinedImpact}
           teams={visibleTeams}
-          maxTeamKg={maxTeamKg}
           onToggleShowAll={() => setShowAllTeams((value) => !value)}
           periodLabel={periodLabel}
           showAll={showAllTeams}
@@ -122,20 +118,23 @@ export function ImpactOverviewCard({
 }
 
 function ImpactHero({
-  eodDays,
   hasData,
-  registrationCount,
+  storyPhotoSources,
   totalCo2Kg,
   totalSocialScore,
-  trees,
 }: {
-  eodDays: number;
   hasData: boolean;
-  registrationCount: number;
+  storyPhotoSources: ImpactStoryPhotoSource[];
   totalCo2Kg: number;
   totalSocialScore: number;
-  trees: number;
 }) {
+  const stories = useMemo(() => {
+    const built = buildImpactStories({ totalCo2Kg, totalSocialScore });
+    return attachStoryImages(built, storyPhotoSources, (registration) =>
+      registration.photoUrl ?? registrationPlaceholderPhotoUrl(registration.id),
+    );
+  }, [storyPhotoSources, totalCo2Kg, totalSocialScore]);
+
   return (
     <div className="flex min-h-0 flex-col gap-7 lg:h-full">
       <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
@@ -143,64 +142,40 @@ function ImpactHero({
       </span>
 
       <div>
-        <h2
-          id="impact-overview-heading"
-          className="text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl"
-        >
-          <span className="text-primary">{integerFormatter.format(eodDays)}</span>
-          <span className="ml-3 inline-block text-4xl font-extrabold text-foreground/90 sm:text-5xl">
-            {eodDays === 1 ? "dag" : "dagen"}
-          </span>
-          <span className="mt-2 block text-lg font-semibold text-muted-foreground sm:text-xl">
-            gewonnen voor Earth Overshoot Day
-          </span>
-        </h2>
-        <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
-          {hasData ? (
-            <>
-              Samen goed voor{" "}
-              <strong className="font-bold text-foreground">
-                {formatTons(totalCo2Kg)} ton CO<sub>2</sub>
-              </strong>{" "}
-              minder uitstoot
-              {totalSocialScore > 0 ? (
-                <>
-                  {" "}
-                  en{" "}
-                  <strong className="font-bold text-tertiary">
-                    {integerFormatter.format(Math.round(totalSocialScore))}
-                  </strong>{" "}
-                  sociale score bij elkaar
-                </>
-              ) : null}
-              .
-            </>
-          ) : (
-            <>
-              Zodra de eerste acties binnenrollen, zien jullie hier precies hoeveel dagen Earth
-              Overshoot Day is opgeschoven.
-            </>
-          )}
-        </p>
+        {hasData && stories.length > 0 ? (
+          <ImpactStoryRotator stories={stories} />
+        ) : (
+          <div className="min-h-[8.5rem] space-y-2 sm:min-h-[9rem]">
+            <h2
+              id="impact-overview-heading"
+              className="text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl"
+            >
+              Jullie impact in cijfers
+            </h2>
+            <p className="max-w-md text-base leading-relaxed text-muted-foreground">
+              {hasData
+                ? "Nog geen vertaling beschikbaar voor dit jaar — voeg registraties toe om bomen, harten en km te zien."
+                : "Zodra de eerste acties binnenrollen, wisselen we hier tussen bomen, harten bereikt en km autorijden vermeden."}
+            </p>
+          </div>
+        )}
       </div>
 
       <dl className="grid grid-cols-2 gap-4 pt-1 lg:mt-auto">
         <FactTile
-          icon="forest"
-          label="Eco-score"
-          sublabel="als bomen geplant · jaar opname"
+          description="Dit is de som van de CO2 impact van alle eco-sociale activiteiten."
+          icon="eco"
+          label="Eco score"
           tone="tertiary"
-          value={integerFormatter.format(trees)}
+          unit="kg CO₂"
+          value={formatKg(totalCo2Kg)}
         />
         <FactTile
-          icon="volunteer_activism"
+          description="Dit is de som van alle sociale impact van alle eco-sociale activiteiten."
+          icon="favorite"
           label="Sociale score"
-          sublabel={
-            registrationCount === 1
-              ? "uit 1 registratie samen"
-              : `uit ${integerFormatter.format(registrationCount)} registraties samen`
-          }
           tone="primary"
+          unit="punten"
           value={formatScore(totalSocialScore)}
         />
       </dl>
@@ -209,16 +184,18 @@ function ImpactHero({
 }
 
 function FactTile({
+  description,
   icon,
   label,
-  sublabel,
   tone,
+  unit,
   value,
 }: {
+  description: string;
   icon: string;
   label: string;
-  sublabel: string;
   tone: "primary" | "tertiary";
+  unit?: string;
   value: string;
 }) {
   const iconTone =
@@ -228,23 +205,30 @@ function FactTile({
 
   return (
     <div
-      className={`group relative flex flex-col gap-4 overflow-hidden p-5 transition-transform hover:-translate-y-0.5 ${impactInsetPanelClassName}`}
+      className={cn(
+        "group relative flex flex-col gap-3 overflow-hidden p-5 transition-transform hover:-translate-y-0.5",
+        impactInsetPanelClassName,
+      )}
     >
       <span
-        className={`inline-flex h-11 w-11 items-center justify-center rounded-[1rem] shadow-sm ${iconTone}`}
+        className={cn(
+          "inline-flex h-10 w-10 items-center justify-center rounded-[0.875rem] shadow-sm",
+          iconTone,
+        )}
       >
-        <Icon name={icon} filled className="text-2xl" />
+        <Icon name={icon} filled className="text-xl" />
       </span>
-      <div>
-        <dd className="text-3xl font-extrabold leading-none tracking-tight text-foreground sm:text-4xl">
-          {value}
-        </dd>
-        <dt className="mt-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
-          <span className="ml-1 font-medium normal-case tracking-normal text-muted-foreground/70">
-            · {sublabel}
-          </span>
-        </dt>
+      <div className="space-y-2">
+        <div className="flex items-baseline gap-1.5">
+          <dd className="text-3xl font-extrabold leading-none tracking-tight text-foreground sm:text-4xl">
+            {value}
+          </dd>
+          {unit ? (
+            <span className="text-sm font-semibold text-muted-foreground">{unit}</span>
+          ) : null}
+        </div>
+        <dt className="text-sm font-bold tracking-tight text-foreground">{label}</dt>
+        <p className="text-xs leading-relaxed text-muted-foreground/90">{description}</p>
       </div>
     </div>
   );
@@ -252,10 +236,9 @@ function FactTile({
 
 function TeamBreakdownPanel({
   fitToContainer = false,
-  grandTotalKg,
   hasMore,
+  maxCombinedImpact,
   teams,
-  maxTeamKg,
   onToggleShowAll,
   periodLabel,
   showAll,
@@ -263,10 +246,9 @@ function TeamBreakdownPanel({
   totalTeamCount,
 }: {
   fitToContainer?: boolean;
-  grandTotalKg: number;
   hasMore: boolean;
+  maxCombinedImpact: number;
   teams: TeamBreakdownRow[];
-  maxTeamKg: number;
   onToggleShowAll: () => void;
   periodLabel: string;
   showAll: boolean;
@@ -287,7 +269,7 @@ function TeamBreakdownPanel({
         <div className="min-w-0">
           <h3 className="text-xl font-extrabold tracking-tight text-foreground">Top teams</h3>
           <p className="mt-0.5 text-xs font-medium text-muted-foreground">
-            CO<sub>2</sub> en sociale score per team · {periodLabel}
+            kg CO<sub>2</sub> en sociale punten per team · {periodLabel}
           </p>
         </div>
       </div>
@@ -306,15 +288,27 @@ function TeamBreakdownPanel({
         >
           {teams.map((team, index) => (
             <TeamBar
-              grandTotalKg={grandTotalKg}
               key={team.id}
-              maxTeamKg={maxTeamKg}
+              maxCombinedImpact={maxCombinedImpact}
               rank={showRanks ? index + 1 : undefined}
               team={team}
             />
           ))}
         </ol>
       )}
+
+      {teams.length > 0 ? (
+        <div className="flex shrink-0 flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <Icon aria-hidden name="eco" filled className="text-sm text-tertiary" />
+            Eco · kg CO<sub>2</sub>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Icon aria-hidden name="favorite" filled className="text-sm text-primary" />
+            Sociaal · punten
+          </span>
+        </div>
+      ) : null}
 
       {hasMore ? (
         <button
@@ -334,70 +328,97 @@ function TeamBreakdownPanel({
 }
 
 function TeamBar({
-  grandTotalKg,
+  maxCombinedImpact,
   team,
-  maxTeamKg,
   rank,
 }: {
-  grandTotalKg: number;
+  maxCombinedImpact: number;
   team: TeamBreakdownRow;
-  maxTeamKg: number;
   rank?: number;
 }) {
-  const fillPercent = maxTeamKg > 0 ? (team.co2SavedKg / maxTeamKg) * 100 : 0;
-  const sharePercent = grandTotalKg > 0 ? (team.co2SavedKg / grandTotalKg) * 100 : 0;
-  const daysLabel = team.eodDays === 1 ? "dag" : "dagen";
+  const combined = team.co2SavedKg + team.socialScoreTotal;
+  const barWidthPercent =
+    maxCombinedImpact > 0 ? Math.min(100, (combined / maxCombinedImpact) * 100) : 0;
 
   return (
     <li className="space-y-2">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="flex min-w-0 items-baseline gap-2 text-sm font-semibold text-foreground">
-          {rank ? (
-            <span className="flex-none text-xs font-extrabold text-primary">
-              #{integerFormatter.format(rank)}
-            </span>
-          ) : null}
-          <span className="truncate">{team.name}</span>
-        </span>
-        <span className="flex-none text-xs font-semibold text-muted-foreground">
-          {formatKg(team.co2SavedKg)} kg · {formatScore(team.socialScoreTotal)} score ·{" "}
-          <span className="font-bold text-primary">
-            {integerFormatter.format(team.eodDays)} {daysLabel}
+      <div className="flex min-w-0 items-baseline gap-2 text-sm font-semibold text-foreground">
+        {rank ? (
+          <span className="flex-none text-xs font-extrabold text-primary">
+            #{integerFormatter.format(rank)}
           </span>
-        </span>
+        ) : null}
+        <span className="truncate">{team.name}</span>
       </div>
       <div
-        aria-label={`${team.name}: ${formatKg(team.co2SavedKg)} kilogram CO2 bespaard, ${formatScore(team.socialScoreTotal)} sociale score, ${integerFormatter.format(
-          team.eodDays,
-        )} ${daysLabel} gewonnen`}
-        aria-valuemax={100}
-        aria-valuemin={0}
-        aria-valuenow={Math.round(sharePercent)}
-        className="relative h-3.5 w-full overflow-hidden rounded-full bg-card shadow-[inset_0_1px_2px_rgba(54,50,45,0.04)]"
-        role="progressbar"
-        tabIndex={-1}
+        aria-label={`${team.name}: ${formatKg(team.co2SavedKg)} kilogram CO2, ${formatScore(team.socialScoreTotal)} sociale punten`}
+        className="relative h-6 w-full overflow-hidden rounded-full bg-card shadow-[inset_0_1px_2px_rgba(54,50,45,0.04)]"
+        role="img"
       >
-        {team.segments.length === 0 ? (
-          <div className="h-full rounded-full bg-primary" style={{ width: `${fillPercent}%` }} />
-        ) : (
-          <div className="flex h-full" style={{ width: `${fillPercent}%` }}>
-            {team.segments.map((segment) => {
-              const segmentWidth =
-                team.co2SavedKg > 0 ? (segment.co2SavedKg / team.co2SavedKg) * 100 : 0;
-              return (
-                <span
-                  key={segment.id}
-                  className="h-full first:rounded-l-full last:rounded-r-full"
-                  style={{ width: `${segmentWidth}%`, backgroundColor: segment.categoryColor }}
-                  title={`${segment.interventionName} (${segment.categoryName}) — ${formatKg(
-                    segment.co2SavedKg,
-                  )} kg · ${formatScore(segment.socialScoreTotal)} score`}
-                />
-              );
-            })}
+        {combined > 0 ? (
+          <div className="flex h-full min-w-0" style={{ width: `${barWidthPercent}%` }}>
+            {team.co2SavedKg > 0 ? (
+              <BarSegment
+                flexGrow={team.co2SavedKg}
+                icon="eco"
+                label={formatKg(team.co2SavedKg)}
+                roundedEnd={team.socialScoreTotal <= 0}
+                roundedStart
+                title={`${formatKg(team.co2SavedKg)} kg CO₂`}
+                tone="eco"
+              />
+            ) : null}
+            {team.socialScoreTotal > 0 ? (
+              <BarSegment
+                flexGrow={team.socialScoreTotal}
+                icon="favorite"
+                label={formatScore(team.socialScoreTotal)}
+                roundedEnd
+                roundedStart={team.co2SavedKg <= 0}
+                title={`${formatScore(team.socialScoreTotal)} punten`}
+                tone="social"
+              />
+            ) : null}
           </div>
-        )}
+        ) : null}
       </div>
     </li>
+  );
+}
+
+function BarSegment({
+  flexGrow,
+  icon,
+  label,
+  roundedEnd = false,
+  roundedStart = false,
+  title,
+  tone,
+}: {
+  flexGrow: number;
+  icon: string;
+  label: string;
+  roundedEnd?: boolean;
+  roundedStart?: boolean;
+  title: string;
+  tone: "eco" | "social";
+}) {
+  const toneClassName =
+    tone === "eco" ? "bg-tertiary text-tertiary-foreground" : "bg-primary text-primary-foreground";
+
+  return (
+    <span
+      className={cn(
+        "flex h-full min-w-[1.65rem] shrink-0 items-center justify-center gap-px overflow-hidden px-0.5 text-[8px] font-extrabold leading-none sm:min-w-[1.85rem] sm:gap-0.5 sm:text-[9px]",
+        toneClassName,
+        roundedStart && "rounded-l-full",
+        roundedEnd && "rounded-r-full",
+      )}
+      style={{ flex: `${flexGrow} 1 0%` }}
+      title={title}
+    >
+      <Icon aria-hidden name={icon} filled className="shrink-0 text-[5px] sm:text-[6px]" />
+      <span className="whitespace-nowrap">{label}</span>
+    </span>
   );
 }

@@ -136,18 +136,35 @@ export function AppSidebar({ brand, mainItems, cta, footerItems, mobileTitle }: 
         aria-label="Hoofdnavigatie"
         aria-expanded={!isCollapsed}
         className={cn(
-          "fixed top-0 left-0 z-30 hidden h-dvh flex-col overflow-y-auto rounded-r-2xl bg-surface-container-low shadow-[20px_0_40px_rgba(54,50,45,0.04)] transition-all duration-300 ease-in-out md:flex",
-          isCollapsed ? "w-[4.5rem] gap-4 p-3" : "w-72 gap-8 p-6",
+          "fixed top-0 left-0 z-30 hidden h-dvh flex-col rounded-r-2xl bg-surface-container-low shadow-[20px_0_40px_rgba(54,50,45,0.04)] transition-all duration-300 ease-in-out md:flex",
+          isCollapsed ? "w-[4.5rem]" : "w-72",
         )}
       >
-        <SidebarBody
-          brand={brand}
-          isCollapsed={isCollapsed}
-          mainItems={mainItems}
-          cta={cta}
-          footerItems={footerItems}
-          pathname={pathname}
-        />
+        {sidebar && (
+          <button
+            type="button"
+            onClick={sidebar.toggle}
+            aria-label={isCollapsed ? "Sidebar uitklappen" : "Sidebar inklappen"}
+            className="absolute top-1/2 right-0 z-40 inline-flex h-9 w-9 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-border/60 bg-card text-primary shadow-md transition hover:bg-card/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            <Icon name={isCollapsed ? "chevron_right" : "chevron_left"} />
+          </button>
+        )}
+        <div
+          className={cn(
+            "flex min-h-0 flex-1 flex-col overflow-y-auto",
+            isCollapsed ? "gap-4 p-3" : "gap-8 p-6",
+          )}
+        >
+          <SidebarBody
+            brand={brand}
+            isCollapsed={isCollapsed}
+            mainItems={mainItems}
+            cta={cta}
+            footerItems={footerItems}
+            pathname={pathname}
+          />
+        </div>
       </nav>
 
       {isCollapsed && cta && (
@@ -187,23 +204,8 @@ function SidebarBody({
   pathname,
   onNavigate,
 }: SidebarBodyProps) {
-  const sidebar = useSidebar();
-
   return (
     <>
-      <div className={cn("flex", isCollapsed ? "justify-center" : "justify-end")}>
-        {sidebar && (
-          <button
-            type="button"
-            onClick={sidebar.toggle}
-            aria-label={isCollapsed ? "Sidebar uitklappen" : "Sidebar inklappen"}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-card text-primary shadow-sm transition hover:bg-card/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          >
-            <Icon name={isCollapsed ? "chevron_right" : "chevron_left"} />
-          </button>
-        )}
-      </div>
-
       <div className={cn(isCollapsed && "flex justify-center")}>{brand}</div>
 
       <div className={cn("flex-1 space-y-2", isCollapsed ? "mt-2" : "mt-4")}>

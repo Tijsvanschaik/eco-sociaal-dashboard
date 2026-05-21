@@ -38,20 +38,43 @@ export function parseDashboardPeriod(value: string | undefined): DashboardPeriod
   return "90d";
 }
 
+/** Kalenderjaar voor het interne dashboard (UTC). Rolt automatisch over op 1 januari. */
+export function getDashboardCalendarYear(now: Date | string = new Date()): number {
+  const date = typeof now === "string" ? new Date(`${now}T12:00:00Z`) : now;
+  return date.getUTCFullYear();
+}
+
+export function isHappenedOnInCalendarYear(happenedOn: string, year: number): boolean {
+  const date = new Date(`${happenedOn}T12:00:00Z`);
+  if (Number.isNaN(date.getTime())) return false;
+  return date.getUTCFullYear() === year;
+}
+
+export function filterRegistrationsByCalendarYear<T extends { happenedOn: string }>(
+  registrations: T[],
+  year: number,
+): T[] {
+  return registrations.filter((registration) =>
+    isHappenedOnInCalendarYear(registration.happenedOn, year),
+  );
+}
+
 export function buildWeeklyTimeseries(
   registrations: WeeklyRegistration[],
   {
     now = new Date(),
-    period,
+    period = "all",
+    year,
   }: {
     now?: Date | string;
-    period: DashboardPeriod;
+    period?: DashboardPeriod;
+    year?: number;
   },
 ): WeeklyTimeseriesRow[] {
   if (registrations.length === 0) return [];
 
   const nowDate = typeof now === "string" ? new Date(`${now}T12:00:00Z`) : now;
-  const minDate = getMinDate(nowDate, period);
+  const minDate = year === undefined ? getMinDate(nowDate, period) : null;
   const rows = new Map<
     string,
     { co2SavedKg: number; registrationCount: number; socialScoreSaved: number }
@@ -60,6 +83,9 @@ export function buildWeeklyTimeseries(
   for (const registration of registrations) {
     const happenedOn = new Date(`${registration.happenedOn}T12:00:00Z`);
     if (Number.isNaN(happenedOn.getTime())) continue;
+    if (year !== undefined && !isHappenedOnInCalendarYear(registration.happenedOn, year)) {
+      continue;
+    }
     if (minDate && happenedOn < minDate) continue;
 
     const social = Number(registration.socialScoreCached ?? 0);
@@ -112,21 +138,26 @@ export function buildWeeklyCategoryTimeseries(
   categories: Category[],
   {
     now = new Date(),
-    period,
+    period = "all",
+    year,
   }: {
     now?: Date | string;
-    period: DashboardPeriod;
+    period?: DashboardPeriod;
+    year?: number;
   },
 ): WeeklyCategoryTimeseriesRow[] {
   if (registrations.length === 0 || categories.length === 0) return [];
 
   const nowDate = typeof now === "string" ? new Date(`${now}T12:00:00Z`) : now;
-  const minDate = getMinDate(nowDate, period);
+  const minDate = year === undefined ? getMinDate(nowDate, period) : null;
   const rows = new Map<string, WeeklyCategoryTimeseriesRow>();
 
   for (const registration of registrations) {
     const happenedOn = new Date(`${registration.happenedOn}T12:00:00Z`);
     if (Number.isNaN(happenedOn.getTime())) continue;
+    if (year !== undefined && !isHappenedOnInCalendarYear(registration.happenedOn, year)) {
+      continue;
+    }
     if (minDate && happenedOn < minDate) continue;
 
     const social = Number(registration.socialScoreCached ?? 0);

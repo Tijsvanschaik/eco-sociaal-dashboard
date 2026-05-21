@@ -14,8 +14,7 @@ Hosting: Vercel (app) + Supabase (DB/auth/storage).
 ## Route-structuur
 - `/` — dispatcher. Uitgelogd -> `/login`; ingelogd -> eerste org-dashboard of `/superadmin`.
 - `/login` — inlogpagina (magic-link + tijdelijke wachtwoordfallback).
-- `/(app)/[orgSlug]/dashboard` — read-only tenantoverzicht met KPI's, recente registraties en breakdowns.
-- `/(app)/[orgSlug]/dashboard?period=30d|90d|all` — zelfde dashboard met server-side periodefilter voor charts en KPI's.
+- `/(app)/[orgSlug]/dashboard` — read-only tenantoverzicht; KPI's en charts gefilterd op **huidig kalenderjaar** (`happened_on`).
 - `/(app)/[orgSlug]/registratie` — aparte registratieflow.
 - `/(app)/[orgSlug]/instellingen` — admin-only orgbeheer (voorheen `/beheer`).
 - `/superadmin` — platform-overzicht, read-only over alle tenants heen.
@@ -50,6 +49,27 @@ Per **registratie** (worker/admin):
 | `social_quantity` | Sociale hoeveelheid → `social_score_cached = social_quantity × social_score_factor` |
 
 Aggregaten (dashboard, TV, `/p`) sommeren de **cached** kolommen. Zie ADR [`docs/decisions/0008-eco-social-units-split.md`](decisions/0008-eco-social-units-split.md).
+
+### Sociale score als gewogen bereik
+
+In de praktijk telt `social_quantity` vrijwel altijd **personen of deelnemers**. De `social_score_factor` per interventie weegt **hoe sociaal intensief** die contacten zijn:
+
+- Diep / intens contact (bijv. taalbegeleiding 1-op-1) → hogere factor (bijv. **3**).
+- Veel mensen, lichtere betrokkenheid → lagere factor (bijv. **0,5**).
+
+Berekening per registratie: `social_score_cached = social_quantity × social_score_factor`.
+
+**Dashboard-copy:** de som van `social_score_cached` presenteren we als **“harten bereikt”** — een gewogen proxy voor bereik, geen letterlijke unieke personen-telling. Vergelijk ADR [`docs/decisions/0007-lev-intervention-impact-factors.md`](decisions/0007-lev-intervention-impact-factors.md) (schaalsysteem sociale score).
+
+### Impact-hero (rotatie)
+
+Het interne dashboard roteert linksboven tussen drie vertalingen (jaar-filter):
+
+1. **Bomen geplant** — `treesEquivalent(totalCo2Kg)` (~22 kg CO₂-opname per boom/jaar).
+2. **Harten bereikt** — `totalSocialScore` (afgerond).
+3. **Km autorijden vermeden** — `totalCo2Kg / 0,17` (indicatieve mobiliteits-proxy).
+
+Implementatie: `lib/impact-stories.ts`, `components/dashboard/impact-story-rotator.tsx`.
 
 ## Chart-architectuur
 - Intern dashboard: weekreeksen en stacked category-series worden server-side opgebouwd uit `registrations` via `lib/timeseries.ts`.

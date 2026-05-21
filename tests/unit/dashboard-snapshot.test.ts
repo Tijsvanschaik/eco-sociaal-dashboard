@@ -113,7 +113,7 @@ describe("buildDashboardSnapshot — teamBreakdown", () => {
     }
   });
 
-  it("sorteert teams van hoog naar laag op bespaarde CO2", () => {
+  it("sorteert teams van hoog naar laag op gecombineerde eco + sociale impact", () => {
     const snapshot = buildDashboardSnapshot({
       baselineKg: null,
       categories,
@@ -140,7 +140,7 @@ describe("buildDashboardSnapshot — teamBreakdown", () => {
     expect(snapshot.teamBreakdown.map((team) => team.name)).toEqual(["LEV Asten", "LEV Helmond"]);
   });
 
-  it("bij gelijke CO2 sorteert op hogere sociale score eerst", () => {
+  it("rankt teams met hogere gecombineerde score boven lagere CO2 wanneer sociaal zwaarder weegt", () => {
     const snapshot = buildDashboardSnapshot({
       baselineKg: null,
       categories,
@@ -151,8 +151,35 @@ describe("buildDashboardSnapshot — teamBreakdown", () => {
           teamId: "team-ast",
           interventionId: "int-bike",
           userId: "u1",
+          co2KgCached: 10,
+          socialScoreCached: 100,
+        },
+        {
+          teamId: "team-hel",
+          interventionId: "int-bike",
+          userId: "u2",
           co2KgCached: 50,
           socialScoreCached: 0,
+        },
+      ],
+    });
+
+    expect(snapshot.teamBreakdown.map((team) => team.name)).toEqual(["LEV Asten", "LEV Helmond"]);
+  });
+
+  it("bij gelijke gecombineerde score sorteert op hogere CO2 eerst", () => {
+    const snapshot = buildDashboardSnapshot({
+      baselineKg: null,
+      categories,
+      interventions,
+      teams,
+      registrations: [
+        {
+          teamId: "team-ast",
+          interventionId: "int-bike",
+          userId: "u1",
+          co2KgCached: 40,
+          socialScoreCached: 20,
         },
         {
           teamId: "team-hel",

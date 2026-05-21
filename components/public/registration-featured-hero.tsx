@@ -4,6 +4,7 @@ import {
   formatRegistrationDate,
   formatRegistrationQuantity,
   formatRegistrationSocialScore,
+  formatRegistrationUnit,
 } from "@/components/dashboard/registration-card";
 import { RegistrationPlaceholder } from "@/components/dashboard/registration-placeholder";
 import { Icon } from "@/components/ui/icon";
@@ -137,17 +138,21 @@ export function RegistrationFeaturedHero({
           </h4>
           <p
             className={cn(
-              "mt-2 font-semibold uppercase tracking-wider text-muted-foreground",
-              kiosk ? "text-sm lg:text-base xl:text-lg" : "text-sm",
+              "mt-2 text-sm font-medium text-muted-foreground lg:text-base xl:text-lg",
+              kiosk && "lg:text-base xl:text-lg",
             )}
           >
-            Eco: {formatRegistrationQuantity(quantity)}
-            {ecoUnit ? ` ${ecoUnit}` : ""}
+            <span className="font-semibold text-tertiary">Eco</span>
+            {" · "}
+            {formatRegistrationQuantity(quantity)}
+            {ecoUnit ? ` ${formatRegistrationUnit(ecoUnit)}` : ""}
             {socialQuantity > 0 ? (
               <>
-                {" · Sociaal: "}
+                {" · "}
+                <span className="font-semibold text-primary">Sociaal</span>
+                {" · "}
                 {formatRegistrationQuantity(socialQuantity)}
-                {socialUnit ? ` ${socialUnit}` : ""}
+                {socialUnit ? ` ${formatRegistrationUnit(socialUnit)}` : ""}
               </>
             ) : null}
           </p>
@@ -156,7 +161,7 @@ export function RegistrationFeaturedHero({
         <div className={cn("flex flex-wrap items-center gap-2", kiosk && "lg:gap-2.5 xl:gap-3")}>
           <span
             className={cn(
-              "inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-container font-extrabold text-primary shadow-sm",
+              "inline-flex max-w-full shrink-0 items-center gap-1 rounded-full bg-tertiary-container font-extrabold text-tertiary shadow-sm",
               kiosk
                 ? "px-3 py-1.5 text-sm lg:px-4 lg:py-2 lg:text-base xl:px-5 xl:text-[1.05rem]"
                 : "px-3 py-1.5 text-sm",
@@ -171,18 +176,18 @@ export function RegistrationFeaturedHero({
           </span>
           <span
             className={cn(
-              "inline-flex shrink-0 items-center gap-1 rounded-full bg-tertiary-container font-extrabold text-tertiary shadow-sm",
+              "inline-flex max-w-full shrink-0 items-center gap-1 rounded-full bg-primary-container font-extrabold text-primary shadow-sm",
               kiosk
                 ? "px-3 py-1.5 text-sm lg:px-4 lg:py-2 lg:text-base xl:px-5 xl:text-[1.05rem]"
                 : "px-3 py-1.5 text-sm",
             )}
           >
             <Icon
-              name="volunteer_activism"
+              name="favorite"
               filled
               className={cn("shrink-0", kiosk ? "text-base lg:text-lg" : "text-base")}
             />
-            {formatRegistrationSocialScore(socialScoreCached)} score
+            {formatRegistrationSocialScore(socialScoreCached)} punten
           </span>
         </div>
 
@@ -210,13 +215,13 @@ export function RegistrationFeaturedHero({
         {note ? (
           <p
             className={cn(
-              "rounded-[1rem] bg-surface-container-low italic leading-relaxed text-muted-foreground",
+              "rounded-[1rem] bg-surface-container-low leading-relaxed text-foreground",
               kiosk
                 ? "px-4 py-3 text-base lg:px-5 lg:py-4 lg:text-lg xl:text-xl xl:leading-relaxed"
                 : "px-4 py-3 text-base lg:text-lg",
             )}
           >
-            {`"${note}"`}
+            {note}
           </p>
         ) : null}
 

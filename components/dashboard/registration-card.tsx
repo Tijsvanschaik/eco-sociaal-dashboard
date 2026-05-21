@@ -49,6 +49,11 @@ export function formatRegistrationDate(isoDate: string): string {
   }).format(date);
 }
 
+export function formatRegistrationUnit(unit: string | null): string {
+  if (!unit) return "";
+  return unit.toLowerCase();
+}
+
 export function RegistrationCard({
   compact = false,
   registration,
@@ -107,17 +112,15 @@ export function RegistrationCard({
             <span className="truncate">{categoryName}</span>
           </span>
         ) : null}
-        <div className="absolute inset-x-4 top-4 z-10">
-          <div className="ml-auto flex max-w-full flex-col items-end gap-1.5 md:ml-0 md:w-full md:flex-row md:items-start md:justify-between md:gap-4">
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-sm font-extrabold text-primary shadow-sm backdrop-blur-sm">
-              <Icon name="eco" filled className="text-base shrink-0" />
-              {formatRegistrationCo2Kg(co2KgCached)} kg
-            </span>
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-sm font-extrabold text-tertiary shadow-sm backdrop-blur-sm">
-              <Icon name="volunteer_activism" filled className="text-base shrink-0" />
-              {formatRegistrationSocialScore(socialScoreCached)} score
-            </span>
-          </div>
+        <div className="absolute inset-x-3 bottom-3 z-10 flex items-start justify-between gap-2 sm:inset-x-4 sm:bottom-4 md:inset-x-4 md:bottom-auto md:top-4">
+          <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full bg-white/92 px-2.5 py-1 text-xs font-extrabold text-tertiary shadow-sm backdrop-blur-sm sm:px-3 sm:text-sm">
+            <Icon name="eco" filled className="shrink-0 text-sm sm:text-base" />
+            {formatRegistrationCo2Kg(co2KgCached)} kg
+          </span>
+          <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full bg-white/92 px-2.5 py-1 text-xs font-extrabold text-primary shadow-sm backdrop-blur-sm sm:px-3 sm:text-sm">
+            <Icon name="favorite" filled className="shrink-0 text-sm sm:text-base" />
+            {formatRegistrationSocialScore(socialScoreCached)} punten
+          </span>
         </div>
       </div>
 
@@ -131,16 +134,19 @@ export function RegistrationCard({
           >
             {interventionLabel}
           </h3>
-          <p className="mt-1 space-y-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <span>
-              Eco: {formatRegistrationQuantity(quantity)}
-              {ecoUnit ? ` ${ecoUnit}` : ""}
-            </span>
+          <p className="mt-1 text-xs text-muted-foreground">
+            <span className="font-semibold text-tertiary">Eco</span>
+            {" · "}
+            {formatRegistrationQuantity(quantity)}
+            {ecoUnit ? ` ${formatRegistrationUnit(ecoUnit)}` : ""}
             {socialQuantity > 0 ? (
-              <span className="block normal-case">
-                Sociaal: {formatRegistrationQuantity(socialQuantity)}
-                {socialUnit ? ` ${socialUnit}` : ""}
-              </span>
+              <>
+                {" · "}
+                <span className="font-semibold text-primary">Sociaal</span>
+                {" · "}
+                {formatRegistrationQuantity(socialQuantity)}
+                {socialUnit ? ` ${formatRegistrationUnit(socialUnit)}` : ""}
+              </>
             ) : null}
           </p>
         </div>
@@ -148,11 +154,11 @@ export function RegistrationCard({
         {note ? (
           <p
             className={cn(
-              "line-clamp-2 rounded-[1rem] bg-surface-container-low px-3 text-muted-foreground",
-              compact ? "py-1.5 text-xs" : "py-2 text-sm",
+              "rounded-[1rem] bg-surface-container-low px-3 text-foreground leading-relaxed",
+              compact ? "py-2.5 text-xs" : "py-3.5 text-sm",
             )}
           >
-            <span className="italic">{`"${note}"`}</span>
+            {note}
           </p>
         ) : null}
 

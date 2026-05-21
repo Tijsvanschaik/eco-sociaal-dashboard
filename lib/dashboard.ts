@@ -156,11 +156,15 @@ export function buildDashboardSnapshot({
     }
   }
 
+  const combinedImpact = (row: { co2SavedKg: number; socialScoreTotal: number }) =>
+    row.co2SavedKg + row.socialScoreTotal;
+
   const sortByImpact = <T extends { co2SavedKg: number; name: string; socialScoreTotal: number }>(
     rows: T[],
   ) =>
     rows.sort(
       (left, right) =>
+        combinedImpact(right) - combinedImpact(left) ||
         right.co2SavedKg - left.co2SavedKg ||
         right.socialScoreTotal - left.socialScoreTotal ||
         left.name.localeCompare(right.name, "nl"),
