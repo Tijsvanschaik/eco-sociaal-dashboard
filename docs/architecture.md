@@ -31,6 +31,26 @@ Hosting: Vercel (app) + Supabase (DB/auth/storage).
 ## Data flow
 User -> Server Action -> Zod -> Supabase (RLS) -> Postgres.
 
+## Impactmodel (eco + sociaal)
+
+Per **interventie** (admin in Instellingen):
+
+| Veld | Betekenis |
+| --- | --- |
+| `eco_unit` | Vrij tekstlabel voor eco-telling (bijv. `uur`, `km`) |
+| `co2_factor_kg` | kg CO₂ per eco-eenheid |
+| `social_unit` | Vrij tekstlabel voor sociale telling (bijv. `personen`) |
+| `social_score_factor` | Relatieve score per sociale eenheid |
+
+Per **registratie** (worker/admin):
+
+| Veld | Berekening |
+| --- | --- |
+| `quantity` | Eco-hoeveelheid → `co2_kg_cached = quantity × co2_factor_kg` |
+| `social_quantity` | Sociale hoeveelheid → `social_score_cached = social_quantity × social_score_factor` |
+
+Aggregaten (dashboard, TV, `/p`) sommeren de **cached** kolommen. Zie ADR [`docs/decisions/0008-eco-social-units-split.md`](decisions/0008-eco-social-units-split.md).
+
 ## Chart-architectuur
 - Intern dashboard: weekreeksen en stacked category-series worden server-side opgebouwd uit `registrations` via `lib/timeseries.ts`.
 - Publieke surfaces (`/p`, `/tv`, `/embed`) lezen via `lib/public-dashboard.ts` één gedeelde data-loader die totals (`public_dashboard_totals`), aggregaat-kolommen op `registrations`, `public_recent_registrations` en optioneel `public_dashboard_timeseries` combineert tot een `DashboardSnapshot` met dezelfde shape als het interne dashboard.

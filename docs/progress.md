@@ -17,8 +17,7 @@
       interventies, registraties + RLS-policies + storage bucket
 - [x] SQL `0002_views.sql`: `public_dashboard_totals`, `public_team_breakdown`,
       `public_category_breakdown` (security_invoker, grant anon)
-- [x] SQL `9000_seed.sql`: LEV Groep, 9 locaties, 4 teams Helmond,
-      6 categorieen, 10 interventies (CO2-factoren nog placeholder)
+- [x] SQL `9000_seed.sql`: LEV Groep dummy-stam (**zes klant-thema's**, alle interventies + factoren volgens ADR 0007); **destructief** voor slug `lev-groep` vóór re-seed (`0001`-`0008` ongewijzigd in deze sessie)
 - [x] Types gegenereerd en in `supabase/types/supabase.ts`
 - [x] Magic-link login (`/login`) + `/auth/callback` + `/auth/signout`
 - [x] `middleware.ts`: session refresh + auth-gate op tenant-routes +
@@ -95,6 +94,7 @@
       voor share/embed-stack. Embed configureerbaar via `?mode=`, `?screens=`,
       `?interval=`. Recente registraties via nieuwe SQL-view
       `public_recent_registrations` + service-role signed URLs voor foto's.
+      *(Zie **Sessie 2026-05-21** voor kiosk heroes, tap-navigatie en vh-fill op slides 1–2.)*
 
 ## Openstaand (later)
 
@@ -124,20 +124,54 @@
       op team / categorie / periode voor de "Recente registraties"-lijst op
       het interne dashboard.
 
+## Sessie 2026-05-16 — sociale score
+
+- **Schema / SQL**: nieuw [`supabase/sql/0008_social_score.sql`](supabase/sql/0008_social_score.sql) — `interventions.social_score_factor`, `registrations.social_score_cached`, anon-`grant` uitbreiding, `public_dashboard_*` + `public_dashboard_timeseries` + `public_recent_registrations` herddefiniëren. Standaard interventiefactoren in `9000_seed.sql` worden sinds mei 2026 door ADR 0007 voor LEV gevuld (eerdere korte placeholders uit Fase 1 zijn vervangen).
+- **App**: Zod + instellingen-formulier voor factor; registratie-actie berekent cached score; [`lib/dashboard.ts`](lib/dashboard.ts) + [`lib/timeseries.ts`](lib/timeseries.ts) aggregeren parallel aan CO₂; TV/share/intern dezelfde kaarten en grafieken (trend: tweede Y-as wanneer score > 0; donut: CO₂ + sociale score gestapeld).
+- **Volgende stap**: draai **`0008`** op elke Supabase-omgeving; `npm run test:integration` opnieuw; eventueel types opnieuw exporteren uit dashboard en met handmatige patch vergelijken.
+
+## Sessie 2026-05-21 (middag) — eco/sociale eenheden split
+
+**Doel:** eco en sociaal onafhankelijk tellen — aparte eenheidslabels op interventie, aparte hoeveelheden op registratie.
+
+- **SQL** [`supabase/sql/0009_eco_social_units.sql`](../supabase/sql/0009_eco_social_units.sql):
+  - `interventions`: `eco_unit` + `social_unit` (vrije tekst, max. 40 tekens); kolom `unit` (enum) verwijderd.
+  - `registrations`: `social_quantity` naast `quantity` (eco); bestaande rijen: `social_quantity = 0`, `social_score_cached = 0` (bewuste eenmalige breuk).
+  - View `public_recent_registrations`: `intervention_eco_unit`, `intervention_social_unit`, `social_quantity` (drop + recreate i.p.v. `CREATE OR REPLACE` vanwege kolomvolgorde).
+  - Migratie-volgorde gefixt: view vóór `DROP unit`; `DROP VIEW` vóór nieuwe view-definitie.
+- **ADR** [`docs/decisions/0008-eco-social-units-split.md`](decisions/0008-eco-social-units-split.md).
+- **App**: registratieformulier (eco + sociale hoeveelheid); instellingen (vrije eco-/sociale eenheid + factoren); `lib/impact.ts`, Zod, server actions, publieke kaarten, demo-scripts (`insert-random-org-registrations`, `seed-demo-registrations`, `seed-fake-data`).
+- **Types**: `supabase/types/supabase.ts` handmatig gesynchroniseerd na `0009` (dashboard-regenerate niet nodig voor dev).
+- **Seed / dev-data**:
+  - [`9000_seed.sql`](../supabase/sql/9000_seed.sql) gebruikt `eco_unit` / `social_unit` (beide uit dezelfde seed-label tot admins ze splitsen).
+  - `npx tsx scripts/seed-fake-data.ts` → 180 registraties op `lev-groep` (10 teams, 33 interventies, dev-users `*@levdev.test`).
+- **Docs**: [`docs/database.md`](database.md) (schema + ERD), [`docs/medewerkers-registratie-eenheid.md`](medewerkers-registratie-eenheid.md) (twee hoeveelheden), [`docs/architecture.md`](architecture.md) (impactmodel).
+- **Tests**: unit-suite groen (`npm test`, `npm run typecheck`).
+- [x] **`0009`** gedraaid op dev (2026-05-21).
+
+**Wat volgt:** visualisatie/copy aanpassen aan het nieuwe model (aparte briefing); `0009` op staging/prod; per interventie eco/sociale eenheid finetunen in Instellingen (bijv. `uur` vs. `personen`).
+
+## Sessie 2026-05-21 — LEV-interventiemodel, demo-data, superadmin-reset
+
+**Context:** input van LEV (zes thema's + activiteitennamen); dev-omgeving op dummy na opnieuw gevuld.
+
+- **ADR + documentatie**: [`docs/decisions/0007-lev-intervention-impact-factors.md`](decisions/0007-lev-intervention-impact-factors.md) — methodiek voor CO₂- en sociale-scorefactoren per interventie-eenheid. [`docs/medewerkers-registratie-eenheid.md`](medewerkers-registratie-eenheid.md) — one-pager voor medewerkers (`uur`, `km`, `stuk`, `kg`).
+- **`9000_seed.sql`**: LEV-thema's als categorieën, alle interventies uit de klantenlijst + factoren uit ADR 0007. **Destructieve tenant-reset voor slug `lev-groep`** vóór opnieuw vullen (registrations, memberships, team_memberships, interventions, categories, teams); org-rij en overige tenants ongemoeid. Zie koptekst scripts + [`docs/database.md`](database.md).
+- **CLI-demo-registraties**: [`scripts/insert-random-org-registrations.ts`](../scripts/insert-random-org-registrations.ts) als gedeelde module; [`scripts/seed-demo-registrations.ts`](../scripts/seed-demo-registrations.ts) (`DEMO_ORG_SLUG`, `DEMO_COUNT`, `DEMO_WORKERS_ONLY`). `seed-fake-data.ts` refactor (strict `workersOnly` + géén impliciete teamkeuze). **Dummy-notities** zijn langere dagverslagen (pool met `null` voor variatie).
+- **Superadmin**: `app/superadmin/orgs/[orgId]/actions.ts` (`superadminClearOrgRegistrations`, alleen platform-admin, **service-role** delete). UI: [`components/superadmin-reset-registrations-panel.tsx`](../components/superadmin-reset-registrations-panel.tsx) op tenantdetail (**Gevarenzone**, twee stappen).
+- **Tests**: unit-suite (Vitest) op moment van werk groen gelaten bij wijzigingen.
+
+**Later / vrijwillig:**
+- Team **team_memberships** in Beheer vullen om demo-seeder zonder fallback (willekeurig lid×team) te kunnen draaien.
+- Orphan foto's in bucket `registrations` na bulk delete desgewenst opruimen.
+- FACTOR-herschaling LEV na harde databronnen (Milieu Centraal / gemeente).
+
 ## Laatste sessie
 
-Datum: 2026-04-21
-Wat gedaan: MVP-oppervlak gebouwd. Intern dashboard vervangt placeholder met
-registratieformulier, recente registraties en KPI/breakdown-kaarten. Nieuwe
-beheerpagina voor org-instellingen, locaties, teams, categorieen,
-interventies en gebruikers. Publieke share-link, TV en embed renderen nu live
-uit de public views. Unit/component tests toegevoegd; lint, typecheck en unit
-tests groen. CI draait nu ook Playwright smoke.
-Wat volgt: echte Supabase `.env.local` koppelen, `npm run test:integration`
-tegen dev draaien, Vercel deploy afronden en daarna een productie-check op
-share slug + embed whitelist doen.
-Blockers: nog geen echte `.env.local` / Vercel-config in deze repo-sessie, dus
-integratie-tests en live deploy zijn nog handmatige vervolgstappen.
+Datum: 2026-05-21  
+Wat gedaan: Impact-architectuur eco/sociaal gesplitst (`0009` + app + ADR 0008). Registratie vraagt nu eco-hoeveelheid en sociale hoeveelheid met labels per interventie. Dev gevuld met `seed-fake-data` (180 registraties op `lev-groep`).  
+Wat volgt: UI/visualisatie op nieuw model; `0009` uitrollen buiten dev; interventie-eenheden inhoudelijk afstemmen met LEV.  
+Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (workers:zelfde wachtwoord).
 
 ## Sessie 2026-04-21 (ochtend)
 
@@ -379,6 +413,39 @@ laten kijken naar slideshow-look op een echt TV-scherm + embed-querystring
 in het LEV-intranet uitproberen.
 
 
+## Sessie 2026-05-21 (TV/kiosk — hero-registraties, navigatie, vh-fill slides)
+
+Samenvatting om later aan te sluiten:
+
+### Recente registraties (`/tv`, `/embed?mode=rotate`)
+
+- **`PublicSurface`** split logische slide `3` naar **max. drie kiosk-slides** (top 3 registraties), elk **één featured hero**: 50/50 foto | tekst (`registration-featured-hero.tsx`, `recent-registration-featured-panel.tsx`).
+- Geen carousel-in-carousel: hoofdslideshow bevat gewoon meer slides na slide 2.
+- **`screens=` in querystring**: id `3` betekent op TV/rotate de **groep** van deze drie registratie-slides (`lib/embed/query-schema.ts`).
+- **`/p` en `/embed` (stack)** houden het **kaartenraster** (`RecentRegistrationsSlide`).
+
+### Kioskslideshow — interactie
+
+- **`kiosk-slideshow.tsx`**: onzichtbare **tap-zones** (links/rechts ~42%), **ArrowLeft/ArrowRight**, handmatig stappen **herstelt autoplay**. Prop **`interactive`**.
+
+### TV whitespaces / recent-hero polish
+
+- Geen **`max-w-[1500px]`** op TV-slides; **TV-padding** schaalt mee (`xl` / `2xl`).
+- Badge **Recente registraties** **linksboven op de foto**, zelfde opbouw als **`DashboardPanel`** (icoon + titel + ondertitel).
+- Tekstkolom kiosk: **gecentreerd**, strakke gaps; op grote schermen **grotere typo/padding** via `clamp` en extra breakpoints.
+
+### Slides 1 & 2 (alleen `expandRecent` = TV of embed-rotate)
+
+- Slide 1: **`fitToContainer`** op **`ImpactOverviewCard`** + **`TotalImpactSlide`**-wrapper; **Top teams** scrollbaar bij lange lijsten (`TeamBreakdownPanel` + **`fitToContainer`**).
+- Slide 2: **`ProgressSlide`** met **`isKioskFullscreen`** — alleen trendgrafiek, **geen** categorie-donuts. **`TrendAreaChartBody`** met **`fillContainer`** voor **flex-hoogte**.
+
+### Kernbestanden
+
+`components/public/public-surface.tsx`, `kiosk-slideshow.tsx`, `progress-slide.tsx`, `total-impact-slide.tsx`, `registration-featured-hero.tsx`, `recent-registration-featured-panel.tsx`, `recent-registrations-slide.tsx`, `impact-overview-card.tsx`, `charts/trend-area-chart.tsx`, `lib/embed/query-schema.ts`, tests o.a. `kiosk-slideshow`, E2E public share.
+
+Intern dashboard (`internal-dashboard.tsx`) en publieke stack blijven slide 2 in **twee kolommen**.
+
+
 ## Tijdelijke auth-opmerking
 
 - [x] Tijdelijke wachtwoord-login toegevoegd op `/login` als fallback voor admins
@@ -395,4 +462,6 @@ in het LEV-intranet uitproberen.
 | `0005_registration_photos_storage.sql` | 2026-04-21 |  |  |
 | `0006_org_profile.sql` | 2026-04-21 |  |  |
 | `0007_public_recent_registrations.sql` |  |  |  |
-| `9000_seed.sql` | 2026-04-17 |  |  |
+| `0008_social_score.sql` |  |  |  |
+| `0009_eco_social_units.sql` | 2026-05-21 |  |  |
+| `9000_seed.sql` | 2026-05-21 (LEV-thema’s + destructive `lev-groep` reset; vereist `0009`) |  |  |
