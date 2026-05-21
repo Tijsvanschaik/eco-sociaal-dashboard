@@ -20,6 +20,21 @@ export function calculateCo2(quantity: number, factor: number): number {
   return roundToThousandths(quantity * factor);
 }
 
+/**
+ * Sociale score op registratie-niveau: sociale hoeveelheid × factor per
+ * sociale eenheid (ingesteld op de interventie). Zelfde afronding als CO₂.
+ */
+export function calculateSocialScore(quantity: number, factorPerUnit: number): number {
+  if (!Number.isFinite(quantity) || !Number.isFinite(factorPerUnit)) {
+    throw new Error("Quantity and factor must be finite numbers.");
+  }
+  if (quantity < 0 || factorPerUnit < 0) {
+    throw new Error("Quantity and factor cannot be negative.");
+  }
+
+  return roundToThousandths(quantity * factorPerUnit);
+}
+
 export function eodDaysGained(savedKg: number, baselineKg: number): number {
   if (!Number.isFinite(savedKg) || !Number.isFinite(baselineKg)) {
     throw new Error("Saved and baseline values must be finite numbers.");

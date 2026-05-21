@@ -6,11 +6,14 @@ type WeeklyRegistration = {
   co2KgCached: number;
   happenedOn: string;
   quantity?: number;
+  socialScoreCached?: number;
 };
 
 export type WeeklyTimeseriesRow = {
   co2SavedKg: number;
   registrationCount: number;
+  /** Eénheidloze sociale score (parallel aan co2KgCached voor de week). */
+  socialScoreSaved: number;
   weekStart: string;
 };
 
@@ -26,6 +29,7 @@ type CategoryRegistration = WeeklyRegistration & {
 
 export type WeeklyCategoryTimeseriesRow = {
   totalCo2SavedKg: number;
+  totalSocialScoreSaved: number;
   weekStart: string;
 } & Record<string, number | string>;
 
@@ -48,17 +52,26 @@ export function buildWeeklyTimeseries(
 
   const nowDate = typeof now === "string" ? new Date(`${now}T12:00:00Z`) : now;
   const minDate = getMinDate(nowDate, period);
-  const rows = new Map<string, { co2SavedKg: number; registrationCount: number }>();
+  const rows = new Map<
+    string,
+    { co2SavedKg: number; registrationCount: number; socialScoreSaved: number }
+  >();
 
   for (const registration of registrations) {
     const happenedOn = new Date(`${registration.happenedOn}T12:00:00Z`);
     if (Number.isNaN(happenedOn.getTime())) continue;
     if (minDate && happenedOn < minDate) continue;
 
+    const social = Number(registration.socialScoreCached ?? 0);
     const weekStart = toIsoDate(startOfIsoWeek(happenedOn));
-    const current = rows.get(weekStart) ?? { co2SavedKg: 0, registrationCount: 0 };
+    const current = rows.get(weekStart) ?? {
+      co2SavedKg: 0,
+      registrationCount: 0,
+      socialScoreSaved: 0,
+    };
 
     current.co2SavedKg += registration.co2KgCached;
+    current.socialScoreSaved += social;
     current.registrationCount += 1;
 
     rows.set(weekStart, current);
@@ -69,6 +82,7 @@ export function buildWeeklyTimeseries(
     .map(([weekStart, row]) => ({
       weekStart,
       co2SavedKg: roundToThousandths(row.co2SavedKg),
+      socialScoreSaved: roundToThousandths(row.socialScoreSaved),
       registrationCount: row.registrationCount,
     }));
 }
@@ -115,6 +129,7 @@ export function buildWeeklyCategoryTimeseries(
     if (Number.isNaN(happenedOn.getTime())) continue;
     if (minDate && happenedOn < minDate) continue;
 
+    const social = Number(registration.socialScoreCached ?? 0);
     const weekStart = toIsoDate(startOfIsoWeek(happenedOn));
     const current =
       rows.get(weekStart) ??
@@ -123,7 +138,11 @@ export function buildWeeklyCategoryTimeseries(
           accumulator[category.id] = 0;
           return accumulator;
         },
-        { weekStart, totalCo2SavedKg: 0 } as WeeklyCategoryTimeseriesRow,
+        {
+          weekStart,
+          totalCo2SavedKg: 0,
+          totalSocialScoreSaved: 0,
+        } as WeeklyCategoryTimeseriesRow,
       );
 
     current[registration.categoryId] = roundToThousandths(
@@ -132,6 +151,7 @@ export function buildWeeklyCategoryTimeseries(
     current.totalCo2SavedKg = roundToThousandths(
       current.totalCo2SavedKg + registration.co2KgCached,
     );
+    current.totalSocialScoreSaved = roundToThousandths(current.totalSocialScoreSaved + social);
 
     rows.set(weekStart, current);
   }

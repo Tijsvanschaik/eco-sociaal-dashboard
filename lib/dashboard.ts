@@ -20,6 +20,7 @@ type Intervention = {
 type Registration = {
   co2KgCached: number;
   interventionId: string;
+  socialScoreCached: number;
   teamId: string;
   userId: string;
 };
@@ -32,6 +33,7 @@ export type BreakdownRow = {
   /** Zelfde EOD-logica als teams: besparing t.o.v. org-baseline. */
   eodDays: number;
   registrationCount: number;
+  socialScoreTotal: number;
 };
 
 export type TeamBreakdownSegment = {
@@ -43,6 +45,7 @@ export type TeamBreakdownSegment = {
   categoryColor: string;
   co2SavedKg: number;
   registrationCount: number;
+  socialScoreTotal: number;
 };
 
 export type TeamBreakdownRow = {
@@ -54,10 +57,12 @@ export type TeamBreakdownRow = {
   eodDays: number;
   registrationCount: number;
   segments: TeamBreakdownSegment[];
+  socialScoreTotal: number;
 };
 
 export type DashboardSnapshot = {
   totalCo2Kg: number;
+  totalSocialScore: number;
   registrationCount: number;
   activeUserCount: number;
   eodDays: number;
@@ -82,7 +87,12 @@ export function buildDashboardSnapshot({
   const categoryMap = new Map(
     categories.map((category) => [
       category.id,
-      { ...category, co2SavedKg: 0, registrationCount: 0 },
+      {
+        ...category,
+        co2SavedKg: 0,
+        registrationCount: 0,
+        socialScoreTotal: 0,
+      },
     ]),
   );
   // Per team: totaal + segments per interventie (met kleur van bijbehorende
@@ -94,6 +104,7 @@ export function buildDashboardSnapshot({
         ...team,
         co2SavedKg: 0,
         registrationCount: 0,
+        socialScoreTotal: 0,
         segments: new Map<string, TeamBreakdownSegment>(),
       },
     ]),
@@ -101,27 +112,32 @@ export function buildDashboardSnapshot({
   const activeUsers = new Set<string>();
 
   let totalCo2Kg = 0;
+  let totalSocialScore = 0;
 
   for (const registration of registrations) {
     totalCo2Kg += registration.co2KgCached;
+    totalSocialScore += registration.socialScoreCached;
     activeUsers.add(registration.userId);
 
     const intervention = interventionMap.get(registration.interventionId);
     const category = intervention ? categoryMap.get(intervention.categoryId) : null;
     if (category) {
       category.co2SavedKg += registration.co2KgCached;
+      category.socialScoreTotal += registration.socialScoreCached;
       category.registrationCount += 1;
     }
 
     const team = teamMap.get(registration.teamId);
     if (team) {
       team.co2SavedKg += registration.co2KgCached;
+      team.socialScoreTotal += registration.socialScoreCached;
       team.registrationCount += 1;
 
       if (intervention && category) {
         const existing = team.segments.get(intervention.id);
         if (existing) {
           existing.co2SavedKg += registration.co2KgCached;
+          existing.socialScoreTotal += registration.socialScoreCached;
           existing.registrationCount += 1;
         } else {
           team.segments.set(intervention.id, {
@@ -132,6 +148,7 @@ export function buildDashboardSnapshot({
             categoryName: category.name,
             categoryColor: category.color,
             co2SavedKg: registration.co2KgCached,
+            socialScoreTotal: registration.socialScoreCached,
             registrationCount: 1,
           });
         }
@@ -139,14 +156,19 @@ export function buildDashboardSnapshot({
     }
   }
 
-  const sortByImpact = <T extends { co2SavedKg: number; name: string }>(rows: T[]) =>
+  const sortByImpact = <T extends { co2SavedKg: number; name: string; socialScoreTotal: number }>(
+    rows: T[],
+  ) =>
     rows.sort(
       (left, right) =>
-        right.co2SavedKg - left.co2SavedKg || left.name.localeCompare(right.name, "nl"),
+        right.co2SavedKg - left.co2SavedKg ||
+        right.socialScoreTotal - left.socialScoreTotal ||
+        left.name.localeCompare(right.name, "nl"),
     );
 
   return {
     totalCo2Kg: roundToThousandths(totalCo2Kg),
+    totalSocialScore: roundToThousandths(totalSocialScore),
     registrationCount: registrations.length,
     activeUserCount: activeUsers.size,
     eodDays: eodDaysGained(totalCo2Kg, baselineKg ?? 0),
@@ -154,17 +176,20 @@ export function buildDashboardSnapshot({
       id: team.id,
       name: team.name,
       co2SavedKg: roundToThousandths(team.co2SavedKg),
+      socialScoreTotal: roundToThousandths(team.socialScoreTotal),
       eodDays: eodDaysGained(team.co2SavedKg, baselineKg ?? 0),
       registrationCount: team.registrationCount,
       segments: Array.from(team.segments.values())
         .sort(
           (left, right) =>
             right.co2SavedKg - left.co2SavedKg ||
+            right.socialScoreTotal - left.socialScoreTotal ||
             left.interventionName.localeCompare(right.interventionName, "nl"),
         )
         .map((segment) => ({
           ...segment,
           co2SavedKg: roundToThousandths(segment.co2SavedKg),
+          socialScoreTotal: roundToThousandths(segment.socialScoreTotal),
         })),
     })),
     categoryBreakdown: sortByImpact(Array.from(categoryMap.values())).map((category) => ({
@@ -172,6 +197,7 @@ export function buildDashboardSnapshot({
       name: category.name,
       color: category.color,
       co2SavedKg: roundToThousandths(category.co2SavedKg),
+      socialScoreTotal: roundToThousandths(category.socialScoreTotal),
       eodDays: eodDaysGained(category.co2SavedKg, baselineKg ?? 0),
       registrationCount: category.registrationCount,
     })),

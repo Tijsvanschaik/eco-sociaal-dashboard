@@ -93,7 +93,9 @@ export async function getPublicDashboardBySlug(
     // betrouwbare waarde uit de totals-view.
     supabase
       .from("registrations")
-      .select("id, team_id, intervention_id, quantity, happened_on, co2_kg_cached")
+      .select(
+        "id, team_id, intervention_id, quantity, social_quantity, happened_on, co2_kg_cached, social_score_cached",
+      )
       .eq("org_id", orgId),
     supabase
       .from("public_recent_registrations")
@@ -126,6 +128,7 @@ export async function getPublicDashboardBySlug(
       // met de SECURITY-DEFINER-gestelde waarde uit de totals-view.
       userId: row.id,
       co2KgCached: Number(row.co2_kg_cached ?? 0),
+      socialScoreCached: Number(row.social_score_cached ?? 0),
       happenedOn: row.happened_on,
     }));
 
@@ -141,6 +144,7 @@ export async function getPublicDashboardBySlug(
       interventionId: registration.interventionId,
       userId: registration.userId,
       co2KgCached: registration.co2KgCached,
+      socialScoreCached: registration.socialScoreCached,
     })),
   });
   snapshot.activeUserCount = Number(totals.active_user_count ?? 0);
@@ -156,13 +160,16 @@ export async function getPublicDashboardBySlug(
     id: row.registration_id ?? "",
     interventionLabel: row.intervention_name ?? "Onbekende interventie",
     quantity: Number(row.quantity ?? 0),
-    unit: row.intervention_unit ?? null,
+    socialQuantity: Number(row.social_quantity ?? 0),
+    ecoUnit: row.intervention_eco_unit ?? null,
+    socialUnit: row.intervention_social_unit ?? null,
     note: row.note,
     photoUrl: row.photo_path ? (photoUrls.get(row.photo_path) ?? null) : null,
     teamLabel: row.team_name ?? "Onbekend team",
     categoryName: row.category_name,
     categoryColor: row.category_color,
     co2KgCached: Number(row.co2_kg_cached ?? 0),
+    socialScoreCached: Number(row.social_score_cached ?? 0),
     happenedOn: row.happened_on ?? "",
   }));
 
