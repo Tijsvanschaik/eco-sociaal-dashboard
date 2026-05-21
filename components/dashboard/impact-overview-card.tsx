@@ -28,6 +28,12 @@ function formatKg(kg: number): string {
   }).format(kg);
 }
 
+function formatScore(value: number): string {
+  return new Intl.NumberFormat("nl-NL", {
+    maximumFractionDigits: value >= 100 ? 0 : 1,
+  }).format(value);
+}
+
 export type ImpactOverviewCardProps = {
   className?: string;
   eodDays: number;
@@ -38,6 +44,7 @@ export type ImpactOverviewCardProps = {
   periodLabel: string;
   registrationCount: number;
   totalCo2Kg: number;
+  totalSocialScore: number;
 };
 
 export function ImpactOverviewCard({
@@ -50,6 +57,7 @@ export function ImpactOverviewCard({
   periodLabel,
   registrationCount,
   totalCo2Kg,
+  totalSocialScore,
 }: ImpactOverviewCardProps) {
   const [showAllTeams, setShowAllTeams] = useState(false);
 
@@ -68,7 +76,10 @@ export function ImpactOverviewCard({
   );
 
   const trees = treesEquivalent(totalCo2Kg);
-  const hasData = totalCo2Kg > 0 || teamBreakdown.some((t) => t.co2SavedKg > 0);
+  const hasData =
+    totalCo2Kg > 0 ||
+    totalSocialScore > 0 ||
+    teamBreakdown.some((t) => t.co2SavedKg > 0 || t.socialScoreTotal > 0);
 
   return (
     <section
@@ -90,9 +101,11 @@ export function ImpactOverviewCard({
           hasData={hasData}
           registrationCount={registrationCount}
           totalCo2Kg={totalCo2Kg}
+          totalSocialScore={totalSocialScore}
           trees={trees}
         />
         <TeamBreakdownPanel
+          fitToContainer={fitToContainer}
           grandTotalKg={grandTotalKg}
           hasMore={!forceShowAllTeams && teamBreakdown.length > MAX_VISIBLE_TEAMS}
           teams={visibleTeams}
@@ -113,18 +126,20 @@ function ImpactHero({
   hasData,
   registrationCount,
   totalCo2Kg,
+  totalSocialScore,
   trees,
 }: {
   eodDays: number;
   hasData: boolean;
   registrationCount: number;
   totalCo2Kg: number;
+  totalSocialScore: number;
   trees: number;
 }) {
   return (
     <div className="flex min-h-0 flex-col gap-7 lg:h-full">
       <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
-        <Icon name="insights" className="text-base" filled /> Totale impact
+        <Icon name="insights" className="text-base" filled /> Totale eco-sociale impact
       </span>
 
       <div>
@@ -147,7 +162,18 @@ function ImpactHero({
               <strong className="font-bold text-foreground">
                 {formatTons(totalCo2Kg)} ton CO<sub>2</sub>
               </strong>{" "}
-              minder uitstoot.
+              minder uitstoot
+              {totalSocialScore > 0 ? (
+                <>
+                  {" "}
+                  en{" "}
+                  <strong className="font-bold text-tertiary">
+                    {integerFormatter.format(Math.round(totalSocialScore))}
+                  </strong>{" "}
+                  sociale score bij elkaar
+                </>
+              ) : null}
+              .
             </>
           ) : (
             <>
@@ -161,17 +187,21 @@ function ImpactHero({
       <dl className="grid grid-cols-2 gap-4 pt-1 lg:mt-auto">
         <FactTile
           icon="forest"
-          label="Bomen equivalent"
-          sublabel="jaar opname"
+          label="Eco-score"
+          sublabel="als bomen geplant · jaar opname"
           tone="tertiary"
           value={integerFormatter.format(trees)}
         />
         <FactTile
           icon="volunteer_activism"
-          label="Sociale acties"
-          sublabel="registraties totaal"
+          label="Sociale score"
+          sublabel={
+            registrationCount === 1
+              ? "uit 1 registratie samen"
+              : `uit ${integerFormatter.format(registrationCount)} registraties samen`
+          }
           tone="primary"
-          value={integerFormatter.format(registrationCount)}
+          value={formatScore(totalSocialScore)}
         />
       </dl>
     </div>
@@ -221,6 +251,7 @@ function FactTile({
 }
 
 function TeamBreakdownPanel({
+  fitToContainer = false,
   grandTotalKg,
   hasMore,
   teams,
@@ -231,6 +262,7 @@ function TeamBreakdownPanel({
   showRanks,
   totalTeamCount,
 }: {
+  fitToContainer?: boolean;
   grandTotalKg: number;
   hasMore: boolean;
   teams: TeamBreakdownRow[];
@@ -242,15 +274,20 @@ function TeamBreakdownPanel({
   totalTeamCount: number;
 }) {
   return (
-    <div className={`flex h-full min-h-0 flex-col gap-5 p-6 sm:p-7 ${impactInsetPanelClassName}`}>
-      <div className="flex items-start gap-3">
+    <div
+      className={cn(
+        `flex h-full min-h-0 flex-col gap-5 p-6 sm:p-7 ${impactInsetPanelClassName}`,
+        fitToContainer && "overflow-hidden",
+      )}
+    >
+      <div className="flex shrink-0 items-start gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] bg-surface-container-high text-primary shadow-sm">
           <Icon name="groups" filled />
         </span>
         <div className="min-w-0">
           <h3 className="text-xl font-extrabold tracking-tight text-foreground">Top teams</h3>
           <p className="mt-0.5 text-xs font-medium text-muted-foreground">
-            CO<sub>2</sub>-besparing per team · {periodLabel}
+            CO<sub>2</sub> en sociale score per team · {periodLabel}
           </p>
         </div>
       </div>
@@ -261,7 +298,12 @@ function TeamBreakdownPanel({
           impact per team.
         </p>
       ) : (
-        <ol className="flex min-h-0 flex-col gap-4">
+        <ol
+          className={cn(
+            "flex min-h-0 flex-col gap-4",
+            fitToContainer && "min-h-0 flex-1 overflow-y-auto overscroll-y-contain pr-1",
+          )}
+        >
           {teams.map((team, index) => (
             <TeamBar
               grandTotalKg={grandTotalKg}
@@ -274,9 +316,9 @@ function TeamBreakdownPanel({
         </ol>
       )}
 
-      {hasMore && (
+      {hasMore ? (
         <button
-          className="group/toggle inline-flex items-center gap-1.5 self-start rounded-full bg-card px-4 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/5"
+          className="group/toggle inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-card px-4 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/5"
           onClick={onToggleShowAll}
           type="button"
         >
@@ -286,7 +328,7 @@ function TeamBreakdownPanel({
           />
           {showAll ? "Toon top 5" : `Toon alle ${integerFormatter.format(totalTeamCount)} teams`}
         </button>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -318,14 +360,14 @@ function TeamBar({
           <span className="truncate">{team.name}</span>
         </span>
         <span className="flex-none text-xs font-semibold text-muted-foreground">
-          {formatKg(team.co2SavedKg)} kg ·{" "}
+          {formatKg(team.co2SavedKg)} kg · {formatScore(team.socialScoreTotal)} score ·{" "}
           <span className="font-bold text-primary">
             {integerFormatter.format(team.eodDays)} {daysLabel}
           </span>
         </span>
       </div>
       <div
-        aria-label={`${team.name}: ${formatKg(team.co2SavedKg)} kilogram CO2 bespaard, ${integerFormatter.format(
+        aria-label={`${team.name}: ${formatKg(team.co2SavedKg)} kilogram CO2 bespaard, ${formatScore(team.socialScoreTotal)} sociale score, ${integerFormatter.format(
           team.eodDays,
         )} ${daysLabel} gewonnen`}
         aria-valuemax={100}
@@ -349,7 +391,7 @@ function TeamBar({
                   style={{ width: `${segmentWidth}%`, backgroundColor: segment.categoryColor }}
                   title={`${segment.interventionName} (${segment.categoryName}) — ${formatKg(
                     segment.co2SavedKg,
-                  )} kg`}
+                  )} kg · ${formatScore(segment.socialScoreTotal)} score`}
                 />
               );
             })}

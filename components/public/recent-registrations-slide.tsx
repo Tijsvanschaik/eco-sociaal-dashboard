@@ -9,15 +9,14 @@ import { cn } from "@/lib/utils";
 export type RecentRegistrationsSlideProps = {
   compactCards?: boolean;
   /**
-   * Hoeveel kaarten maximaal tonen. TV/desktop slideshow = 6 (3x2). Stack/embed
-   * = meer (default 9). Eventueel doorgeven door de page om tot het beschikbare
-   * datapakket in `lib/public-dashboard.ts` te beperken.
+   * Hoeveel kaarten maximaal tonen. Stack/share = beperkt tot N; default = alle
+   * geladen recente registraties uit `getPublicDashboardBySlug`.
    */
   limit?: number;
   registrations: RegistrationCardData[];
   /**
    * Grid-classnames. Default = mobile-first responsive grid passend voor
-   * stack-modus. Pass voor TV / fullscreen een vaste 3-koloms grid mee.
+   * stack-modus.
    */
   gridClassName?: string;
 };
@@ -26,11 +25,14 @@ const DEFAULT_GRID = "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3";
 
 /**
  * Slide 3: Recente registraties. Identieke kaarten als op het interne
- * dashboard zodat foto, categoriekleur en CO2-badge consistent zijn.
+ * dashboard zodat foto, categoriekleur en CO₂- + sociale score-badges consistent zijn.
  *
  * Foto's worden via service-role signed URLs aangeleverd door de loader; valt
  * de URL weg, dan toont `<RegistrationCard>` de gekleurde
  * `<RegistrationPlaceholder>` zoals overal elders.
+ *
+ * TV en `/embed?mode=rotate` gebruiken geen geneste carousel: `PublicSurface`
+ * splitst logische slide `3` daar in aparte kiosk-slides (max. 3 registraties).
  */
 export function RecentRegistrationsSlide({
   compactCards = false,
