@@ -6,6 +6,9 @@
  * bestaande users op e-mail en slaat registraties alleen aan wanneer er er
  * nog nauwelijks zijn.
  *
+ * Na een destructieve `9000_seed.sql`-run ontbreken memberships; dit script zet ze
+ * (opnieuw) en kan opnieuw een registratie-batch toevoegen.
+ *
  * Uitvoeren:
  *   npx tsx scripts/seed-fake-data.ts
  *
@@ -15,14 +18,15 @@
 import { createReadStream, existsSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { createClient } from "@supabase/supabase-js";
+
 import type { Database } from "../supabase/types/supabase";
+import { insertRandomOrgRegistrations } from "./insert-random-org-registrations";
 
 type UserRole = "admin" | "worker";
 
 const ORG_SLUG = "lev-groep";
 const DEFAULT_PASSWORD = "LevDev2026!";
 const REGISTRATION_TARGET = 180;
-const DAYS_BACK = 90;
 
 const FAKE_USERS: Array<{ email: string; name: string; role: UserRole }> = [
   { email: "anouk.admin@levdev.test", name: "Anouk Admin", role: "admin" },
@@ -59,47 +63,6 @@ function rand<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)] as T;
 }
 
-function randRange(min: number, max: number, step = 1): number {
-  const steps = Math.floor((max - min) / step) + 1;
-  return Number((min + Math.floor(Math.random() * steps) * step).toFixed(3));
-}
-
-function quantityForUnit(unit: string): number {
-  switch (unit) {
-    case "km":
-      return randRange(2, 45);
-    case "maaltijd":
-      return randRange(1, 3);
-    case "kwh":
-      return randRange(1, 12);
-    case "stuk":
-      return randRange(1, 6);
-    case "uur":
-      return randRange(1, 4, 0.5);
-    case "dag":
-      return randRange(1, 5);
-    case "kg":
-      return randRange(1, 10);
-    case "liter":
-      return randRange(1, 20);
-    default:
-      return 1;
-  }
-}
-
-function randomHappenedOn(): string {
-  const today = new Date();
-  today.setHours(12, 0, 0, 0);
-  const offset = Math.floor(Math.random() * DAYS_BACK);
-  const d = new Date(today);
-  d.setDate(d.getDate() - offset);
-  const day = d.getDay();
-  if ((day === 0 || day === 6) && Math.random() < 0.6) {
-    d.setDate(d.getDate() - (day === 0 ? 2 : 1));
-  }
-  return d.toISOString().slice(0, 10);
-}
-
 async function main(): Promise<void> {
   await loadEnvLocal();
 
@@ -128,27 +91,15 @@ async function main(): Promise<void> {
   }
   const orgId = org.id;
 
-  const [teamsRes, interventionsRes] = await Promise.all([
-    admin
-      .from("teams")
-      .select("id, name")
-      .eq("org_id", orgId)
-      .eq("is_archived", false)
-      .order("name"),
-    admin
-      .from("interventions")
-      .select("id, name, unit, co2_factor_kg")
-      .eq("org_id", orgId)
-      .eq("is_archived", false),
-  ]);
-  if (teamsRes.error) throw teamsRes.error;
-  if (interventionsRes.error) throw interventionsRes.error;
-  const teams = teamsRes.data ?? [];
-  const interventions = interventionsRes.data ?? [];
-  if (teams.length === 0 || interventions.length === 0) {
-    throw new Error("Geen teams of interventies gevonden. Draai eerst 9000_seed.sql.");
+  const { count: interventionCount } = await admin
+    .from("interventions")
+    .select("id", { count: "exact", head: true })
+    .eq("org_id", orgId)
+    .eq("is_archived", false);
+  const ic = interventionCount ?? 0;
+  if (ic === 0) {
+    throw new Error("Geen interventies gevonden. Draai eerst 9000_seed.sql.");
   }
-  console.log(`   ${teams.length} teams, ${interventions.length} interventies.`);
 
   console.log("→ Nep-users aanmaken / hergebruiken");
   const userIdsByEmail = new Map<string, string>();
@@ -211,6 +162,19 @@ async function main(): Promise<void> {
     user_id: string;
   }> = [];
 
+  const teamsRes = await admin
+    .from("teams")
+    .select("id, name")
+    .eq("org_id", orgId)
+    .eq("is_archived", false)
+    .order("name");
+  if (teamsRes.error) throw teamsRes.error;
+  const teams = teamsRes.data ?? [];
+  if (teams.length === 0) {
+    throw new Error("Geen teams gevonden. Draai eerst 9000_seed.sql.");
+  }
+  console.log(`   ${teams.length} teams, ${ic} interventies.`);
+
   for (const u of FAKE_USERS) {
     const userId = userIdsByEmail.get(u.email) as string;
     const assignCount = u.role === "admin" ? teams.length : Math.random() < 0.3 ? 2 : 1;
@@ -242,58 +206,11 @@ async function main(): Promise<void> {
     );
   } else {
     console.log(`→ ${REGISTRATION_TARGET} registraties genereren`);
-    const [tmListRes, memListRes] = await Promise.all([
-      admin.from("team_memberships").select("user_id, team_id").eq("org_id", orgId),
-      admin.from("memberships").select("user_id, role").eq("org_id", orgId),
-    ]);
-    if (tmListRes.error) throw tmListRes.error;
-    if (memListRes.error) throw memListRes.error;
-
-    const workerIds = new Set(
-      (memListRes.data ?? []).filter((m) => m.role === "worker").map((m) => m.user_id),
-    );
-    const workerAssignments = (tmListRes.data ?? []).filter((row) => workerIds.has(row.user_id));
-
-    if (workerAssignments.length === 0) {
-      throw new Error("Geen worker-toewijzingen gevonden.");
-    }
-
-    const notes = [
-      null,
-      null,
-      null,
-      "Op weg naar thuisbezoek",
-      "Samen met collega",
-      "Teamlunch",
-      "Buurtactiviteit",
-      "Groepje begeleid",
-      "Eigen initiatief",
-    ];
-
-    const rows = Array.from({ length: REGISTRATION_TARGET }, () => {
-      const assignment = rand(workerAssignments);
-      const intervention = rand(interventions);
-      const quantity = quantityForUnit(intervention.unit as string);
-      const co2 = Number((quantity * Number(intervention.co2_factor_kg)).toFixed(3));
-      return {
-        org_id: orgId,
-        team_id: assignment.team_id as string,
-        user_id: assignment.user_id as string,
-        intervention_id: intervention.id,
-        quantity,
-        happened_on: randomHappenedOn(),
-        note: rand(notes),
-        co2_kg_cached: co2,
-      };
+    await insertRandomOrgRegistrations(admin, orgId, REGISTRATION_TARGET, {
+      allowImplicitTeamPair: false,
+      workersOnly: true,
     });
-
-    const chunkSize = 60;
-    for (let i = 0; i < rows.length; i += chunkSize) {
-      const chunk = rows.slice(i, i + chunkSize);
-      const { error } = await admin.from("registrations").insert(chunk);
-      if (error) throw error;
-      console.log(`   ${Math.min(i + chunkSize, rows.length)}/${rows.length}`);
-    }
+    console.log(`   ${REGISTRATION_TARGET}/${REGISTRATION_TARGET}`);
   }
 
   console.log("\nKlaar.");
