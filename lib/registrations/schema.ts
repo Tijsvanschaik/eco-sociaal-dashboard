@@ -13,10 +13,16 @@ export const registrationSchema = z.object({
   interventionId: z.string().uuid("Kies een interventie."),
   quantity: z.coerce
     .number({
-      invalid_type_error: "Vul een hoeveelheid in.",
+      invalid_type_error: "Vul een eco-hoeveelheid in.",
     })
-    .positive("Hoeveelheid moet groter zijn dan 0.")
-    .max(1_000_000, "Hoeveelheid is te hoog."),
+    .positive("Eco-hoeveelheid moet groter zijn dan 0.")
+    .max(1_000_000, "Eco-hoeveelheid is te hoog."),
+  socialQuantity: z.coerce
+    .number({
+      invalid_type_error: "Vul een sociale hoeveelheid in.",
+    })
+    .positive("Sociale hoeveelheid moet groter zijn dan 0.")
+    .max(1_000_000, "Sociale hoeveelheid is te hoog."),
   happenedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Kies een geldige datum."),
   note: z
     .string()
@@ -38,6 +44,7 @@ export function registrationInputFromFormData(formData: FormData): RegistrationI
     teamId: formData.get("teamId"),
     interventionId: formData.get("interventionId"),
     quantity: formData.get("quantity"),
+    socialQuantity: formData.get("socialQuantity"),
     happenedOn: formData.get("happenedOn"),
     note: formData.get("note"),
     // FormData.get levert `null` als het veld ontbreekt; zod .optional accepteert

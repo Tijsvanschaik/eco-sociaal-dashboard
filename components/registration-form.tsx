@@ -49,7 +49,9 @@ type InterventionOption = {
   factorKg: number;
   id: string;
   name: string;
-  unit: string;
+  ecoUnit: string;
+  socialScoreFactor: number;
+  socialUnit: string;
 };
 
 type UiState =
@@ -97,6 +99,7 @@ export function RegistrationForm({
       note: "",
       photoPath: undefined,
       quantity: 0,
+      socialQuantity: 0,
       teamId: teams[0]?.id ?? "",
     }),
     [interventions, teams],
@@ -176,6 +179,7 @@ export function RegistrationForm({
       formData.set("teamId", values.teamId);
       formData.set("interventionId", values.interventionId);
       formData.set("quantity", String(values.quantity));
+      formData.set("socialQuantity", String(values.socialQuantity));
       formData.set("happenedOn", values.happenedOn);
       formData.set("note", values.note ?? "");
       if (values.photoPath) {
@@ -191,6 +195,7 @@ export function RegistrationForm({
           note: "",
           photoPath: undefined,
           quantity: 0,
+          socialQuantity: 0,
         });
         setPhoto({ status: "idle" });
         router.refresh();
@@ -229,7 +234,7 @@ export function RegistrationForm({
           )}
         />
 
-        {/* Stap 2 + 3 — hoeveelheid + wanneer (naast elkaar op desktop) */}
+        {/* Stap 2 — eco- en sociale hoeveelheid */}
         <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
           <FormField
             control={form.control}
@@ -238,32 +243,20 @@ export function RegistrationForm({
               <FormItem className="space-y-3">
                 <StepHeader
                   number={2}
-                  subtitle="Hoeveel van de activiteit heb je gedaan?"
-                  title="Hoeveel heb je hiervan gedaan?"
+                  subtitle="Hoeveelheid voor de CO₂-berekening van deze activiteit."
+                  title="Eco-hoeveelheid"
                 />
                 <FormControl>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      aria-label="Hoeveelheid"
-                      className={cn(
-                        "h-14 min-w-0 flex-1 text-2xl font-extrabold",
-                        inputSurfaceClassName,
-                      )}
-                      inputMode="decimal"
-                      min="0.001"
-                      step="0.001"
-                      type="number"
-                      {...field}
-                    />
-                    {selectedIntervention ? (
-                      <span className="flex min-w-[4rem] flex-col items-center justify-center px-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                        <span>{selectedIntervention.unit}</span>
-                        <span className="mt-0.5 text-xs font-medium normal-case text-muted-foreground/70">
-                          × {formatFactor(selectedIntervention.factorKg)} kg CO₂
-                        </span>
-                      </span>
-                    ) : null}
-                  </div>
+                  <QuantityWithUnitInput
+                    ariaLabel="Eco-hoeveelheid"
+                    factorHint={
+                      selectedIntervention
+                        ? `× ${formatFactor(selectedIntervention.factorKg)} kg CO₂`
+                        : undefined
+                    }
+                    unitLabel={selectedIntervention?.ecoUnit}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -272,11 +265,41 @@ export function RegistrationForm({
 
           <FormField
             control={form.control}
-            name="happenedOn"
+            name="socialQuantity"
             render={({ field }) => (
               <FormItem className="space-y-3">
                 <StepHeader
                   number={3}
+                  subtitle="Hoeveelheid voor de sociale score (kan afwijken van eco)."
+                  title="Sociale hoeveelheid"
+                />
+                <FormControl>
+                  <QuantityWithUnitInput
+                    ariaLabel="Sociale hoeveelheid"
+                    factorHint={
+                      selectedIntervention
+                        ? `× ${formatFactor(selectedIntervention.socialScoreFactor)} score`
+                        : undefined
+                    }
+                    unitLabel={selectedIntervention?.socialUnit}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Stap 4 — wanneer */}
+        <div className="max-w-md">
+          <FormField
+            control={form.control}
+            name="happenedOn"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <StepHeader
+                  number={4}
                   subtitle="Op welke datum is de activiteit uitgevoerd."
                   title="Wanneer?"
                 />
@@ -293,14 +316,14 @@ export function RegistrationForm({
           />
         </div>
 
-        {/* Stap 4 — team (alleen bij meerdere teams) */}
+        {/* Stap 5 — team (alleen bij meerdere teams) */}
         {teams.length > 1 ? (
           <FormField
             control={form.control}
             name="teamId"
             render={({ field }) => (
               <FormItem className="space-y-3">
-                <StepHeader number={4} title="Voor welk team?" />
+                <StepHeader number={5} title="Voor welk team?" />
                 <FormControl>
                   <div className="flex flex-wrap gap-2">
                     {teams.map((team) => {
@@ -344,7 +367,7 @@ export function RegistrationForm({
           render={({ field }) => (
             <FormItem className="space-y-3">
               <StepHeader
-                number={teams.length > 1 ? 5 : 4}
+                number={teams.length > 1 ? 6 : 5}
                 optional
                 title="Notitie"
                 subtitle="Deel kort wat je hebt gedaan of wat je opviel."
@@ -363,7 +386,7 @@ export function RegistrationForm({
 
         {/* Stap 6 / 5 — foto */}
         <PhotoField
-          number={teams.length > 1 ? 6 : 5}
+          number={teams.length > 1 ? 7 : 6}
           onChange={handlePhotoChange}
           onRemove={handleRemovePhoto}
           state={photo}
@@ -402,6 +425,49 @@ export function RegistrationForm({
         </div>
       </form>
     </Form>
+  );
+}
+
+function QuantityWithUnitInput({
+  ariaLabel,
+  factorHint,
+  onBlur,
+  onChange,
+  unitLabel,
+  value,
+}: {
+  ariaLabel: string;
+  factorHint?: string;
+  onBlur: () => void;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  unitLabel?: string;
+  value: number;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <Input
+        aria-label={ariaLabel}
+        className={cn("h-14 min-w-0 flex-1 text-2xl font-extrabold", inputSurfaceClassName)}
+        inputMode="decimal"
+        min="0.001"
+        name={ariaLabel}
+        onBlur={onBlur}
+        onChange={onChange}
+        step="0.001"
+        type="number"
+        value={Number.isFinite(value) && value > 0 ? value : ""}
+      />
+      {unitLabel ? (
+        <span className="flex min-w-[4rem] flex-col items-center justify-center px-2 text-center text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          <span>{unitLabel}</span>
+          {factorHint ? (
+            <span className="mt-0.5 block text-[0.68rem] font-medium normal-case tracking-normal leading-snug text-muted-foreground/80">
+              {factorHint}
+            </span>
+          ) : null}
+        </span>
+      ) : null}
+    </div>
   );
 }
 

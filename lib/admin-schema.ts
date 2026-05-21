@@ -11,11 +11,19 @@ export const categorySchema = z.object({
   name: z.string().trim().min(1, "Naam is verplicht.").max(80, "Naam is te lang."),
 });
 
+const unitLabelSchema = z
+  .string()
+  .trim()
+  .min(1, "Eenheid is verplicht.")
+  .max(40, "Eenheid is te lang (max. 40 tekens).");
+
 export const interventionSchema = z.object({
   categoryId: z.string().uuid("Kies een categorie."),
   co2FactorKg: z.coerce.number().min(0, "CO2-factor mag niet negatief zijn."),
+  ecoUnit: unitLabelSchema,
   name: z.string().trim().min(1, "Naam is verplicht.").max(80, "Naam is te lang."),
-  unit: z.enum(["kg", "km", "maaltijd", "kwh", "stuk", "uur", "liter", "dag"]),
+  socialScoreFactor: z.coerce.number().min(0, "Sociale score-factor mag niet negatief zijn."),
+  socialUnit: unitLabelSchema,
 });
 
 export const orgProfileSchema = z.object({

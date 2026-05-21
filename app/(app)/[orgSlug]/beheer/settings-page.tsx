@@ -81,7 +81,7 @@ export default async function SettingsPage({
         .order("name"),
       supabase
         .from("interventions")
-        .select("id, name, category_id, unit, co2_factor_kg")
+        .select("id, name, category_id, eco_unit, social_unit, co2_factor_kg, social_score_factor")
         .eq("org_id", context.org.id)
         .order("name"),
       supabase.from("memberships").select("user_id, role").eq("org_id", context.org.id),
@@ -651,11 +651,13 @@ function InterventionsTab({
   categories: Array<{ id: string; name: string; color: string }>;
   categoryMap: Map<string, { id: string; name: string; color: string }>;
   interventions: Array<{
+    category_id: string;
+    co2_factor_kg: number;
     id: string;
     name: string;
-    category_id: string;
-    unit: string;
-    co2_factor_kg: number;
+    social_score_factor: number;
+    eco_unit: string;
+    social_unit: string;
   }>;
   orgSlug: string;
 }) {
@@ -693,7 +695,7 @@ function InterventionsTab({
         </DashboardPanel>
 
         <DashboardPanel
-          description="Interventies zijn concrete acties met een CO2-factor per eenheid."
+          description="Interventies zijn concrete acties met aparte eco- en sociale eenheden plus factoren per eenheid."
           icon="eco"
           iconTone="tertiary"
           title="Nieuwe interventie"
@@ -716,21 +718,37 @@ function InterventionsTab({
                     value: category.id,
                   }))}
                 />
-                <SelectField
-                  emptyOption="Kies eenheid..."
-                  label="Eenheid"
-                  name="unit"
-                  options={["kg", "km", "maaltijd", "kwh", "stuk", "uur", "liter", "dag"].map(
-                    (unit) => ({ label: unit, value: unit }),
-                  )}
+                <Field
+                  helper="Label voor de eco-hoeveelheid bij registratie (bijv. uur, km, kg)."
+                  label="Eco-eenheid"
+                  name="ecoUnit"
+                  placeholder="uur"
+                  required
+                />
+                <Field
+                  helper="Label voor de sociale hoeveelheid bij registratie (bijv. personen, uur)."
+                  label="Sociale eenheid"
+                  name="socialUnit"
+                  placeholder="personen"
+                  required
                 />
               </div>
               <Field
-                helper="Hoeveel kg CO2 wordt bespaard per eenheid van deze interventie."
-                label="CO2-factor per eenheid"
+                helper="Hoeveel kg CO2 wordt bespaard per eco-eenheid."
+                label="CO2-factor per eco-eenheid"
                 min="0"
                 name="co2FactorKg"
                 placeholder="0.150"
+                required
+                step="0.001"
+                type="number"
+              />
+              <Field
+                helper="Relatieve score per sociale eenheid — jullie bepalen wat een punt inhoudt."
+                label="Sociale score-factor per sociale eenheid"
+                min="0"
+                name="socialScoreFactor"
+                placeholder="0"
                 required
                 step="0.001"
                 type="number"
@@ -773,9 +791,15 @@ function InterventionsTab({
                   <th className="px-3 pb-3 text-xs font-bold uppercase tracking-widest">
                     Categorie
                   </th>
-                  <th className="px-3 pb-3 text-xs font-bold uppercase tracking-widest">Eenheid</th>
+                  <th className="px-3 pb-3 text-xs font-bold uppercase tracking-widest">Eco-eenheid</th>
+                  <th className="px-3 pb-3 text-xs font-bold uppercase tracking-widest">
+                    Sociale eenheid
+                  </th>
                   <th className="px-3 pb-3 text-right text-xs font-bold uppercase tracking-widest">
-                    CO2 per eenheid
+                    CO2 / eco-eenheid
+                  </th>
+                  <th className="px-3 pb-3 text-right text-xs font-bold uppercase tracking-widest">
+                    Score / soc. eenheid
                   </th>
                 </tr>
               </thead>
@@ -822,7 +846,12 @@ function InterventionsTab({
                       </td>
                       <td className="px-3 py-4">
                         <span className="rounded-full bg-surface-container-high px-3 py-1 font-mono text-xs text-foreground">
-                          {intervention.unit}
+                          {intervention.eco_unit}
+                        </span>
+                      </td>
+                      <td className="px-3 py-4">
+                        <span className="rounded-full bg-surface-container-high px-3 py-1 font-mono text-xs text-foreground">
+                          {intervention.social_unit}
                         </span>
                       </td>
                       <td className="px-3 py-4 text-right">
@@ -830,7 +859,15 @@ function InterventionsTab({
                           {intervention.co2_factor_kg}
                         </span>
                         <span className="ml-1 text-xs text-muted-foreground">
-                          kg/{intervention.unit}
+                          kg/{intervention.eco_unit}
+                        </span>
+                      </td>
+                      <td className="px-3 py-4 text-right">
+                        <span className="font-mono text-sm font-bold text-foreground">
+                          {intervention.social_score_factor}
+                        </span>
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          score/{intervention.social_unit}
                         </span>
                       </td>
                     </tr>

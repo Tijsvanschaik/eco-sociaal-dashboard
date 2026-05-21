@@ -73,16 +73,20 @@ export async function createIntervention(orgSlug: string, formData: FormData) {
   const input = interventionSchema.parse({
     name: formData.get("name"),
     categoryId: formData.get("categoryId"),
-    unit: formData.get("unit"),
+    ecoUnit: formData.get("ecoUnit"),
+    socialUnit: formData.get("socialUnit"),
     co2FactorKg: formData.get("co2FactorKg"),
+    socialScoreFactor: formData.get("socialScoreFactor"),
   });
 
   await writer.from("interventions").insert({
     org_id: context.org.id,
     category_id: input.categoryId,
     name: input.name,
-    unit: input.unit,
+    eco_unit: input.ecoUnit,
+    social_unit: input.socialUnit,
     co2_factor_kg: input.co2FactorKg,
+    social_score_factor: input.socialScoreFactor,
   });
 
   revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);

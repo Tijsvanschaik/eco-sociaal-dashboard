@@ -29,7 +29,9 @@ export type InterventionOption = {
   factorKg: number;
   id: string;
   name: string;
-  unit: string;
+  ecoUnit: string;
+  socialScoreFactor: number;
+  socialUnit: string;
 };
 
 export type RecentRegistration = {
@@ -41,9 +43,12 @@ export type RecentRegistration = {
   interventionLabel: string;
   note: string | null;
   photoUrl: string | null;
+  ecoUnit: string | null;
   quantity: number;
+  socialQuantity: number;
+  socialScoreCached: number;
+  socialUnit: string | null;
   teamLabel: string;
-  unit: string | null;
 };
 
 export type TenantDashboardData = {
@@ -159,12 +164,12 @@ async function loadOrgRows(
       .eq("is_archived", false),
     supabase
       .from("interventions")
-      .select("id, name, unit, co2_factor_kg, category_id")
+      .select("id, name, eco_unit, social_unit, co2_factor_kg, social_score_factor, category_id")
       .eq("org_id", orgId)
       .eq("is_archived", false),
     supabase
       .from("registrations")
-      .select("team_id, intervention_id, user_id, co2_kg_cached, happened_on")
+      .select("team_id, intervention_id, user_id, co2_kg_cached, social_score_cached, happened_on")
       .eq("org_id", orgId),
     buildRecentRegistrationsQuery(supabase, orgId),
   ]);
@@ -179,8 +184,10 @@ async function loadOrgRows(
     return {
       id: intervention.id,
       name: intervention.name,
-      unit: intervention.unit,
+      ecoUnit: intervention.eco_unit,
+      socialUnit: intervention.social_unit,
       factorKg: intervention.co2_factor_kg,
+      socialScoreFactor: Number(intervention.social_score_factor ?? 0),
       categoryName: category?.name ?? "Onbekende categorie",
       categoryColor: category?.color ?? null,
       categoryId: intervention.category_id,
@@ -195,6 +202,7 @@ async function loadOrgRows(
       interventionId: registration.intervention_id,
       userId: registration.user_id,
       co2KgCached: registration.co2_kg_cached,
+      socialScoreCached: Number(registration.social_score_cached ?? 0),
       happenedOn: registration.happened_on,
       categoryId: interventionMap.get(registration.intervention_id)?.categoryId,
     })) ?? [];
@@ -211,6 +219,7 @@ async function loadOrgRows(
       interventionId: registration.interventionId,
       userId: registration.userId,
       co2KgCached: registration.co2KgCached,
+      socialScoreCached: registration.socialScoreCached,
     })),
     teams: teamRows,
   });
@@ -220,6 +229,7 @@ async function loadOrgRows(
     co2KgCached: registration.co2KgCached,
     happenedOn: registration.happenedOn,
     quantity: 1,
+    socialScoreCached: registration.socialScoreCached,
   }));
   const timeseries = buildWeeklyTimeseries(timeseriesRegistrations, { period });
   const categoryTimeseries = buildWeeklyCategoryTimeseries(chartRegistrations, categories ?? [], {
@@ -244,12 +254,15 @@ async function loadOrgRows(
         return {
           id: registration.id,
           quantity: registration.quantity,
+          socialQuantity: Number(registration.social_quantity ?? 0),
           happenedOn: registration.happened_on,
           note: registration.note,
           co2KgCached: registration.co2_kg_cached,
+          socialScoreCached: Number(registration.social_score_cached ?? 0),
           teamLabel: team?.name ?? "Onbekend team",
           interventionLabel: intervention?.name ?? "Onbekende interventie",
-          unit: intervention?.unit ?? null,
+          ecoUnit: intervention?.ecoUnit ?? null,
+          socialUnit: intervention?.socialUnit ?? null,
           categoryName: category?.name ?? null,
           categoryColor: category?.color ?? null,
           photoUrl: registration.photo_path
@@ -267,7 +280,9 @@ async function loadOrgRows(
 function buildRecentRegistrationsQuery(supabase: SupabaseServerClient, orgId: string) {
   return supabase
     .from("registrations")
-    .select("id, team_id, intervention_id, quantity, happened_on, note, photo_path, co2_kg_cached")
+    .select(
+      "id, team_id, intervention_id, quantity, social_quantity, happened_on, note, photo_path, co2_kg_cached, social_score_cached",
+    )
     .eq("org_id", orgId)
     .order("created_at", { ascending: false })
     .limit(12);

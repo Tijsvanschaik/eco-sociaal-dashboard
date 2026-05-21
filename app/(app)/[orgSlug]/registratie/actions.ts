@@ -1,6 +1,6 @@
 "use server";
 
-import { calculateCo2 } from "@/lib/impact";
+import { calculateCo2, calculateSocialScore } from "@/lib/impact";
 import { getOrgContextBySlug } from "@/lib/organizations";
 import { REGISTRATIONS_BUCKET } from "@/lib/registrations/photo-upload";
 import { registrationInputFromFormData } from "@/lib/registrations/schema";
@@ -39,7 +39,7 @@ export async function createRegistration(
 
     const { data: intervention } = await supabase
       .from("interventions")
-      .select("id, co2_factor_kg")
+      .select("id, co2_factor_kg, social_score_factor")
       .eq("org_id", context.org.id)
       .eq("id", input.interventionId)
       .eq("is_archived", false)
@@ -76,6 +76,10 @@ export async function createRegistration(
     }
 
     const co2KgCached = calculateCo2(input.quantity, intervention.co2_factor_kg);
+    const socialScoreCached = calculateSocialScore(
+      input.socialQuantity,
+      intervention.social_score_factor,
+    );
     const note = input.note?.trim() ? input.note : null;
 
     const { error } = await supabase.from("registrations").insert({
@@ -84,10 +88,12 @@ export async function createRegistration(
       intervention_id: input.interventionId,
       user_id: context.userId,
       quantity: input.quantity,
+      social_quantity: input.socialQuantity,
       happened_on: input.happenedOn,
       note,
       photo_path: input.photoPath ?? null,
       co2_kg_cached: co2KgCached,
+      social_score_cached: socialScoreCached,
     });
 
     if (error) {

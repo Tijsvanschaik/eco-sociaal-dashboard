@@ -11,25 +11,35 @@ export type RegistrationCardData = {
   interventionLabel: string;
   note: string | null;
   photoUrl?: string | null;
+  ecoUnit: string | null;
   quantity: number;
+  socialQuantity: number;
+  socialScoreCached: number;
+  socialUnit: string | null;
   teamLabel: string;
-  unit: string | null;
 };
 
-function formatKg(value: number): string {
+export function formatRegistrationCo2Kg(value: number): string {
   return new Intl.NumberFormat("nl-NL", {
     maximumFractionDigits: value >= 100 ? 0 : 1,
     minimumFractionDigits: value >= 100 ? 0 : 1,
   }).format(value);
 }
 
-function formatQuantity(value: number): string {
+export function formatRegistrationSocialScore(value: number): string {
+  return new Intl.NumberFormat("nl-NL", {
+    maximumFractionDigits: value >= 100 ? 0 : 1,
+    minimumFractionDigits: value >= 100 ? 0 : 1,
+  }).format(value);
+}
+
+export function formatRegistrationQuantity(value: number): string {
   return new Intl.NumberFormat("nl-NL", {
     maximumFractionDigits: value >= 10 ? 0 : 1,
   }).format(value);
 }
 
-function formatDate(isoDate: string): string {
+export function formatRegistrationDate(isoDate: string): string {
   const date = new Date(`${isoDate}T12:00:00Z`);
   if (Number.isNaN(date.getTime())) return isoDate;
   return new Intl.DateTimeFormat("nl-NL", {
@@ -55,9 +65,12 @@ export function RegistrationCard({
     interventionLabel,
     note,
     photoUrl,
+    ecoUnit,
     quantity,
+    socialQuantity,
+    socialScoreCached,
+    socialUnit,
     teamLabel,
-    unit,
   } = registration;
 
   return (
@@ -80,7 +93,7 @@ export function RegistrationCard({
         )}
         {categoryName ? (
           <span
-            className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1 text-xs font-bold uppercase tracking-wider text-foreground shadow-sm backdrop-blur-sm"
+            className="absolute left-4 top-4 z-10 md:bottom-4 md:top-auto inline-flex max-w-[calc(100%-2rem)] items-center gap-1.5 truncate rounded-full bg-white/85 px-3 py-1 text-xs font-bold uppercase tracking-wider text-foreground shadow-sm backdrop-blur-sm"
             style={{
               // subtiele tint naar de categoriekleur
               boxShadow: categoryColor ? `0 0 0 1px ${categoryColor}33` : undefined,
@@ -88,16 +101,24 @@ export function RegistrationCard({
           >
             <span
               aria-hidden
-              className="h-2 w-2 rounded-full"
+              className="h-2 w-2 shrink-0 rounded-full"
               style={{ backgroundColor: categoryColor ?? "var(--primary)" }}
             />
-            {categoryName}
+            <span className="truncate">{categoryName}</span>
           </span>
         ) : null}
-        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-sm font-extrabold text-primary shadow-sm backdrop-blur-sm">
-          <Icon name="eco" filled className="text-base" />
-          {formatKg(co2KgCached)} kg
-        </span>
+        <div className="absolute inset-x-4 top-4 z-10">
+          <div className="ml-auto flex max-w-full flex-col items-end gap-1.5 md:ml-0 md:w-full md:flex-row md:items-start md:justify-between md:gap-4">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-sm font-extrabold text-primary shadow-sm backdrop-blur-sm">
+              <Icon name="eco" filled className="text-base shrink-0" />
+              {formatRegistrationCo2Kg(co2KgCached)} kg
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-sm font-extrabold text-tertiary shadow-sm backdrop-blur-sm">
+              <Icon name="volunteer_activism" filled className="text-base shrink-0" />
+              {formatRegistrationSocialScore(socialScoreCached)} score
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className={cn("flex min-h-0 flex-1 flex-col", compact ? "gap-2 p-4" : "gap-3 p-5")}>
@@ -110,9 +131,17 @@ export function RegistrationCard({
           >
             {interventionLabel}
           </h3>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {formatQuantity(quantity)}
-            {unit ? ` ${unit}` : ""}
+          <p className="mt-1 space-y-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <span>
+              Eco: {formatRegistrationQuantity(quantity)}
+              {ecoUnit ? ` ${ecoUnit}` : ""}
+            </span>
+            {socialQuantity > 0 ? (
+              <span className="block normal-case">
+                Sociaal: {formatRegistrationQuantity(socialQuantity)}
+                {socialUnit ? ` ${socialUnit}` : ""}
+              </span>
+            ) : null}
           </p>
         </div>
 
@@ -123,7 +152,7 @@ export function RegistrationCard({
               compact ? "py-1.5 text-xs" : "py-2 text-sm",
             )}
           >
-            <span className="italic">"{note}"</span>
+            <span className="italic">{`"${note}"`}</span>
           </p>
         ) : null}
 
@@ -134,7 +163,7 @@ export function RegistrationCard({
           )}
         >
           <MetaRow icon="groups" label={teamLabel} />
-          <MetaRow icon="event" label={formatDate(happenedOn)} />
+          <MetaRow icon="event" label={formatRegistrationDate(happenedOn)} />
         </dl>
       </div>
     </article>
