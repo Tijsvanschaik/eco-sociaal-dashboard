@@ -20,7 +20,7 @@ export default async function RegistratiePage({ params }: { params: Params }) {
   return (
     <main className="min-h-dvh w-full min-w-0 space-y-8 bg-[color-mix(in_srgb,var(--card)_92%,var(--background)_8%)] px-10 py-6 sm:py-10">
       <div className="mx-auto w-full max-w-7xl space-y-8">
-        <header className="w-full space-y-3 p-10">
+        <header className="w-full space-y-3">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] bg-primary-container text-primary shadow-sm">
               <Icon name="favorite" filled className="text-xl" />

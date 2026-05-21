@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AppSidebar, type SidebarItem } from "@/components/app-shell/app-sidebar";
+import { AppSidebar, AppSidebarLayout, type SidebarItem } from "@/components/app-shell/app-sidebar";
 
 let currentPathname = "/lev-groep/dashboard";
 
@@ -109,5 +109,28 @@ describe("<AppSidebar />", () => {
     fireEvent.click(firstCloseButton);
 
     expect(screen.queryAllByRole("button", { name: /menu sluiten/i })).toHaveLength(0);
+  });
+
+  it("collapses the desktop sidebar and keeps the CTA accessible", () => {
+    render(
+      <AppSidebarLayout
+        brand={brand}
+        mainItems={mainItems}
+        footerItems={footerItems}
+        cta={{ label: "Nieuwe Registratie", href: "/lev-groep/registratie", icon: "add" }}
+      >
+        <p>content</p>
+      </AppSidebarLayout>,
+    );
+
+    const collapseButton = screen.getByRole("button", { name: /sidebar inklappen/i });
+    fireEvent.click(collapseButton);
+
+    expect(screen.getByRole("navigation", { name: /hoofdnavigatie/i })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.getByRole("button", { name: /sidebar uitklappen/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /nieuwe registratie/i }).length).toBeGreaterThan(0);
   });
 });

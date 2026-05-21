@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
-import { AppSidebar, type SidebarCta, type SidebarItem } from "./app-sidebar";
+import { AppSidebarLayout, type SidebarCta, type SidebarItem } from "./app-sidebar";
 import { OrgBadge } from "./org-badge";
 
-type Org = { id: string; name: string; slug: string };
+type Org = { id: string; name: string; slug: string; logoUrl?: string | null };
 
 type TenantAppShellProps = {
   org: Org;
@@ -70,17 +70,16 @@ export function TenantAppShell({
   footerItems.push({ kind: "form", label: "Uitloggen", action: "/auth/signout", icon: "logout" });
 
   return (
-    <div className="min-h-dvh bg-background md:pl-72">
-      <AppSidebar
-        mobileTitle={org.name}
-        brand={
-          <OrgBadge org={org} userDisplayName={userDisplayName} switchableOrgs={switchableOrgs} />
-        }
-        mainItems={mainItems}
-        cta={cta}
-        footerItems={footerItems}
-      />
+    <AppSidebarLayout
+      mobileTitle={org.name}
+      brand={
+        <OrgBadge org={org} userDisplayName={userDisplayName} switchableOrgs={switchableOrgs} />
+      }
+      mainItems={mainItems}
+      cta={cta}
+      footerItems={footerItems}
+    >
       {children}
-    </div>
+    </AppSidebarLayout>
   );
 }

@@ -1,7 +1,10 @@
+"use client";
+
 import { OrgSwitcher } from "@/components/org-switcher";
+import { useSidebar } from "@/components/app-shell/sidebar-context";
 import { cn } from "@/lib/utils";
 
-type Org = { id: string; name: string; slug: string };
+type Org = { id: string; name: string; slug: string; logoUrl?: string | null };
 
 type OrgBadgeProps = {
   org: Org;
@@ -12,33 +15,58 @@ type OrgBadgeProps = {
 };
 
 /**
- * Bovenin de sidebar. Toont een placeholder-logo (initialen op
- * primary-container) + organisatienaam + user-display. Als de user bij
- * meerdere orgs hoort verschijnt daaronder de compacte OrgSwitcher.
- *
- * TODO: vervang het initialen-blok door een echt org-logo zodra we
- * logo-upload naar Supabase Storage ondersteunen.
+ * Bovenin de sidebar. Toont het org-logo (of initialen als fallback),
+ * gebruikersnaam en organisatienaam. Als de user bij meerdere orgs hoort
+ * verschijnt daaronder de compacte OrgSwitcher.
  */
 export function OrgBadge({ org, userDisplayName, switchableOrgs, className }: OrgBadgeProps) {
+  const sidebar = useSidebar();
+  const isCollapsed = sidebar?.isCollapsed ?? false;
   const initials = getInitials(org.name);
   const showSwitcher = (switchableOrgs?.length ?? 0) > 1;
 
   return (
-    <div className={cn("flex flex-col items-center pt-6 pb-2 text-center", className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center text-center",
+        isCollapsed ? "pt-1 pb-0" : "pt-6 pb-2",
+        className,
+      )}
+    >
       <div
-        className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-container text-lg font-extrabold tracking-tight text-on-primary-container"
-        aria-hidden
+        className={cn(
+          "flex items-center justify-center overflow-hidden rounded-2xl",
+          isCollapsed ? "h-10 w-10" : "mb-4 h-16 w-16",
+          org.logoUrl
+            ? "bg-card shadow-sm"
+            : "bg-primary-container text-lg font-extrabold tracking-tight text-on-primary-container",
+        )}
+        aria-hidden={!org.logoUrl}
       >
-        {initials}
+        {org.logoUrl ? (
+          <img
+            alt={`Logo van ${org.name}`}
+            src={org.logoUrl}
+            className="h-full w-full object-contain p-2"
+          />
+        ) : (
+          initials
+        )}
       </div>
-      <h1 className="text-xl font-extrabold tracking-tight text-primary">{org.name}</h1>
-      <span className="mt-1 max-w-[12rem] truncate text-sm text-muted-foreground">
-        {userDisplayName}
-      </span>
-      {showSwitcher && (
-        <div className="mt-3">
-          <OrgSwitcher current={org} orgs={switchableOrgs ?? []} />
-        </div>
+      {!isCollapsed && (
+        <>
+          <h1 className="max-w-[12rem] truncate text-xl font-extrabold tracking-tight text-primary">
+            {userDisplayName}
+          </h1>
+          <span className="mt-1 max-w-[12rem] truncate text-sm text-muted-foreground">
+            {org.name}
+          </span>
+          {showSwitcher && (
+            <div className="mt-3">
+              <OrgSwitcher current={org} orgs={switchableOrgs ?? []} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

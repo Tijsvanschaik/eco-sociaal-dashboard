@@ -1,9 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
 
 import { Logo } from "@/components/brand/logo";
+import { useSidebar } from "@/components/app-shell/sidebar-context";
 import { cn } from "@/lib/utils";
 
-import { AppSidebar, type SidebarCta, type SidebarItem } from "./app-sidebar";
+import { AppSidebarLayout, type SidebarCta, type SidebarItem } from "./app-sidebar";
 
 type PlatformAppShellProps = {
   userDisplayName: string;
@@ -50,16 +53,15 @@ export function PlatformAppShell({
   footerItems.push({ kind: "form", label: "Uitloggen", action: "/auth/signout", icon: "logout" });
 
   return (
-    <div className="min-h-dvh bg-background md:pl-72">
-      <AppSidebar
-        mobileTitle="Superadmin"
-        brand={<PlatformBadge userDisplayName={userDisplayName} />}
-        mainItems={mainItems}
-        cta={cta}
-        footerItems={footerItems}
-      />
+    <AppSidebarLayout
+      mobileTitle="Superadmin"
+      brand={<PlatformBadge userDisplayName={userDisplayName} />}
+      mainItems={mainItems}
+      cta={cta}
+      footerItems={footerItems}
+    >
       {children}
-    </div>
+    </AppSidebarLayout>
   );
 }
 
@@ -70,13 +72,26 @@ function PlatformBadge({
   userDisplayName: string;
   className?: string;
 }) {
+  const sidebar = useSidebar();
+  const isCollapsed = sidebar?.isCollapsed ?? false;
+
   return (
-    <div className={cn("flex flex-col items-center pt-6 pb-2 text-center", className)}>
-      <Logo className="mb-5 h-8 w-auto" />
-      <h1 className="text-xl font-extrabold tracking-tight text-primary">Superadmin</h1>
-      <span className="mt-1 max-w-[12rem] truncate text-sm text-muted-foreground">
-        {userDisplayName}
-      </span>
+    <div
+      className={cn(
+        "flex flex-col items-center text-center",
+        isCollapsed ? "pt-1 pb-0" : "pt-6 pb-2",
+        className,
+      )}
+    >
+      <Logo className={cn(isCollapsed ? "mb-0 h-6 w-auto" : "mb-5 h-8 w-auto")} />
+      {!isCollapsed && (
+        <>
+          <h1 className="text-xl font-extrabold tracking-tight text-primary">Superadmin</h1>
+          <span className="mt-1 max-w-[12rem] truncate text-sm text-muted-foreground">
+            {userDisplayName}
+          </span>
+        </>
+      )}
     </div>
   );
 }

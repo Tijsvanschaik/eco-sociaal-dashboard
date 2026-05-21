@@ -23,6 +23,7 @@ export default async function DashboardPage({
 
   return (
     <InternalDashboard
+      orgSlug={orgSlug}
       orgName={data.context.org.name}
       period={data.period}
       recentRegistrations={data.recentRegistrations}

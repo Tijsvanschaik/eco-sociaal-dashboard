@@ -96,7 +96,7 @@ describe("<TenantAppShell />", () => {
     expect(ctaLinks[0]).toHaveAttribute("href", "/lev-groep/registratie");
   });
 
-  it("displays the org initials and name in the brand badge", () => {
+  it("displays org initials when no logo is configured", () => {
     render(
       <TenantAppShell
         org={org}
@@ -110,6 +110,28 @@ describe("<TenantAppShell />", () => {
     );
 
     expect(screen.getAllByText("LG").length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("heading", { name: /medewerker@example.com/i }).length).toBeGreaterThan(
+      0,
+    );
     expect(screen.getAllByText(/LEV Groep/i).length).toBeGreaterThan(0);
+  });
+
+  it("displays the org logo when logoUrl is set", () => {
+    render(
+      <TenantAppShell
+        org={{ ...org, logoUrl: "https://example.com/logo.png" }}
+        memberRole="worker"
+        isSuperadmin={false}
+        userDisplayName="medewerker@example.com"
+        switchableOrgs={[org]}
+      >
+        <p>content</p>
+      </TenantAppShell>,
+    );
+
+    const logos = screen.getAllByRole("img", { name: /logo van lev groep/i });
+    expect(logos.length).toBeGreaterThan(0);
+    expect(logos[0]).toHaveAttribute("src", "https://example.com/logo.png");
+    expect(screen.queryAllByText("LG")).toHaveLength(0);
   });
 });

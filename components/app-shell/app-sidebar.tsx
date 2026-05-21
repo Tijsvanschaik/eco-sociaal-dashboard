@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 
+import { SidebarLayout, SidebarProvider, useSidebar } from "./sidebar-context";
+
 export type SidebarLinkItem = {
   kind: "link";
   label: string;
@@ -45,15 +47,35 @@ export type AppSidebarProps = {
   mobileTitle?: string;
 };
 
+export type AppSidebarLayoutProps = AppSidebarProps & {
+  children: ReactNode;
+};
+
+/**
+ * Shell-wrapper: sidebar + content-offset. Gebruik dit in tenant- en platform-shells.
+ */
+export function AppSidebarLayout({ children, ...sidebarProps }: AppSidebarLayoutProps) {
+  return (
+    <SidebarProvider>
+      <SidebarLayout>
+        <AppSidebar {...sidebarProps} />
+        {children}
+      </SidebarLayout>
+    </SidebarProvider>
+  );
+}
+
 /**
  * App-navigatie voor authenticated (tenant- en platformbrede) schermen.
- * Desktop (md+): vaste sidebar links van 18rem breed.
+ * Desktop (md+): vaste sidebar links; inklapbaar naar een smalle icon-rail.
  * Mobile: sticky topbar met hamburger die een slide-in drawer opent.
  */
 export function AppSidebar({ brand, mainItems, cta, footerItems, mobileTitle }: AppSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const previousPathname = useRef(pathname);
+  const sidebar = useSidebar();
+  const isCollapsed = sidebar?.isCollapsed ?? false;
 
   useEffect(() => {
     if (previousPathname.current !== pathname) {
@@ -87,7 +109,7 @@ export function AppSidebar({ brand, mainItems, cta, footerItems, mobileTitle }: 
             onClick={() => setIsOpen(false)}
             className="absolute inset-0 bg-black/40"
           />
-          <aside className="absolute inset-y-0 left-0 flex w-72 flex-col gap-8 overflow-y-auto rounded-r-[100px] bg-surface-container-low p-6 shadow-2xl">
+          <aside className="absolute inset-y-0 left-0 flex w-72 flex-col gap-8 overflow-y-auto rounded-r-2xl bg-surface-container-low p-6 shadow-2xl">
             <div className="flex justify-end">
               <button
                 type="button"
@@ -112,22 +134,43 @@ export function AppSidebar({ brand, mainItems, cta, footerItems, mobileTitle }: 
 
       <nav
         aria-label="Hoofdnavigatie"
-        className="fixed top-0 left-0 z-30 hidden h-dvh w-72 flex-col gap-8 overflow-y-auto rounded-r-[100px] bg-surface-container-low p-6 shadow-[20px_0_40px_rgba(54,50,45,0.04)] md:flex"
+        aria-expanded={!isCollapsed}
+        className={cn(
+          "fixed top-0 left-0 z-30 hidden h-dvh flex-col overflow-y-auto rounded-r-2xl bg-surface-container-low shadow-[20px_0_40px_rgba(54,50,45,0.04)] transition-all duration-300 ease-in-out md:flex",
+          isCollapsed ? "w-[4.5rem] gap-4 p-3" : "w-72 gap-8 p-6",
+        )}
       >
         <SidebarBody
           brand={brand}
+          isCollapsed={isCollapsed}
           mainItems={mainItems}
           cta={cta}
           footerItems={footerItems}
           pathname={pathname}
         />
       </nav>
+
+      {isCollapsed && cta && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 hidden justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:flex">
+          <Button
+            asChild
+            variant="brand"
+            className="pointer-events-auto h-auto gap-2 px-6 py-3.5 text-base shadow-lg"
+          >
+            <Link href={cta.href}>
+              <Icon name={cta.icon} />
+              <span>{cta.label}</span>
+            </Link>
+          </Button>
+        </div>
+      )}
     </>
   );
 }
 
 type SidebarBodyProps = {
   brand: ReactNode;
+  isCollapsed?: boolean;
   mainItems: SidebarItem[];
   cta?: SidebarCta;
   footerItems: SidebarItem[];
@@ -137,20 +180,37 @@ type SidebarBodyProps = {
 
 function SidebarBody({
   brand,
+  isCollapsed = false,
   mainItems,
   cta,
   footerItems,
   pathname,
   onNavigate,
 }: SidebarBodyProps) {
+  const sidebar = useSidebar();
+
   return (
     <>
-      <div>{brand}</div>
+      <div className={cn("flex", isCollapsed ? "justify-center" : "justify-end")}>
+        {sidebar && (
+          <button
+            type="button"
+            onClick={sidebar.toggle}
+            aria-label={isCollapsed ? "Sidebar uitklappen" : "Sidebar inklappen"}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-card text-primary shadow-sm transition hover:bg-card/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            <Icon name={isCollapsed ? "chevron_right" : "chevron_left"} />
+          </button>
+        )}
+      </div>
 
-      <div className="mt-4 flex-1 space-y-2">
+      <div className={cn(isCollapsed && "flex justify-center")}>{brand}</div>
+
+      <div className={cn("flex-1 space-y-2", isCollapsed ? "mt-2" : "mt-4")}>
         {mainItems.map((item) => (
           <SidebarItemRenderer
             key={itemKey(item)}
+            isCollapsed={isCollapsed}
             item={item}
             pathname={pathname}
             onNavigate={onNavigate}
@@ -159,13 +219,21 @@ function SidebarBody({
       </div>
 
       {cta && (
-        <div className="pt-2">
-          <Button asChild variant="brand" className="h-auto w-full gap-2 px-6 py-3.5 text-base">
-            <Link href={cta.href} onClick={onNavigate}>
-              <Icon name={cta.icon} />
-              <span>{cta.label}</span>
-            </Link>
-          </Button>
+        <div className={cn("pt-2", isCollapsed && "flex justify-center")}>
+          {isCollapsed ? (
+            <Button asChild variant="brand" className="h-11 w-11 shrink-0 p-0">
+              <Link href={cta.href} title={cta.label} aria-label={cta.label} onClick={onNavigate}>
+                <Icon name={cta.icon} />
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="brand" className="h-auto w-full gap-2 px-6 py-3.5 text-base">
+              <Link href={cta.href} onClick={onNavigate}>
+                <Icon name={cta.icon} />
+                <span>{cta.label}</span>
+              </Link>
+            </Button>
+          )}
         </div>
       )}
 
@@ -173,6 +241,7 @@ function SidebarBody({
         {footerItems.map((item) => (
           <SidebarItemRenderer
             key={itemKey(item)}
+            isCollapsed={isCollapsed}
             item={item}
             pathname={pathname}
             onNavigate={onNavigate}
@@ -188,10 +257,12 @@ function itemKey(item: SidebarItem) {
 }
 
 function SidebarItemRenderer({
+  isCollapsed,
   item,
   pathname,
   onNavigate,
 }: {
+  isCollapsed: boolean;
   item: SidebarItem;
   pathname: string;
   onNavigate?: () => void;
@@ -202,10 +273,17 @@ function SidebarItemRenderer({
         <button
           type="submit"
           data-slot="sidebar-item"
-          className="flex w-full items-center gap-4 rounded-full px-5 py-3.5 text-left text-muted-foreground transition-all duration-300 hover:translate-x-1 hover:bg-card/60 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          title={isCollapsed ? item.label : undefined}
+          aria-label={isCollapsed ? item.label : undefined}
+          className={cn(
+            "flex w-full items-center rounded-full text-left text-muted-foreground transition-all duration-300 hover:bg-card/60 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            isCollapsed
+              ? "justify-center px-0 py-3 hover:translate-x-0"
+              : "gap-4 px-5 py-3.5 hover:translate-x-1",
+          )}
         >
           <Icon name={item.icon} />
-          <span>{item.label}</span>
+          <span className={cn(isCollapsed && "sr-only")}>{item.label}</span>
         </button>
       </form>
     );
@@ -217,20 +295,25 @@ function SidebarItemRenderer({
     <Link
       href={item.href}
       aria-current={isActive ? "page" : undefined}
+      aria-label={isCollapsed ? item.label : undefined}
+      title={isCollapsed ? item.label : undefined}
       target={item.external ? "_blank" : undefined}
       rel={item.external ? "noopener noreferrer" : undefined}
       data-slot="sidebar-item"
       data-active={isActive ? "true" : undefined}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-4 rounded-full px-5 py-3.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+        "flex items-center rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+        isCollapsed
+          ? "justify-center px-0 py-3 hover:translate-x-0"
+          : "gap-4 px-5 py-3.5 hover:translate-x-1",
         isActive
           ? "bg-card font-bold text-primary shadow-sm"
-          : "text-muted-foreground hover:translate-x-1 hover:bg-card/60 hover:text-primary",
+          : "text-muted-foreground hover:bg-card/60 hover:text-primary",
       )}
     >
       <Icon name={item.icon} filled={isActive} />
-      <span>{item.label}</span>
+      <span className={cn(isCollapsed && "sr-only")}>{item.label}</span>
     </Link>
   );
 }
