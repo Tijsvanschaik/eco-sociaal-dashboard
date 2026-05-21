@@ -34,8 +34,8 @@ describe("TrendAreaChart", () => {
     render(
       <TrendAreaChart
         data={[
-          { weekStart: "2026-04-06", co2SavedKg: 3, registrationCount: 2 },
-          { weekStart: "2026-04-13", co2SavedKg: 5, registrationCount: 3 },
+          { weekStart: "2026-04-06", co2SavedKg: 3, socialScoreSaved: 0, registrationCount: 2 },
+          { weekStart: "2026-04-13", co2SavedKg: 5, socialScoreSaved: 1, registrationCount: 3 },
         ]}
         description="Test"
         title="Trend per week"

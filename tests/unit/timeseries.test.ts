@@ -5,9 +5,9 @@ describe("buildWeeklyTimeseries", () => {
   it("groups registrations by ISO week and orders oldest to newest", () => {
     const result = buildWeeklyTimeseries(
       [
-        { happenedOn: "2026-04-08", co2KgCached: 2, quantity: 1 },
+        { happenedOn: "2026-04-08", co2KgCached: 2, socialScoreCached: 1, quantity: 1 },
         { happenedOn: "2026-04-07", co2KgCached: 1.5, quantity: 1 },
-        { happenedOn: "2026-04-15", co2KgCached: 4, quantity: 2 },
+        { happenedOn: "2026-04-15", co2KgCached: 4, socialScoreCached: 0.25, quantity: 2 },
       ],
       { period: "all" },
     );
@@ -16,11 +16,13 @@ describe("buildWeeklyTimeseries", () => {
       {
         weekStart: "2026-04-06",
         co2SavedKg: 3.5,
+        socialScoreSaved: 1,
         registrationCount: 2,
       },
       {
         weekStart: "2026-04-13",
         co2SavedKg: 4,
+        socialScoreSaved: 0.25,
         registrationCount: 1,
       },
     ]);
@@ -43,6 +45,7 @@ describe("buildWeeklyTimeseries", () => {
       {
         weekStart: "2026-04-06",
         co2SavedKg: 5,
+        socialScoreSaved: 0,
         registrationCount: 1,
       },
     ]);
@@ -61,11 +64,13 @@ describe("buildWeeklyTimeseries", () => {
       {
         weekStart: "2026-04-06",
         co2SavedKg: 2,
+        socialScoreSaved: 0,
         registrationCount: 1,
       },
       {
         weekStart: "2026-04-13",
         co2SavedKg: 3,
+        socialScoreSaved: 0,
         registrationCount: 1,
       },
     ]);

@@ -20,8 +20,10 @@ const interventions = [
   {
     id: "22222222-2222-2222-2222-222222222222",
     name: "Fietsen",
-    unit: "km",
+    ecoUnit: "km",
+    socialUnit: "personen",
     factorKg: 0.15,
+    socialScoreFactor: 0.5,
     categoryName: "Mobiliteit",
     categoryColor: "#22aa66",
     categoryId: "33333333-3333-3333-3333-333333333333",
@@ -49,7 +51,8 @@ describe("RegistrationForm", () => {
     const submit = screen.getByRole("button", { name: /impact opslaan/i });
     expect(submit).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText(/hoeveelheid/i), { target: { value: "3" } });
+    fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "3" } });
+    fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "5" } });
 
     await waitFor(() => expect(submit).toBeEnabled());
   });
@@ -65,8 +68,8 @@ describe("RegistrationForm", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText(/hoeveelheid/i), { target: { value: "-2" } });
-    fireEvent.blur(screen.getByLabelText(/hoeveelheid/i));
+    fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "-2" } });
+    fireEvent.blur(screen.getByLabelText(/eco-hoeveelheid/i));
 
     expect(await screen.findByText(/groter zijn dan 0/i)).toBeInTheDocument();
   });
@@ -82,7 +85,8 @@ describe("RegistrationForm", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText(/hoeveelheid/i), { target: { value: "2.5" } });
+    fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "2.5" } });
+    fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "4" } });
     const submit = screen.getByRole("button", { name: /impact opslaan/i });
 
     await waitFor(() => expect(submit).toBeEnabled());

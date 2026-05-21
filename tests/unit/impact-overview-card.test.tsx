@@ -8,13 +8,15 @@ function makeTeam(
   id: string,
   name: string,
   co2SavedKg: number,
-  segments: Array<{ color: string; interventionId: string; kg: number }> = [],
+  segments: Array<{ color: string; interventionId: string; kg: number; socialKg?: number }> = [],
   eodDays = 0,
 ): TeamBreakdownRow {
+  const socialScoreTotal = segments.reduce((sum, s) => sum + (s.socialKg ?? 0), 0);
   return {
     id,
     name,
     co2SavedKg,
+    socialScoreTotal,
     eodDays,
     registrationCount: segments.length,
     segments: segments.map((segment) => ({
@@ -25,6 +27,7 @@ function makeTeam(
       categoryName: `Categorie ${segment.interventionId}`,
       categoryColor: segment.color,
       co2SavedKg: segment.kg,
+      socialScoreTotal: segment.socialKg ?? 0,
       registrationCount: 1,
     })),
   };
@@ -37,6 +40,7 @@ describe("<ImpactOverviewCard />", () => {
         eodDays={5}
         registrationCount={42}
         totalCo2Kg={4_200}
+        totalSocialScore={120}
         periodLabel="laatste 90 dagen"
         teamBreakdown={[
           makeTeam(
@@ -44,7 +48,7 @@ describe("<ImpactOverviewCard />", () => {
             "LEV Helmond",
             3_000,
             [
-              { color: "#3b82f6", interventionId: "bike", kg: 2_000 },
+              { color: "#3b82f6", interventionId: "bike", kg: 2_000, socialKg: 40 },
               { color: "#10b981", interventionId: "veggie", kg: 1_000 },
             ],
             12,
@@ -53,7 +57,7 @@ describe("<ImpactOverviewCard />", () => {
             "team-b",
             "LEV Asten",
             1_200,
-            [{ color: "#3b82f6", interventionId: "bike", kg: 1_200 }],
+            [{ color: "#3b82f6", interventionId: "bike", kg: 1_200, socialKg: 80 }],
             5,
           ),
         ]}
@@ -64,6 +68,7 @@ describe("<ImpactOverviewCard />", () => {
       screen.getByRole("heading", { name: /5\s*dagen gewonnen/i, level: 2 }),
     ).toBeInTheDocument();
     expect(screen.getByText(/4,2 ton/)).toBeInTheDocument();
+    expect(screen.getByText(/sociale score bij elkaar/i)).toBeInTheDocument();
     expect(screen.getByText("LEV Helmond")).toBeInTheDocument();
     expect(screen.getByText("LEV Asten")).toBeInTheDocument();
     expect(screen.getByText(/12\s*dagen/)).toBeInTheDocument();
@@ -89,6 +94,7 @@ describe("<ImpactOverviewCard />", () => {
         eodDays={3}
         registrationCount={10}
         totalCo2Kg={500}
+        totalSocialScore={0}
         periodLabel="alle data"
         teamBreakdown={many}
       />,
@@ -110,6 +116,7 @@ describe("<ImpactOverviewCard />", () => {
         eodDays={0}
         registrationCount={0}
         totalCo2Kg={0}
+        totalSocialScore={0}
         periodLabel="alle data"
         teamBreakdown={[]}
       />,

@@ -1,4 +1,4 @@
-import { calculateCo2, eodDaysGained, treesEquivalent } from "@/lib/impact";
+import { calculateCo2, calculateSocialScore, eodDaysGained, treesEquivalent } from "@/lib/impact";
 import { describe, expect, it } from "vitest";
 
 describe("calculateCo2", () => {
@@ -12,6 +12,16 @@ describe("calculateCo2", () => {
 
   it("supports decimals and rounds to thousandths", () => {
     expect(calculateCo2(12.345, 0.1234)).toBe(1.523);
+  });
+});
+
+describe("calculateSocialScore", () => {
+  it("mirrors rounding rules van calculateCo2", () => {
+    expect(calculateSocialScore(12.345, 0.1234)).toBe(1.523);
+  });
+
+  it("throws when quantity is negative", () => {
+    expect(() => calculateSocialScore(-1, 1)).toThrow(/negative/i);
   });
 });
 

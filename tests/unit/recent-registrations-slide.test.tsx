@@ -9,14 +9,17 @@ function makeRegistration(overrides: Partial<RegistrationCardData> = {}): Regist
     categoryColor: "#10b981",
     categoryName: "Voeding",
     co2KgCached: 4,
+    socialScoreCached: 0,
     happenedOn: "2026-04-20",
     id: overrides.id ?? "reg-1",
     interventionLabel: "Vegetarische maaltijd",
     note: null,
     photoUrl: null,
+    ecoUnit: "maaltijd",
     quantity: 2,
+    socialQuantity: 3,
+    socialUnit: "personen",
     teamLabel: "LEV Helmond",
-    unit: "maaltijd",
     ...overrides,
   };
 }

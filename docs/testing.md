@@ -14,12 +14,13 @@
 ## Minimum-set tests voor MVP
 
 1. `calculateCo2(quantity, factor)` — boundary cases (0, negatief, decimaal).
-2. `eodDaysGained(savedKg, baselineKg)` — nulmeting = 0 dagen, halve baseline = 182/183 dagen.
-3. `registrationSchema` — verplichte velden, min/max quantity.
-4. RLS: worker van team A kan geen registratie maken voor team B.
-5. RLS: anon kan `public_dashboard_totals` lezen, maar niet `registrations`.
-6. Component: registratieformulier — submit disabled tot valid, toont foutmelding bij negatieve hoeveelheid.
-7. E2E: login -> registreren -> verschijnt in dashboard (Top Teams update).
+2. `calculateSocialScore(quantity, factor)` — idem rounding-gedrag als CO₂-helper.
+3. `eodDaysGained(savedKg, baselineKg)` — nulmeting = 0 dagen, halve baseline = 182/183 dagen.
+4. `registrationSchema` — verplichte velden, min/max quantity.
+5. RLS: worker van team A kan geen registratie maken voor team B.
+6. RLS: anon kan `public_dashboard_totals` lezen, maar niet `registrations`.
+7. Component: registratieformulier — submit disabled tot valid, toont foutmelding bij negatieve hoeveelheid.
+8. E2E: login -> registreren -> verschijnt in dashboard (Top Teams update).
 
 ## TDD-flow voor elke feature
 

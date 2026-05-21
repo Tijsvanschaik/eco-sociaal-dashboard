@@ -108,8 +108,10 @@ async function setupFixtures(): Promise<Fixtures> {
       org_id: orgA.id,
       category_id: categoryA.id,
       name: "Test Intervention",
-      unit: "kg",
+      eco_unit: "kg",
+      social_unit: "personen",
       co2_factor_kg: 1,
+      social_score_factor: 0,
     })
     .select("id")
     .single();
@@ -157,8 +159,10 @@ async function setupFixtures(): Promise<Fixtures> {
       intervention_id: interventionA.id,
       user_id: workerA2.id,
       quantity: 5,
+      social_quantity: 2,
       happened_on: new Date().toISOString().slice(0, 10),
       co2_kg_cached: 5,
+      social_score_cached: 0,
     })
     .select("id")
     .single();
@@ -290,7 +294,9 @@ describe("RLS - sensitive columns", () => {
     const anon = anonClient();
     const { data, error } = await anon
       .from("registrations")
-      .select("id, org_id, team_id, intervention_id, quantity, happened_on, co2_kg_cached")
+      .select(
+        "id, org_id, team_id, intervention_id, quantity, happened_on, co2_kg_cached, social_score_cached",
+      )
       .eq("org_id", fx.orgA.id);
     expect(error).toBeNull();
     expect(data ?? []).not.toHaveLength(0);
@@ -395,8 +401,10 @@ describe("RLS - registrations mutations", () => {
       intervention_id: fx.interventionA.id,
       user_id: fx.users.workerA1.id,
       quantity: 1,
+      social_quantity: 1,
       happened_on: new Date().toISOString().slice(0, 10),
       co2_kg_cached: 1,
+      social_score_cached: 0,
     });
     expect(error).toBeTruthy();
   });
@@ -411,8 +419,10 @@ describe("RLS - registrations mutations", () => {
         intervention_id: fx.interventionA.id,
         user_id: fx.users.workerA1.id,
         quantity: 2,
+        social_quantity: 3,
         happened_on: new Date().toISOString().slice(0, 10),
         co2_kg_cached: 2,
+        social_score_cached: 0,
       })
       .select("id")
       .single();
@@ -456,8 +466,10 @@ describe("RLS - registrations mutations", () => {
       intervention_id: fx.interventionA.id,
       user_id: fx.users.workerB.id,
       quantity: 1,
+      social_quantity: 1,
       happened_on: new Date().toISOString().slice(0, 10),
       co2_kg_cached: 1,
+      social_score_cached: 0,
     });
     expect(error).toBeTruthy();
   });
