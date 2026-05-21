@@ -56,4 +56,35 @@ describe("<KioskSlideshow />", () => {
 
     expect(screen.getByTestId("kiosk-slide-only").dataset.active).toBe("true");
   });
+
+  it("advances to the next slide when the right tap target is clicked", () => {
+    render(
+      <KioskSlideshow
+        slides={[
+          { id: "a", node: <div>Slide A</div> },
+          { id: "b", node: <div>Slide B</div> },
+        ]}
+      />,
+    );
+
+    expect(screen.getByTestId("kiosk-slide-a").dataset.active).toBe("true");
+    act(() => {
+      screen.getByRole("button", { name: "Volgende slide" }).click();
+    });
+    expect(screen.getByTestId("kiosk-slide-b").dataset.active).toBe("true");
+  });
+
+  it("hides tap targets when interactive=false", () => {
+    render(
+      <KioskSlideshow
+        interactive={false}
+        slides={[
+          { id: "a", node: <div>A</div> },
+          { id: "b", node: <div>B</div> },
+        ]}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Volgende slide" })).toBeNull();
+  });
 });

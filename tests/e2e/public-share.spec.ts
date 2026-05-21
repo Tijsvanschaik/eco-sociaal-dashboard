@@ -19,7 +19,7 @@ test.describe("public share surfaces", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`/tv/${shareSlug}`);
 
-    await expect(page.getByText(/TV-modus/i)).toBeVisible();
+    await expect(page.getByTestId("public-surface")).toHaveAttribute("data-mode", "tv");
     // Slideshow shell only renders on lg+ viewports; on smaller viewports
     // the kiosk falls back to <KioskStack>.
     await expect(page.getByTestId("kiosk-slideshow")).toBeVisible();

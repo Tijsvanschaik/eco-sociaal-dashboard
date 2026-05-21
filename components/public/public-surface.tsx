@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { KioskSlideshow } from "@/components/public/kiosk-slideshow";
 import { type KioskSlide, KioskStack } from "@/components/public/kiosk-stack";
 import { ProgressSlide } from "@/components/public/progress-slide";
+import { RecentRegistrationFeaturedPanel } from "@/components/public/recent-registration-featured-panel";
 import { RecentRegistrationsSlide } from "@/components/public/recent-registrations-slide";
 import { TotalImpactSlide } from "@/components/public/total-impact-slide";
 import { ALL_PUBLIC_SLIDES, type PublicSlideId } from "@/lib/embed/query-schema";
@@ -19,51 +20,107 @@ export type PublicSurfaceProps = {
   slideOrder?: PublicSlideId[];
 };
 
+const MAX_KIOSK_RECENT_SLIDES = 3;
+
+function wrapTv(node: ReactNode, mode: PublicSurfaceMode) {
+  if (mode !== "tv") return node;
+  return (
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col justify-stretch">
+      {node}
+    </div>
+  );
+}
+
+function buildKioskSlides({
+  data,
+  mode,
+  order,
+  slideMap,
+  expandRecentIntoSeparateSlides,
+}: {
+  data: PublicDashboardData;
+  mode: PublicSurfaceMode;
+  order: PublicSlideId[];
+  slideMap: Record<PublicSlideId, ReactNode>;
+  expandRecentIntoSeparateSlides: boolean;
+}): KioskSlide[] {
+  const slides: KioskSlide[] = [];
+
+  for (const id of order) {
+    if (id === "3" && expandRecentIntoSeparateSlides) {
+      const regs = data.recentRegistrations.slice(0, MAX_KIOSK_RECENT_SLIDES);
+      if (regs.length === 0) {
+        slides.push({
+          id: "slide-3-empty",
+          node: wrapTv(slideMap["3"], mode),
+        });
+      } else {
+        regs.forEach((registration, index) => {
+          slides.push({
+            id: `slide-3-${registration.id}`,
+            node: wrapTv(
+              <RecentRegistrationFeaturedPanel
+                index={index}
+                registration={registration}
+                totalRecent={regs.length}
+              />,
+              mode,
+            ),
+          });
+        });
+      }
+      continue;
+    }
+
+    slides.push({
+      id: `slide-${id}`,
+      node: wrapTv(slideMap[id], mode),
+    });
+  }
+
+  return slides;
+}
+
 /**
  * Centrale renderer voor publieke surfaces. Bouwt eenmaal de slide-set en
  * kiest dan een shell (slideshow op TV, stack op share/embed) op basis van de
  * mode. Op smalle viewports valt elke modus terug op stack zodat mobiel
  * scrollbaar blijft (1-screen-no-scroll geldt alleen op `lg+`).
+ *
+ * Op TV en `embed-rotate` wordt logische slide `3` (recente registraties)
+ * uitgesplitst tot max. drie aparte kiosk-slides (3–5), elk met één hero-
+ * registratie — geen geneste carousel.
  */
 export function PublicSurface({ data, intervalMs, mode, slideOrder }: PublicSurfaceProps) {
   const order = slideOrder?.length ? slideOrder : [...ALL_PUBLIC_SLIDES];
   const periodLabel = "alle data";
   const orgName = data.totals.org_name ?? "";
+  const expandRecent = mode === "tv" || mode === "embed-rotate";
 
   const slideMap: Record<PublicSlideId, ReactNode> = {
     "1": (
-      <TotalImpactSlide isTv={mode === "tv"} periodLabel={periodLabel} snapshot={data.snapshot} />
+      <TotalImpactSlide isTv={expandRecent} periodLabel={periodLabel} snapshot={data.snapshot} />
     ),
     "2": (
       <ProgressSlide
+        isKioskFullscreen={expandRecent}
         periodLabel={periodLabel}
         snapshot={data.snapshot}
         timeseries={data.timeseries}
       />
     ),
-    "3": (
-      <RecentRegistrationsSlide
-        compactCards={mode === "tv"}
-        gridClassName={mode === "tv" ? "grid grid-cols-3 gap-4" : ""}
-        // Op TV/desktop slideshow: 6 kaarten in 3x2-grid; op stack/embed: 9.
-        limit={mode === "tv" ? 6 : mode === "embed-rotate" ? 6 : undefined}
-        registrations={data.recentRegistrations}
-      />
-    ),
+    "3": <RecentRegistrationsSlide registrations={data.recentRegistrations} />,
   };
 
-  const slides: KioskSlide[] = order.map((id) => ({
-    id: `slide-${id}`,
-    node:
-      mode === "tv" ? (
-        <div className="flex h-full min-h-0 items-center justify-center">
-          <div className="w-full max-w-[1500px]">{slideMap[id]}</div>
-        </div>
-      ) : (
-        slideMap[id]
-      ),
-  }));
-  const showRotation = mode === "tv" || mode === "embed-rotate";
+  const slides = buildKioskSlides({
+    data,
+    mode,
+    order,
+    slideMap,
+    expandRecentIntoSeparateSlides: expandRecent,
+  });
+
+  const showRotation = expandRecent;
 
   return (
     <main
@@ -71,7 +128,7 @@ export function PublicSurface({ data, intervalMs, mode, slideOrder }: PublicSurf
         "flex w-full min-w-0 flex-col bg-[color-mix(in_srgb,var(--card)_92%,var(--background)_8%)]",
         // TV vult exact het scherm; share/embed-stack laten content groeien.
         mode === "tv"
-          ? "min-h-dvh px-4 py-4 sm:px-6 lg:h-dvh lg:overflow-hidden"
+          ? "min-h-dvh px-3 py-3 sm:px-4 sm:py-3 lg:h-dvh lg:overflow-hidden lg:px-5 lg:py-4 xl:px-8 xl:py-5 2xl:px-12 2xl:py-7"
           : "px-4 py-6 sm:px-6 sm:py-8",
       )}
       data-mode={mode}
@@ -83,7 +140,7 @@ export function PublicSurface({ data, intervalMs, mode, slideOrder }: PublicSurf
         <>
           {/* Slideshow op desktop (lg+); stack op smal scherm. */}
           <div className="hidden lg:flex lg:flex-1 lg:min-h-0 lg:flex-col">
-            <KioskSlideshow intervalMs={intervalMs} slides={slides} />
+            <KioskSlideshow interactive intervalMs={intervalMs} slides={slides} />
           </div>
           <div className="flex flex-col lg:hidden">
             <KioskStack slides={slides} />

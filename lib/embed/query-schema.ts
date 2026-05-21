@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * Slide-IDs die `/tv` en `/embed` ondersteunen. Volgorde = vertoonvolgorde.
  *
- * - `1` = Totale impact + Top teams
+ * - `1` = Totale eco-sociale impact + Top teams
  * - `2` = Voortgang + Impact per categorie
  * - `3` = Recente registraties
  */
@@ -26,7 +26,9 @@ const DEFAULT_INTERVAL_SECONDS = 8;
  * de page; tikfouten of onbekende waarden vallen netjes terug op defaults.
  *
  * - `mode`: `stack` (default, scrollbaar in iframes) of `rotate` (slideshow).
- * - `screens`: comma-separated slide-IDs (default = alle drie).
+ * - `screens`: comma-separated slide-IDs (default = alle drie). Id `3` wordt
+ *   op TV en `mode=rotate` automatisch uitgesplitst tot drie aparte slides in
+ *   het kiosk-carousel (max. drie recente registraties).
  * - `interval`: secondes tussen slides (3-60, default 8). Alleen relevant in
  *   `mode=rotate`.
  */
