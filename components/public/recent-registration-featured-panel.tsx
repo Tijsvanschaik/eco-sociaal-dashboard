@@ -12,6 +12,9 @@ export function RecentRegistrationFeaturedPanel({
   totalRecent: number;
 }) {
   return (
-    <RegistrationFeaturedHero recentMeta={{ index, total: totalRecent }} registration={registration} />
+    <RegistrationFeaturedHero
+      recentMeta={{ index, total: totalRecent }}
+      registration={registration}
+    />
   );
 }

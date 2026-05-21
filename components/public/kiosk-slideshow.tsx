@@ -56,11 +56,15 @@ export function KioskSlideshow({
     restartAutoplay();
   }, [slideCount, restartAutoplay]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: autoplayKey restarts the interval after manual navigation
   useEffect(() => {
     if (slideCount <= 1) return;
-    const id = window.setInterval(() => {
-      setActiveIndex((index) => (index + 1) % slideCount);
-    }, Math.max(intervalMs, 1000));
+    const id = window.setInterval(
+      () => {
+        setActiveIndex((index) => (index + 1) % slideCount);
+      },
+      Math.max(intervalMs, 1000),
+    );
     return () => window.clearInterval(id);
   }, [intervalMs, slideCount, autoplayKey]);
 

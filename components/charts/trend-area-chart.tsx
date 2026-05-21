@@ -12,8 +12,8 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import { cn } from "@/lib/utils";
 import type { WeeklyTimeseriesRow } from "@/lib/timeseries";
+import { cn } from "@/lib/utils";
 
 function formatKg(value: number): string {
   return new Intl.NumberFormat("nl-NL", {
@@ -108,7 +108,10 @@ export function TrendAreaChartBody({
 
   return (
     <ChartContainer
-      className={cn("w-full", fillContainer ? "h-full min-h-[min(42vh,12rem)] flex-1" : "h-[260px]")}
+      className={cn(
+        "w-full",
+        fillContainer ? "h-full min-h-[min(42vh,12rem)] flex-1" : "h-[260px]",
+      )}
       config={config}
       data-testid="trend-chart"
       style={fillContainer ? { height: "100%" } : { height }}

@@ -2,8 +2,8 @@
 
 import type { ReactNode } from "react";
 
-import { Logo } from "@/components/brand/logo";
 import { useSidebar } from "@/components/app-shell/sidebar-context";
+import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
 import { AppSidebarLayout, type SidebarCta, type SidebarItem } from "./app-sidebar";

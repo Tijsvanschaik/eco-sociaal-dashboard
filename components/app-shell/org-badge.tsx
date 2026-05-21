@@ -1,7 +1,7 @@
 "use client";
 
-import { OrgSwitcher } from "@/components/org-switcher";
 import { useSidebar } from "@/components/app-shell/sidebar-context";
+import { OrgSwitcher } from "@/components/org-switcher";
 import { cn } from "@/lib/utils";
 
 type Org = { id: string; name: string; slug: string; logoUrl?: string | null };

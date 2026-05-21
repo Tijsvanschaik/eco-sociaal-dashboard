@@ -25,9 +25,7 @@ const MAX_KIOSK_RECENT_SLIDES = 3;
 function wrapTv(node: ReactNode, mode: PublicSurfaceMode) {
   if (mode !== "tv") return node;
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col justify-stretch">
-      {node}
-    </div>
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col justify-stretch">{node}</div>
   );
 }
 

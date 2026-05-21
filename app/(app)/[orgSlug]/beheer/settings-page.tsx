@@ -791,7 +791,9 @@ function InterventionsTab({
                   <th className="px-3 pb-3 text-xs font-bold uppercase tracking-widest">
                     Categorie
                   </th>
-                  <th className="px-3 pb-3 text-xs font-bold uppercase tracking-widest">Eco-eenheid</th>
+                  <th className="px-3 pb-3 text-xs font-bold uppercase tracking-widest">
+                    Eco-eenheid
+                  </th>
                   <th className="px-3 pb-3 text-xs font-bold uppercase tracking-widest">
                     Sociale eenheid
                   </th>

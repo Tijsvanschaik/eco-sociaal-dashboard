@@ -1,9 +1,9 @@
 import {
+  type RegistrationCardData,
   formatRegistrationCo2Kg,
   formatRegistrationDate,
   formatRegistrationQuantity,
   formatRegistrationSocialScore,
-  type RegistrationCardData,
 } from "@/components/dashboard/registration-card";
 import { RegistrationPlaceholder } from "@/components/dashboard/registration-placeholder";
 import { Icon } from "@/components/ui/icon";
@@ -41,7 +41,10 @@ export type RegistrationFeaturedHeroProps = {
  * Groot kiosk-formaat: linkerfoto (±50%), rechts inhoud gegroepeerd en
  * verticaal gecentreerd. Met `recentMeta` een paneelachtige header op de foto.
  */
-export function RegistrationFeaturedHero({ registration, recentMeta }: RegistrationFeaturedHeroProps) {
+export function RegistrationFeaturedHero({
+  registration,
+  recentMeta,
+}: RegistrationFeaturedHeroProps) {
   const {
     categoryColor,
     categoryName,
@@ -150,12 +153,7 @@ export function RegistrationFeaturedHero({ registration, recentMeta }: Registrat
           </p>
         </div>
 
-        <div
-          className={cn(
-            "flex flex-wrap items-center gap-2",
-            kiosk && "lg:gap-2.5 xl:gap-3",
-          )}
-        >
+        <div className={cn("flex flex-wrap items-center gap-2", kiosk && "lg:gap-2.5 xl:gap-3")}>
           <span
             className={cn(
               "inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-container font-extrabold text-primary shadow-sm",

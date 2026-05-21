@@ -110,9 +110,9 @@ describe("<TenantAppShell />", () => {
     );
 
     expect(screen.getAllByText("LG").length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("heading", { name: /medewerker@example.com/i }).length).toBeGreaterThan(
-      0,
-    );
+    expect(
+      screen.getAllByRole("heading", { name: /medewerker@example.com/i }).length,
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText(/LEV Groep/i).length).toBeGreaterThan(0);
   });
 
