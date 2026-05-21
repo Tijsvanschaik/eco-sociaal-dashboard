@@ -13,7 +13,9 @@ Update dit document bij **elke migratie** (iedere nieuwe file in `supabase/sql/`
 | `supabase/sql/0005_registration_photos_storage.sql` | Idempotente reset van de `registrations`-bucket + storage-RLS (incl. superadmin) |
 | `supabase/sql/0006_org_profile.sql` | `organizations.description` + `organizations.logo_url` |
 | `supabase/sql/0007_public_recent_registrations.sql` | Publieke view voor recente registraties op `/tv` en `/embed` (incl. note + photo_path) |
-| `supabase/sql/9000_seed.sql` | Dev-seed: LEV Groep + 10 teams + 6 cat + 10 interventies |
+| `supabase/sql/0008_social_score.sql` | Sociale score: kolommen op `interventions`/`registrations`, anon-grant, herddefiniëren publieke totals/team/category/timeseries + `public_recent_registrations` |
+| `supabase/sql/0009_eco_social_units.sql` | `eco_unit` + `social_unit` (tekst) op interventies; `social_quantity` op registraties; drop `unit`; reset historische `social_score_cached`; view `public_recent_registrations` |
+| `supabase/sql/9000_seed.sql` | Dev-seed LEV (`lev-groep`): wipe tenant‑stam + alle registraties/ledentabellen‑rijen voor die org, daarna teams + 6 thema‑categorieën + interventies (ADR 0007) |
 
 ## Schema (export)
 
@@ -29,12 +31,16 @@ Update dit document bij **elke migratie** (iedere nieuwe file in `supabase/sql/`
 - **teams** (`id` pk, `org_id` fk, `name`, `is_archived`, timestamps; uniek op `(org_id, name)` en `(org_id, id)` voor composite FK)
 - **team_memberships** (`id` pk, `org_id` fk, `team_id` fk, `user_id` fk, `created_at`; uniek op `(team_id, user_id)`)
 - **categories** (`id` pk, `org_id` fk, `name`, `color` `#RRGGBB`, `is_archived`, timestamps; uniek op `(org_id, name)`)
-- **interventions** (`id` pk, `org_id` fk, `category_id` fk via `(org_id, category_id) -> categories(org_id, id)`, `name`, `unit`, `co2_factor_kg`, `is_archived`, timestamps; uniek op `(org_id, name)`)
-- **registrations** (`id` pk, `org_id` fk, `team_id` + `intervention_id` als composite FKs naar `(org_id, *)`, `user_id` fk, `quantity > 0`, `happened_on`, `photo_path`, `note`, `co2_kg_cached`, timestamps)
+- **interventions** (`id` pk, `org_id` fk, `category_id` fk via `(org_id, category_id) -> categories(org_id, id)`, `name`, **`eco_unit`** (tekst, 1–40 tekens), **`social_unit`** (tekst), `co2_factor_kg`, **`social_score_factor`** (≥ 0), `is_archived`, timestamps; uniek op `(org_id, name)`)
+- **registrations** (`id` pk, `org_id` fk, `team_id` + `intervention_id` als composite FKs naar `(org_id, *)`, `user_id` fk, **`quantity`** (eco, > 0), **`social_quantity`** (≥ 0), `happened_on`, `photo_path`, `note`, `co2_kg_cached`, **`social_score_cached`** (≥ 0), timestamps)
 
 Waarom composite FKs op `registrations`: ze garanderen dat team en intervention uit dezelfde org komen als `registrations.org_id`, zonder cross-tenant leak.
 
 Waarom `co2_kg_cached`: snapshot van `quantity * interventions.co2_factor_kg` op insertmoment, zodat factor-wijzigingen historische dashboards niet verschuiven.
+
+Waarom `social_score_cached`: snapshot van `social_quantity * interventions.social_score_factor` (sociale eenheid kan afwijken van eco).
+
+Waarom aparte eenheden/hoeveelheden: eco (CO₂) en sociale impact kunnen op dezelfde registratie met verschillende telwijzen worden vastgelegd (bijv. uren vs. personen).
 
 ## ERD (Mermaid)
 
@@ -91,8 +97,10 @@ erDiagram
     uuid org_id FK
     uuid category_id FK
     text name
-    intervention_unit unit
+    text eco_unit
+    text social_unit
     numeric co2_factor_kg
+    numeric social_score_factor
     bool is_archived
   }
   registrations {
@@ -102,10 +110,12 @@ erDiagram
     uuid intervention_id FK
     uuid user_id FK
     numeric quantity
+    numeric social_quantity
     date happened_on
     text photo_path
     text note
     numeric co2_kg_cached
+    numeric social_score_cached
   }
 ```
 
@@ -134,7 +144,7 @@ Helper-functies (`security definer`, bypassen RLS op `memberships` om recursie t
 | `interventions` | member or superadmin; anon als org publiek | admin | admin | admin |
 | `registrations` | member or superadmin; anon (aggregate-kolommen) als org publiek | admin OR (member+team-lid+self) | owner OR admin | owner OR admin |
 
-Anon-kolombeperking op `registrations`: `revoke select on registrations from anon` + `grant select (id, org_id, team_id, intervention_id, quantity, happened_on, co2_kg_cached, created_at)`. `user_id`, `photo_path` en `note` zijn dus nooit publiek.
+Anon-kolombeperking op `registrations`: `revoke select on registrations from anon` + `grant select (id, org_id, team_id, intervention_id, quantity, happened_on, co2_kg_cached, social_score_cached, created_at)`. `user_id`, `photo_path` en `note` zijn dus nooit publiek.
 
 Storage `registrations` bucket (zie `0001_init.sql` + idempotente reset in `0005_registration_photos_storage.sql`):
 - Path-conventie: `<org_id>/<user_id>/<uuid>.<ext>` — eerste segment MOET de org-UUID zijn zodat RLS tenant-isolatie kan afdwingen.
@@ -143,13 +153,15 @@ Storage `registrations` bucket (zie `0001_init.sql` + idempotente reset in `0005
 - UPDATE/DELETE: uploader (`owner = auth.uid()`), admin van die org, of superadmin.
 - File-size-limit en MIME-whitelist staan bewust uit op de bucket zodat client-side validatie (JPG/PNG/WEBP/HEIC, max 5 MB) leidend blijft en makkelijk aan te passen is zonder SQL-wijziging.
 
-## Publieke views (0002)
+## Publieke views (0002 + herddefiniëring in 0008)
 
 Alle drie met `security_invoker = true`, `grant select to anon, authenticated`:
 
-- `public_dashboard_totals` — per org: `co2_saved_kg`, `registration_count`, `active_user_count` (via `app_public_org_active_user_count`: SECURITY DEFINER, zodat `anon` geen directe SELECT op `registrations.user_id` nodig heeft), `eod_days_gained` (= `min(365, round((co2/baseline)*365, 2))` of `null` als baseline ontbreekt).
-- `public_team_breakdown` — per org -> team: co2 + count.
-- `public_category_breakdown` — per org -> categorie: co2 + count + kleur.
+- `public_dashboard_totals` — per org: `co2_saved_kg`, `registration_count`, `active_user_count` (via `app_public_org_active_user_count`: SECURITY DEFINER, zodat `anon` geen directe SELECT op `registrations.user_id` nodig heeft), `eod_days_gained` (alleen op CO₂; = `min(365, round((co2/baseline)*365, 2))` of `null` als baseline ontbreekt), **`social_score_total`** (laatste kolom in SQL zodat `CREATE OR REPLACE VIEW` op bestaande installaties geen ordinal-rename fout geeft).
+- `public_team_breakdown` — per org → team: `co2_saved_kg`, `registration_count`, **`social_score_total`**.
+- `public_category_breakdown` — per org → categorie: `co2_saved_kg`, `registration_count`, **`social_score_total`** + kleurkolommen.
+
+`public_dashboard_timeseries` (`0004`, kolom **`social_score_total`** toegevoegd in `0008`): per org/week-start: `co2_saved_kg`, registratietelling, **`social_score_total`**.
 
 ## Publieke view (0007) — recente registraties
 
@@ -157,7 +169,7 @@ Alle drie met `security_invoker = true`, `grant select to anon, authenticated`:
 
 We draaien hem als security_definer (`security_invoker = false`) zodat de definer-privileges van de view-eigenaar de column-level revoke omzeilen, terwijl het rij-filter `o.public_share_enabled = true` als enige autorisatielaag fungeert. Foto's blijven storage-RLS-afgeschermd; signed URLs voor anon worden in de Next.js loader gegenereerd met de service-role key.
 
-Kolommen: `org_id, share_slug, registration_id, happened_on, created_at, quantity, note, photo_path, co2_kg_cached, intervention_name, intervention_unit, team_name, category_name, category_color`.
+Kolommen (na **`0008`**, incl. **`social_score_cached`** aan het einde van de kolomlijst voor `CREATE OR REPLACE`-compatibiliteit): `org_id, share_slug, registration_id, happened_on, created_at, quantity, note, photo_path, co2_kg_cached, intervention_name, intervention_unit, team_name, category_name, category_color, social_score_cached`.
 
 ## Migrations (legacy veld, niet gebruikt)
 

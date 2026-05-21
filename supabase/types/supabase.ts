@@ -1,3 +1,7 @@
+/**
+ * Hand-maintained to match live schema after `0009_eco_social_units.sql` (2026-05-21).
+ * Regenerate from Supabase dashboard when possible; diff against this file after runs.
+ */
 export type Json =
   | string
   | number
@@ -85,33 +89,39 @@ export type Database = {
           category_id: string
           co2_factor_kg: number
           created_at: string
+          eco_unit: string
           id: string
           is_archived: boolean
           name: string
           org_id: string
-          unit: Database["public"]["Enums"]["intervention_unit"]
+          social_score_factor: number
+          social_unit: string
           updated_at: string
         }
         Insert: {
           category_id: string
           co2_factor_kg: number
           created_at?: string
+          eco_unit: string
           id?: string
           is_archived?: boolean
           name: string
           org_id: string
-          unit: Database["public"]["Enums"]["intervention_unit"]
+          social_score_factor?: number
+          social_unit: string
           updated_at?: string
         }
         Update: {
           category_id?: string
           co2_factor_kg?: number
           created_at?: string
+          eco_unit?: string
           id?: string
           is_archived?: boolean
           name?: string
           org_id?: string
-          unit?: Database["public"]["Enums"]["intervention_unit"]
+          social_score_factor?: number
+          social_unit?: string
           updated_at?: string
         }
         Relationships: [
@@ -287,6 +297,8 @@ export type Database = {
           org_id: string
           photo_path: string | null
           quantity: number
+          social_quantity: number
+          social_score_cached: number
           team_id: string
           updated_at: string
           user_id: string
@@ -301,6 +313,8 @@ export type Database = {
           org_id: string
           photo_path?: string | null
           quantity: number
+          social_quantity: number
+          social_score_cached?: number
           team_id: string
           updated_at?: string
           user_id: string
@@ -315,6 +329,8 @@ export type Database = {
           org_id?: string
           photo_path?: string | null
           quantity?: number
+          social_quantity?: number
+          social_score_cached?: number
           team_id?: string
           updated_at?: string
           user_id?: string
@@ -519,6 +535,7 @@ export type Database = {
           org_id: string | null
           registration_count: number | null
           share_slug: string | null
+          social_score_total: number | null
         }
         Relationships: []
       }
@@ -528,6 +545,7 @@ export type Database = {
           org_id: string | null
           registration_count: number | null
           share_slug: string | null
+          social_score_total: number | null
           week_start: string | null
         }
         Relationships: []
@@ -543,6 +561,7 @@ export type Database = {
           org_name: string | null
           registration_count: number | null
           share_slug: string | null
+          social_score_total: number | null
         }
         Relationships: []
       }
@@ -553,14 +572,17 @@ export type Database = {
           co2_kg_cached: number | null
           created_at: string | null
           happened_on: string | null
+          intervention_eco_unit: string | null
           intervention_name: string | null
-          intervention_unit: Database["public"]["Enums"]["intervention_unit"] | null
+          intervention_social_unit: string | null
           note: string | null
           org_id: string | null
           photo_path: string | null
           quantity: number | null
           registration_id: string | null
           share_slug: string | null
+          social_quantity: number | null
+          social_score_cached: number | null
           team_name: string | null
         }
         Relationships: []
@@ -571,6 +593,7 @@ export type Database = {
           org_id: string | null
           registration_count: number | null
           share_slug: string | null
+          social_score_total: number | null
           team_id: string | null
           team_name: string | null
         }
