@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
 import { InterventionCard } from "@/components/registration/intervention-card";
 import { SectionLabel } from "@/components/registration/registration-section";
-import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
 import { EmptyState } from "@/components/settings/form-fields";
 import { sectionLabelClassName } from "@/components/settings/settings-styles";
 import { Icon } from "@/components/ui/icon";
@@ -54,6 +54,7 @@ export function InterventionPicker({
     [categoryFilter, interventions, searchQuery, selectedId],
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll selected card when filters change
   useEffect(() => {
     if (!selectedId) return;
     selectedCardRef.current?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });

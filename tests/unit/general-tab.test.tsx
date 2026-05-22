@@ -47,8 +47,6 @@ describe("<GeneralTab />", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /beschrijving bewerken/i }));
 
-    expect(
-      screen.getByDisplayValue("Welzijnsorganisatie in Brabant"),
-    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Welzijnsorganisatie in Brabant")).toBeInTheDocument();
   });
 });

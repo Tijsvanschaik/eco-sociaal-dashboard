@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  type CategorySlice,
   hasMetricTotal,
   sortedRowsForMetric,
-  type CategorySlice,
 } from "@/components/charts/category-donut-chart";
 
 function slice(
@@ -23,13 +23,13 @@ function slice(
 
 describe("sortedRowsForMetric", () => {
   it("filters zero values and sorts descending by active metric", () => {
-    const items = [
-      slice("a", 10, 50),
-      slice("b", 100, 0),
-      slice("c", 40, 200),
-    ];
+    const items = [slice("a", 10, 50), slice("b", 100, 0), slice("c", 40, 200)];
 
-    expect(sortedRowsForMetric(items, "co2SavedKg").map((item) => item.id)).toEqual(["b", "c", "a"]);
+    expect(sortedRowsForMetric(items, "co2SavedKg").map((item) => item.id)).toEqual([
+      "b",
+      "c",
+      "a",
+    ]);
     expect(sortedRowsForMetric(items, "socialScoreTotal").map((item) => item.id)).toEqual([
       "c",
       "a",

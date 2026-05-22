@@ -277,10 +277,7 @@ function SidebarItemRenderer({
     compact ? "text-sm font-medium" : "",
     isCollapsed
       ? cn("justify-center px-0 hover:translate-x-0", compact ? "py-2" : "py-3")
-      : cn(
-          "hover:translate-x-1",
-          compact ? "gap-2.5 px-3.5 py-2" : "gap-4 px-5 py-3.5",
-        ),
+      : cn("hover:translate-x-1", compact ? "gap-2.5 px-3.5 py-2" : "gap-4 px-5 py-3.5"),
   );
 
   const iconClassName = compact ? "text-[1.125rem]" : undefined;
@@ -293,10 +290,7 @@ function SidebarItemRenderer({
           data-slot="sidebar-item"
           title={isCollapsed ? item.label : undefined}
           aria-label={isCollapsed ? item.label : undefined}
-          className={cn(
-            itemClassName,
-            "text-muted-foreground hover:bg-card/60 hover:text-primary",
-          )}
+          className={cn(itemClassName, "text-muted-foreground hover:bg-card/60 hover:text-primary")}
         >
           <Icon className={iconClassName} name={item.icon} />
           <span className={cn(isCollapsed && "sr-only")}>{item.label}</span>

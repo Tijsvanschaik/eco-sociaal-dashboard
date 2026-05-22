@@ -21,10 +21,7 @@ export function RegistrationPlaceholder({
 }) {
   return (
     <div
-      className={cn(
-        "relative h-full w-full overflow-hidden bg-surface-container-low",
-        className,
-      )}
+      className={cn("relative h-full w-full overflow-hidden bg-surface-container-low", className)}
     >
       <img
         alt=""

@@ -77,6 +77,7 @@ export function Modal({
           sizeClassName[size],
           className,
         )}
+        // biome-ignore lint/a11y/useSemanticElements: custom modal shell; native dialog styling conflicts with design system
         role="dialog"
         tabIndex={-1}
       >

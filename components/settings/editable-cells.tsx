@@ -165,10 +165,7 @@ export function EditableTextareaCell({
         <textarea
           ref={inputRef}
           aria-label={`${label} bewerken`}
-          className={cn(
-            inlineInputClassName,
-            "min-h-[5.5rem] resize-y py-2",
-          )}
+          className={cn(inlineInputClassName, "min-h-[5.5rem] resize-y py-2")}
           defaultValue={value}
           disabled={isPending}
           rows={rows}

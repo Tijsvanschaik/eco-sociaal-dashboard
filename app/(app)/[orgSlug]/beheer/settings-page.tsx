@@ -97,7 +97,9 @@ export default async function SettingsPage({
         <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           {context.org.name}
         </p>
-        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">Instellingen</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
+          Instellingen
+        </h1>
       </header>
 
       <SettingsTabsNav activeTab={activeTab} orgSlug={context.org.slug} />
@@ -127,11 +129,7 @@ export default async function SettingsPage({
           />
         ) : null}
         {activeTab === "teams" ? (
-          <TeamsTab
-            orgSlug={context.org.slug}
-            teamMemberships={teamMemberships}
-            teams={teams}
-          />
+          <TeamsTab orgSlug={context.org.slug} teamMemberships={teamMemberships} teams={teams} />
         ) : null}
         {activeTab === "interventies" ? (
           <InterventionsTab

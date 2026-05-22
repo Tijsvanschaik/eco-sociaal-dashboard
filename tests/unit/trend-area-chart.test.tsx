@@ -1,4 +1,8 @@
-import { TrendAreaChart, TrendAreaChartBody, hasTrendSocialData } from "@/components/charts/trend-area-chart";
+import {
+  TrendAreaChart,
+  TrendAreaChartBody,
+  hasTrendSocialData,
+} from "@/components/charts/trend-area-chart";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -56,7 +60,10 @@ describe("TrendAreaChart", () => {
       />,
     );
 
-    expect(screen.getByRole("radio", { name: "Eco-sociaal" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Eco-sociaal" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     expect(screen.getByRole("radio", { name: "Eco" })).toHaveAttribute("aria-checked", "false");
     expect(screen.getByRole("radio", { name: "Sociaal" })).toHaveAttribute("aria-checked", "false");
   });

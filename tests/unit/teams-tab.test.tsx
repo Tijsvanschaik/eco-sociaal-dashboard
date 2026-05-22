@@ -26,9 +26,7 @@ const teamMemberships = [
 
 describe("<TeamsTab />", () => {
   it("renders the table and opens the create team modal", () => {
-    render(
-      <TeamsTab orgSlug="lev-groep" teamMemberships={teamMemberships} teams={teams} />,
-    );
+    render(<TeamsTab orgSlug="lev-groep" teamMemberships={teamMemberships} teams={teams} />);
 
     expect(screen.getByRole("heading", { name: /teams/i })).toBeInTheDocument();
     expect(screen.getByText("LEV Helmond")).toBeInTheDocument();
@@ -41,9 +39,7 @@ describe("<TeamsTab />", () => {
   });
 
   it("opens inline editing when clicking a team name", () => {
-    render(
-      <TeamsTab orgSlug="lev-groep" teamMemberships={teamMemberships} teams={teams} />,
-    );
+    render(<TeamsTab orgSlug="lev-groep" teamMemberships={teamMemberships} teams={teams} />);
 
     fireEvent.click(screen.getByRole("button", { name: /teamnaam bewerken: lev helmond/i }));
 

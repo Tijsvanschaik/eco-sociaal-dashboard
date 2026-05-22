@@ -17,7 +17,12 @@ const intervention = {
 describe("ImpactPreview", () => {
   it("shows placeholder copy when quantities are missing", () => {
     render(
-      <ImpactPreview intervention={intervention} quantity={0} socialQuantity={0} variant="inline" />,
+      <ImpactPreview
+        intervention={intervention}
+        quantity={0}
+        socialQuantity={0}
+        variant="inline"
+      />,
     );
 
     expect(screen.getByText(/zodra je een activiteit kiest/i)).toBeInTheDocument();

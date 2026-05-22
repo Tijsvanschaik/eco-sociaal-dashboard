@@ -45,7 +45,11 @@ const interventions = [
 describe("<InterventionsTab />", () => {
   it("renders the table and opens the create intervention modal", () => {
     render(
-      <InterventionsTab categories={categories} interventions={interventions} orgSlug="lev-groep" />,
+      <InterventionsTab
+        categories={categories}
+        interventions={interventions}
+        orgSlug="lev-groep"
+      />,
     );
 
     expect(screen.getByRole("heading", { name: /interventies/i })).toBeInTheDocument();
@@ -59,7 +63,11 @@ describe("<InterventionsTab />", () => {
 
   it("filters interventions by category chip", () => {
     render(
-      <InterventionsTab categories={categories} interventions={interventions} orgSlug="lev-groep" />,
+      <InterventionsTab
+        categories={categories}
+        interventions={interventions}
+        orgSlug="lev-groep"
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /filter op mobiliteit/i }));
@@ -70,7 +78,11 @@ describe("<InterventionsTab />", () => {
 
   it("opens inline editing when clicking a cell value", () => {
     render(
-      <InterventionsTab categories={categories} interventions={interventions} orgSlug="lev-groep" />,
+      <InterventionsTab
+        categories={categories}
+        interventions={interventions}
+        orgSlug="lev-groep"
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /eco-eenheid bewerken: km/i }));
@@ -80,7 +92,11 @@ describe("<InterventionsTab />", () => {
 
   it("opens category dropdown when clicking the category cell", () => {
     render(
-      <InterventionsTab categories={categories} interventions={interventions} orgSlug="lev-groep" />,
+      <InterventionsTab
+        categories={categories}
+        interventions={interventions}
+        orgSlug="lev-groep"
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /categorie bewerken: mobiliteit/i }));

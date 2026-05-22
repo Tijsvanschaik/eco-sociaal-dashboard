@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEventHandler, type InputHTMLAttributes, type ReactNode } from "react";
+import type { ChangeEventHandler, InputHTMLAttributes, ReactNode } from "react";
 
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,10 @@ import {
 
 export function FormError({ message }: { message: string }) {
   return (
-    <p className="rounded-[0.85rem] bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
+    <p
+      className="rounded-[0.85rem] bg-destructive/10 px-3 py-2 text-sm text-destructive"
+      role="alert"
+    >
       {message}
     </p>
   );

@@ -41,6 +41,12 @@ const interventions = [
   },
 ];
 
+function getSubmitButton() {
+  const submit = screen.getAllByRole("button", { name: /impact opslaan/i })[0];
+  if (!submit) throw new Error("Submit button not found");
+  return submit;
+}
+
 describe("RegistrationForm", () => {
   beforeEach(() => {
     refresh.mockReset();
@@ -59,7 +65,7 @@ describe("RegistrationForm", () => {
       />,
     );
 
-    const submit = screen.getAllByRole("button", { name: /impact opslaan/i })[0]!;
+    const submit = getSubmitButton();
     expect(submit).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "3" } });
@@ -98,7 +104,7 @@ describe("RegistrationForm", () => {
 
     fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "2.5" } });
     fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "4" } });
-    const submit = screen.getAllByRole("button", { name: /impact opslaan/i })[0]!;
+    const submit = getSubmitButton();
 
     await waitFor(() => expect(submit).toBeEnabled());
     fireEvent.click(submit);
@@ -179,7 +185,7 @@ describe("RegistrationForm", () => {
 
     fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "2" } });
     fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "3" } });
-    const submit = screen.getAllByRole("button", { name: /impact opslaan/i })[0]!;
+    const submit = getSubmitButton();
 
     await waitFor(() => expect(submit).toBeEnabled());
     fireEvent.click(submit);

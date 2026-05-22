@@ -120,6 +120,7 @@ function TrendViewSelector({
               !isActive && "text-muted-foreground hover:text-foreground",
             )}
             onClick={() => onChange(option.id)}
+            // biome-ignore lint/a11y/useSemanticElements: styled tablist controls; native radio styling doesn't match design
             role="radio"
             type="button"
           >
@@ -209,10 +210,7 @@ export function TrendAreaChartBody({
       <TrendViewSelector hasSocial={hasSocial} viewMode={viewMode} onChange={setViewMode} />
 
       <ChartContainer
-        className={cn(
-          "w-full",
-          fillContainer ? "min-h-[260px] flex-1" : "h-[260px]",
-        )}
+        className={cn("w-full", fillContainer ? "min-h-[260px] flex-1" : "h-[260px]")}
         config={config}
         data-testid="trend-chart"
         style={fillContainer ? { height: "100%" } : { height }}

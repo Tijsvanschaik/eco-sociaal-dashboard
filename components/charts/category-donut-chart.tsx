@@ -42,7 +42,10 @@ export function hasMetricTotal(items: CategorySlice[], metricKey: SliceMetricKey
   return items.some((item) => item[metricKey] > METRIC_EPSILON);
 }
 
-export function sortedRowsForMetric(items: CategorySlice[], metricKey: SliceMetricKey): CategorySlice[] {
+export function sortedRowsForMetric(
+  items: CategorySlice[],
+  metricKey: SliceMetricKey,
+): CategorySlice[] {
   return items
     .filter((item) => item.registrationCount > 0 && item[metricKey] > METRIC_EPSILON)
     .sort((a, b) => b[metricKey] - a[metricKey]);
@@ -80,47 +83,47 @@ function CategoryMetricDonut({
     <div className="@container grid grid-cols-1 gap-5 @[34rem]:grid-cols-[auto_1fr] @[34rem]:items-center">
       <div className="flex justify-center">
         <div className="relative shrink-0" style={{ width: size, height: size }}>
-        <div className="pointer-events-none absolute inset-0 z-0 flex flex-col items-center justify-center px-8 text-center">
-          <span className="text-2xl font-extrabold leading-none tracking-tight text-foreground sm:text-3xl">
-            {centerValueFormatter(total)}
-          </span>
-          <span className="mt-1.5 text-[11px] font-semibold leading-tight text-muted-foreground sm:text-xs">
-            {centerSubtitle}
-          </span>
-        </div>
-        <ChartContainer
-          className="relative z-10 h-full w-full"
-          config={Object.fromEntries(
-            rows.map((item) => [item.id, { label: item.name, color: item.color ?? "#84cc16" }]),
-          )}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Tooltip
-                content={
-                  <ChartTooltipContent
-                    className="z-20"
-                    formatter={(value) => metricFormatter(Number(value ?? 0))}
-                  />
-                }
-                wrapperStyle={{ zIndex: 20 }}
-              />
-              <Pie
-                data={rows}
-                dataKey={metricKey}
-                nameKey="name"
-                innerRadius="62%"
-                outerRadius="92%"
-                paddingAngle={2}
-                strokeWidth={0}
-              >
-                {rows.map((item) => (
-                  <Cell key={item.id} fill={item.color ?? "#84cc16"} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+          <div className="pointer-events-none absolute inset-0 z-0 flex flex-col items-center justify-center px-8 text-center">
+            <span className="text-2xl font-extrabold leading-none tracking-tight text-foreground sm:text-3xl">
+              {centerValueFormatter(total)}
+            </span>
+            <span className="mt-1.5 text-[11px] font-semibold leading-tight text-muted-foreground sm:text-xs">
+              {centerSubtitle}
+            </span>
+          </div>
+          <ChartContainer
+            className="relative z-10 h-full w-full"
+            config={Object.fromEntries(
+              rows.map((item) => [item.id, { label: item.name, color: item.color ?? "#84cc16" }]),
+            )}
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Tooltip
+                  content={
+                    <ChartTooltipContent
+                      className="z-20"
+                      formatter={(value) => metricFormatter(Number(value ?? 0))}
+                    />
+                  }
+                  wrapperStyle={{ zIndex: 20 }}
+                />
+                <Pie
+                  data={rows}
+                  dataKey={metricKey}
+                  nameKey="name"
+                  innerRadius="62%"
+                  outerRadius="92%"
+                  paddingAngle={2}
+                  strokeWidth={0}
+                >
+                  {rows.map((item) => (
+                    <Cell key={item.id} fill={item.color ?? "#84cc16"} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartContainer>
         </div>
       </div>
 
@@ -215,7 +218,7 @@ function CategoryMetricTabs({
 export function CategoryDonutChartBody({
   items,
   limit = 6,
-  periodLabel,
+  periodLabel: _periodLabel,
   size = 252,
 }: {
   items: CategorySlice[];

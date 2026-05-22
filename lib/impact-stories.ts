@@ -52,8 +52,7 @@ export function buildImpactStories({
       numericValue: trees,
       formattedValue: integerFormatter.format(trees),
       title: "bomen geplant",
-      description:
-        "Zoveel bomen nemen ongeveer dezelfde hoeveelheid CO₂ op in één jaar.",
+      description: "Zoveel bomen nemen ongeveer dezelfde hoeveelheid CO₂ op in één jaar.",
     });
   }
 
@@ -80,8 +79,7 @@ export function buildImpactStories({
       numericValue: km,
       formattedValue: integerFormatter.format(km),
       title: "km autorijden vermeden",
-      description:
-        "Deze CO₂-besparing staat gelijk aan zoveel autokilometers minder rijden.",
+      description: "Deze CO₂-besparing staat gelijk aan zoveel autokilometers minder rijden.",
     });
   }
 

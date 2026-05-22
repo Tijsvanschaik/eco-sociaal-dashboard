@@ -71,7 +71,5 @@ export function deriveCategoriesFromInterventions(
     });
   }
 
-  return Array.from(map.values()).sort((left, right) =>
-    left.name.localeCompare(right.name, "nl"),
-  );
+  return Array.from(map.values()).sort((left, right) => left.name.localeCompare(right.name, "nl"));
 }

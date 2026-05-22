@@ -48,18 +48,21 @@ function StoryVisual({ story }: { story: ImpactStory }) {
 
 export function ImpactStoryRotator({ stories }: { stories: ImpactStory[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const storiesKey = stories.map((story) => story.id).join("|");
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset carousel when stories change
   useEffect(() => {
     setActiveIndex(0);
-  }, [stories]);
+  }, [storiesKey]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: restart rotation when stories change
   useEffect(() => {
     if (stories.length <= 1) return;
     const id = window.setInterval(() => {
       setActiveIndex((index) => (index + 1) % stories.length);
     }, ROTATION_MS);
     return () => window.clearInterval(id);
-  }, [stories]);
+  }, [stories.length, storiesKey]);
 
   if (stories.length === 0) return null;
 

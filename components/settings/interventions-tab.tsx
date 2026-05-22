@@ -1,13 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  type FormEvent,
-  useEffect,
-  useMemo,
-  useState,
-  useTransition,
-} from "react";
+import { type FormEvent, useEffect, useMemo, useState, useTransition } from "react";
 
 import {
   archiveIntervention,
@@ -42,8 +36,8 @@ import {
 } from "@/components/settings/settings-styles";
 import {
   ConfirmArchiveModal,
-  getErrorMessage,
   RowIconButton,
+  getErrorMessage,
 } from "@/components/settings/settings-ui";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -224,10 +218,7 @@ export function InterventionsTab({ categories, interventions, orgSlug }: Interve
                   <th className={tableHeadRightClassName} scope="col">
                     CO₂-factor
                   </th>
-                  <th
-                    className={cn(tableHeadClassName, tableSectionBorderClassName)}
-                    scope="col"
-                  >
+                  <th className={cn(tableHeadClassName, tableSectionBorderClassName)} scope="col">
                     Sociale eenheid
                   </th>
                   <th className={tableHeadRightClassName} scope="col">
@@ -246,9 +237,7 @@ export function InterventionsTab({ categories, interventions, orgSlug }: Interve
                     category={categoryMap.get(intervention.category_id)}
                     intervention={intervention}
                     isLast={index === filteredInterventions.length - 1}
-                    onDelete={() =>
-                      setArchiveModal({ type: "archive-intervention", intervention })
-                    }
+                    onDelete={() => setArchiveModal({ type: "archive-intervention", intervention })}
                     onSaved={() => router.refresh()}
                     orgSlug={orgSlug}
                   />
@@ -685,7 +674,14 @@ function CategoryCreateModal({
       <form className="space-y-5" id="create-category-form" onSubmit={handleSubmit}>
         <Field label="Naam" name="name" placeholder="Bijv. Mobiliteit" required />
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <Field className="sm:w-28" defaultValue="#6b7280" label="Kleur" name="color" required type="color" />
+          <Field
+            className="sm:w-28"
+            defaultValue="#6b7280"
+            label="Kleur"
+            name="color"
+            required
+            type="color"
+          />
           <p className={cn(modalFieldHelperClassName, "sm:pb-2.5")}>
             Deze kleur gebruiken we in grafieken en op het dashboard.
           </p>

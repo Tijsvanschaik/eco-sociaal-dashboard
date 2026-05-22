@@ -19,9 +19,9 @@ import {
 } from "@/components/settings/settings-styles";
 import {
   ConfirmArchiveModal,
-  getErrorMessage,
   RowIconButton,
   SettingsSection,
+  getErrorMessage,
 } from "@/components/settings/settings-ui";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -227,7 +227,6 @@ function MemberRow({
   const [isPending, startTransition] = useTransition();
   const isAdmin = membership.role === "admin";
   const initials = getInitials(displayName);
-  const roleLabel = isAdmin ? "Admin" : "Medewerker";
 
   function saveRole(nextRole: string) {
     if (isPending || nextRole === membership.role) {

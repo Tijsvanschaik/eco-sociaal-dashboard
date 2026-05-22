@@ -1,4 +1,8 @@
-import { attachStoryImages, buildImpactStories, kmDrivingAvoidedEquivalent } from "@/lib/impact-stories";
+import {
+  attachStoryImages,
+  buildImpactStories,
+  kmDrivingAvoidedEquivalent,
+} from "@/lib/impact-stories";
 import { describe, expect, it } from "vitest";
 
 describe("kmDrivingAvoidedEquivalent", () => {
@@ -39,9 +43,24 @@ describe("attachStoryImages", () => {
     const withImages = attachStoryImages(
       stories,
       [
-        { id: "eco-a", photoUrl: "https://example.com/eco-a.jpg", co2KgCached: 40, socialScoreCached: 5 },
-        { id: "eco-b", photoUrl: "https://example.com/eco-b.jpg", co2KgCached: 20, socialScoreCached: 10 },
-        { id: "social-a", photoUrl: "https://example.com/social-a.jpg", co2KgCached: 1, socialScoreCached: 60 },
+        {
+          id: "eco-a",
+          photoUrl: "https://example.com/eco-a.jpg",
+          co2KgCached: 40,
+          socialScoreCached: 5,
+        },
+        {
+          id: "eco-b",
+          photoUrl: "https://example.com/eco-b.jpg",
+          co2KgCached: 20,
+          socialScoreCached: 10,
+        },
+        {
+          id: "social-a",
+          photoUrl: "https://example.com/social-a.jpg",
+          co2KgCached: 1,
+          socialScoreCached: 60,
+        },
       ],
       (registration) => registration.photoUrl ?? `placeholder:${registration.id}`,
     );

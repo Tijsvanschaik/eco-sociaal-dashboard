@@ -1,4 +1,7 @@
-import { sectionDescriptionClassName, sectionLabelClassName } from "@/components/settings/settings-styles";
+import {
+  sectionDescriptionClassName,
+  sectionLabelClassName,
+} from "@/components/settings/settings-styles";
 
 /** Sub-label binnen een DashboardPanel-sectie (zelfde stijl als instellingen). */
 export function SectionLabel({ children }: { children: React.ReactNode }) {

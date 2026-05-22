@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -13,23 +13,14 @@ import { QuantityFields } from "@/components/registration/quantity-fields";
 import { RegistrationDetailsFields } from "@/components/registration/registration-details-fields";
 import type { FormUiState, PhotoState } from "@/components/registration/types";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
 import {
   deleteRegistrationPhoto,
   uploadRegistrationPhoto,
   validatePhotoFile,
 } from "@/lib/registrations/photo-upload";
-import {
-  type RegistrationInput,
-  registrationSchema,
-} from "@/lib/registrations/schema";
+import { type RegistrationInput, registrationSchema } from "@/lib/registrations/schema";
 import { createClient } from "@/lib/supabase/client";
 import type { InterventionOption, TeamOption } from "@/lib/tenant-dashboard-data";
 import { cn } from "@/lib/utils";

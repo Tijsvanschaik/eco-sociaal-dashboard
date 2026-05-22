@@ -15,10 +15,10 @@ import {
 } from "@/components/settings/settings-styles";
 import {
   ConfirmArchiveModal,
-  getErrorMessage,
   MemberCountBadge,
   RowIconButton,
   SettingsSection,
+  getErrorMessage,
 } from "@/components/settings/settings-ui";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -30,9 +30,7 @@ export type SettingsTeam = {
   name: string;
 };
 
-type ArchiveModalState =
-  | { type: "closed" }
-  | { type: "archive-team"; team: SettingsTeam };
+type ArchiveModalState = { type: "closed" } | { type: "archive-team"; team: SettingsTeam };
 
 type TeamsTabProps = {
   orgSlug: string;

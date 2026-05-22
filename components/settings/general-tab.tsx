@@ -4,10 +4,7 @@ import { useRouter } from "next/navigation";
 import { type ReactNode, useState, useTransition } from "react";
 
 import { updateOrgProfile, updateOrgSettings } from "@/app/(app)/[orgSlug]/beheer/actions";
-import {
-  EditableTextCell,
-  EditableTextareaCell,
-} from "@/components/settings/editable-cells";
+import { EditableTextCell, EditableTextareaCell } from "@/components/settings/editable-cells";
 import { FormError } from "@/components/settings/form-fields";
 import {
   cellTextClassName,
@@ -151,8 +148,8 @@ export function GeneralTab({ context }: GeneralTabProps) {
         <header className="space-y-1 pb-6">
           <h3 className={sectionTitleClassName}>Organisatieprofiel</h3>
           <p className={sectionDescriptionClassName}>
-            Naam, beschrijving en logo. Zichtbaar in de sidebar en op je publieke dashboard. Klik
-            op een waarde om te bewerken.
+            Naam, beschrijving en logo. Zichtbaar in de sidebar en op je publieke dashboard. Klik op
+            een waarde om te bewerken.
           </p>
         </header>
 
