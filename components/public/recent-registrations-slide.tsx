@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
 import {
   RegistrationCard,
@@ -8,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 export type RecentRegistrationsSlideProps = {
   compactCards?: boolean;
+  description?: ReactNode;
   /**
    * Hoeveel kaarten maximaal tonen. Stack/share = beperkt tot N; default = alle
    * geladen recente registraties uit `getPublicDashboardBySlug`.
@@ -36,6 +39,7 @@ const DEFAULT_GRID = "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3";
  */
 export function RecentRegistrationsSlide({
   compactCards = false,
+  description = "De laatste acties van de hele organisatie — elke kaart telt direct mee in het overzicht bovenaan.",
   limit,
   registrations,
   gridClassName,
@@ -46,7 +50,7 @@ export function RecentRegistrationsSlide({
     <DashboardPanel
       className={compactCards ? "w-full" : "h-full min-h-0"}
       contentClassName={compactCards ? undefined : "flex min-h-0 flex-1 flex-col"}
-      description="De laatste acties van de hele organisatie — elke kaart telt direct mee in het overzicht bovenaan."
+      description={description}
       icon="history"
       iconTone="primary"
       title="Recente registraties"

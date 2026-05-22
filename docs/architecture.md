@@ -15,6 +15,7 @@ Hosting: Vercel (app) + Supabase (DB/auth/storage).
 - `/` — dispatcher. Uitgelogd -> `/login`; ingelogd -> eerste org-dashboard of `/superadmin`.
 - `/login` — inlogpagina (magic-link + tijdelijke wachtwoordfallback).
 - `/(app)/[orgSlug]/dashboard` — read-only tenantoverzicht; KPI's en charts gefilterd op **huidig kalenderjaar** (`happened_on`).
+- `/(app)/[orgSlug]/teams/[teamId]` — team-detailpagina (drill-down vanaf dashboard); activiteiten per interventie, trend, recente registraties gefilterd op team.
 - `/(app)/[orgSlug]/registratie` — aparte registratieflow.
 - `/(app)/[orgSlug]/instellingen` — admin-only orgbeheer (voorheen `/beheer`).
 - `/superadmin` — platform-overzicht, read-only over alle tenants heen.

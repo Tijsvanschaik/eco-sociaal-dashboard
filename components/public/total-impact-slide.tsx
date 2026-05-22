@@ -8,6 +8,7 @@ export type TotalImpactSlideProps = {
   periodLabel: string;
   snapshot: DashboardSnapshot;
   storyPhotoSources?: ImpactStoryPhotoSource[];
+  teamLinkBase?: string;
 };
 
 /**
@@ -21,6 +22,7 @@ export function TotalImpactSlide({
   periodLabel,
   snapshot,
   storyPhotoSources = [],
+  teamLinkBase,
 }: TotalImpactSlideProps) {
   return (
     <div className={cn(isTv && "flex h-full min-h-0 w-full min-w-0 flex-1 flex-col")}>
@@ -32,6 +34,7 @@ export function TotalImpactSlide({
         registrationCount={snapshot.registrationCount}
         showTeamRanks={isTv}
         storyPhotoSources={storyPhotoSources}
+        teamLinkBase={teamLinkBase}
         teamBreakdown={snapshot.teamBreakdown}
         totalCo2Kg={snapshot.totalCo2Kg}
         totalSocialScore={snapshot.totalSocialScore}

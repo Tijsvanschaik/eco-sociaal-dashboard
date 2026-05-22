@@ -3,7 +3,43 @@ import type { ReactNode } from "react";
 import { AppSidebarLayout, type SidebarCta, type SidebarItem } from "./app-sidebar";
 import { OrgBadge } from "./org-badge";
 
-type Org = { id: string; name: string; slug: string; logoUrl?: string | null };
+type Org = {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl?: string | null;
+  publicShareEnabled?: boolean;
+  publicShareSlug?: string | null;
+};
+
+function buildPublicSurfaceFooterItems(shareSlug: string): SidebarItem[] {
+  return [
+    {
+      kind: "link",
+      label: "Openbare link",
+      href: `/p/${shareSlug}`,
+      icon: "public",
+      external: true,
+      neverActive: true,
+    },
+    {
+      kind: "link",
+      label: "TV-scherm",
+      href: `/tv/${shareSlug}`,
+      icon: "tv",
+      external: true,
+      neverActive: true,
+    },
+    {
+      kind: "link",
+      label: "Embed-link",
+      href: `/embed/${shareSlug}`,
+      icon: "code",
+      external: true,
+      neverActive: true,
+    },
+  ];
+}
 
 type TenantAppShellProps = {
   org: Org;
@@ -59,6 +95,14 @@ export function TenantAppShell({
       neverActive: true,
     },
   ];
+
+  const canManageOrg = memberRole === "admin" || isSuperadmin;
+  const shareSlug =
+    org.publicShareEnabled && org.publicShareSlug?.trim() ? org.publicShareSlug.trim() : null;
+  if (canManageOrg && shareSlug) {
+    footerItems.push(...buildPublicSurfaceFooterItems(shareSlug));
+  }
+
   if (isSuperadmin) {
     footerItems.push({
       kind: "link",

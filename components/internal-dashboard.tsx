@@ -50,6 +50,7 @@ export function InternalDashboard({
         periodLabel={periodLabel}
         snapshot={snapshot}
         storyPhotoSources={toStoryPhotoSources(recentRegistrations)}
+        teamLinkBase={`/${orgSlug}/teams`}
       />
 
       <ProgressSlide

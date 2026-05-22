@@ -62,6 +62,51 @@ describe("<TenantAppShell />", () => {
     expect(screen.getAllByRole("link", { name: /instellingen/i }).length).toBeGreaterThan(0);
   });
 
+  it("adds public surface links for admin when share is enabled", () => {
+    render(
+      <TenantAppShell
+        org={{
+          ...org,
+          publicShareEnabled: true,
+          publicShareSlug: "lev-groep",
+        }}
+        memberRole="admin"
+        isSuperadmin={false}
+        userDisplayName="admin@example.com"
+        switchableOrgs={[org]}
+      >
+        <p>content</p>
+      </TenantAppShell>,
+    );
+
+    const publicLink = screen.getAllByRole("link", { name: /openbare link/i })[0];
+    const tvLink = screen.getAllByRole("link", { name: /tv-scherm/i })[0];
+    const embedLink = screen.getAllByRole("link", { name: /embed-link/i })[0];
+
+    expect(publicLink).toHaveAttribute("href", "/p/lev-groep");
+    expect(publicLink).toHaveAttribute("target", "_blank");
+    expect(tvLink).toHaveAttribute("href", "/tv/lev-groep");
+    expect(embedLink).toHaveAttribute("href", "/embed/lev-groep");
+  });
+
+  it("hides public surface links for workers and when share is disabled", () => {
+    render(
+      <TenantAppShell
+        org={{ ...org, publicShareEnabled: true, publicShareSlug: "lev-groep" }}
+        memberRole="worker"
+        isSuperadmin={false}
+        userDisplayName="medewerker@example.com"
+        switchableOrgs={[org]}
+      >
+        <p>content</p>
+      </TenantAppShell>,
+    );
+
+    expect(screen.queryAllByRole("link", { name: /openbare link/i })).toHaveLength(0);
+    expect(screen.queryAllByRole("link", { name: /tv-scherm/i })).toHaveLength(0);
+    expect(screen.queryAllByRole("link", { name: /embed-link/i })).toHaveLength(0);
+  });
+
   it("adds superadmin footer link when user is superadmin", () => {
     render(
       <TenantAppShell

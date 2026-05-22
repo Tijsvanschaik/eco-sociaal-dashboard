@@ -121,4 +121,21 @@ describe("<ImpactOverviewCard />", () => {
     expect(screen.getByText(/nog geen registraties gekoppeld aan een team/i)).toBeInTheDocument();
     expect(screen.getByText(/zodra de eerste acties binnenrollen/i)).toBeInTheDocument();
   });
+
+  it("maakt teamnamen klikbaar wanneer teamLinkBase is gezet", () => {
+    render(
+      <ImpactOverviewCard
+        eodDays={0}
+        registrationCount={1}
+        totalCo2Kg={100}
+        totalSocialScore={0}
+        periodLabel="2026"
+        teamLinkBase="/lev-groep/teams"
+        teamBreakdown={[makeTeam("team-a", "LEV Helmond", 100)]}
+      />,
+    );
+
+    const link = screen.getByRole("link", { name: /lev helmond/i });
+    expect(link).toHaveAttribute("href", "/lev-groep/teams/team-a");
+  });
 });

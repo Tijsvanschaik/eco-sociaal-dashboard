@@ -239,10 +239,11 @@ function SidebarBody({
         </div>
       )}
 
-      <div className="space-y-2 pt-2">
+      <div className={cn("space-y-1 pt-2", isCollapsed && "pt-1")}>
         {footerItems.map((item) => (
           <SidebarItemRenderer
             key={itemKey(item)}
+            compact
             isCollapsed={isCollapsed}
             item={item}
             pathname={pathname}
@@ -259,16 +260,31 @@ function itemKey(item: SidebarItem) {
 }
 
 function SidebarItemRenderer({
+  compact = false,
   isCollapsed,
   item,
   pathname,
   onNavigate,
 }: {
+  compact?: boolean;
   isCollapsed: boolean;
   item: SidebarItem;
   pathname: string;
   onNavigate?: () => void;
 }) {
+  const itemClassName = cn(
+    "flex w-full items-center rounded-full text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+    compact ? "text-sm font-medium" : "",
+    isCollapsed
+      ? cn("justify-center px-0 hover:translate-x-0", compact ? "py-2" : "py-3")
+      : cn(
+          "hover:translate-x-1",
+          compact ? "gap-2.5 px-3.5 py-2" : "gap-4 px-5 py-3.5",
+        ),
+  );
+
+  const iconClassName = compact ? "text-[1.125rem]" : undefined;
+
   if (item.kind === "form") {
     return (
       <form action={item.action} method="post" className="block">
@@ -278,13 +294,11 @@ function SidebarItemRenderer({
           title={isCollapsed ? item.label : undefined}
           aria-label={isCollapsed ? item.label : undefined}
           className={cn(
-            "flex w-full items-center rounded-full text-left text-muted-foreground transition-all duration-300 hover:bg-card/60 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-            isCollapsed
-              ? "justify-center px-0 py-3 hover:translate-x-0"
-              : "gap-4 px-5 py-3.5 hover:translate-x-1",
+            itemClassName,
+            "text-muted-foreground hover:bg-card/60 hover:text-primary",
           )}
         >
-          <Icon name={item.icon} />
+          <Icon className={iconClassName} name={item.icon} />
           <span className={cn(isCollapsed && "sr-only")}>{item.label}</span>
         </button>
       </form>
@@ -305,16 +319,13 @@ function SidebarItemRenderer({
       data-active={isActive ? "true" : undefined}
       onClick={onNavigate}
       className={cn(
-        "flex items-center rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-        isCollapsed
-          ? "justify-center px-0 py-3 hover:translate-x-0"
-          : "gap-4 px-5 py-3.5 hover:translate-x-1",
+        itemClassName,
         isActive
           ? "bg-card font-bold text-primary shadow-sm"
           : "text-muted-foreground hover:bg-card/60 hover:text-primary",
       )}
     >
-      <Icon name={item.icon} filled={isActive} />
+      <Icon className={iconClassName} filled={isActive} name={item.icon} />
       <span className={cn(isCollapsed && "sr-only")}>{item.label}</span>
     </Link>
   );

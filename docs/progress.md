@@ -91,7 +91,7 @@
       registratiekaarten (kleuren, copy, notities, foto-placeholders). *(Zie
       **Sessie 2026-05-21 (avond)**.)*
 - [ ] Slice D (deel 2, rest) - Bento-grid layout + activiteitenfeed-filters
-- [ ] Slice E - Registratie-pagina
+- [x] Slice E - Registratie-pagina
 - [x] Slice F - Instellingen (tabs: inline-edit tables/rijen, modals voor create,
       gedeelde `components/settings/*`, full-width layout; zie **Sessie 2026-05-21 (instellingen)**)
 - [ ] Slice G - Superadmin-surfaces (content)
@@ -248,12 +248,37 @@ sociaal (`kg CO₂` / `punten`), en registratiekaarten + impact-hero aantrekkeli
 
 ## Laatste sessie
 
-Datum: 2026-05-21 (instellingen)  
-Wat gedaan: Instellingen volledig geharmoniseerd (4 tabs inline-edit) + dashboard UX-polish (charts, rotator, registratiekaarten). Unit tests groen.  
-Wat volgt: bento-grid + registratiefilters; rotator-thumb fine-tunen; user-invite E2E.  
+Datum: 2026-05-22  
+Wat gedaan: Slice E — registratiepagina redesign (categorie-filter + zoek, live impact-preview, component-split, sticky submit mobiel, success-banner). Unit tests groen (139).  
+Wat volgt: Slice D rest (bento-grid + registratiefilters op dashboard); user-invite E2E.  
 Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (workers: zelfde wachtwoord).
 
-## Sessie 2026-04-21 (ochtend)
+## Sessie 2026-05-22 — registratiepagina Slice E
+
+**Doel:** mobile-first scroll-flow voor registratie, visueel aligned met dashboard/instellingen.
+
+- **Filter-helper** [`lib/registration/intervention-filters.ts`](../lib/registration/intervention-filters.ts): categorie + zoekfilter, `alwaysIncludeId` voor geselecteerde activiteit.
+- **Component-split** `components/registration/*`: picker, quantity-fields, details, photo, impact-preview, orchestratie in `registration-form.tsx`. Re-export via `components/registration-form.tsx`.
+- **Intervention picker**: categorie-tabs, zoekveld, responsive kaartengrid (~33 interventies LEV).
+- **Live impact-preview**: kg CO₂, sociale punten, bomen-equivalent; sticky sidebar desktop, inline mobiel.
+- **Page layout** [`app/(app)/[orgSlug]/registratie/page.tsx`](../app/(app)/[orgSlug]/registratie/page.tsx): padding aligned met dashboard, card-styling, sticky submit mobiel, uitgebreide success-banner (dashboard-link + nog een registratie).
+- **Tests**: `intervention-filters`, `impact-preview`, uitgebreide `registration-form` (filter, preview, success).
+
+**Geen backend-wijzigingen** — server action + Zod-schema ongewijzigd.
+
+## Sessie 2026-05-22 — team-detailpagina
+
+**Doel:** per team activiteiten en impact tonen, bereikbaar via drill-down op het interne dashboard.
+
+- **Data** [`lib/tenant-team-data.ts`](../lib/tenant-team-data.ts): `getTenantTeamDetailData`, `filterRegistrationsByTeamId`; hergebruikt `buildDashboardSnapshot` + timeseries-helpers op team-gefilterde registraties (kalenderjaar). Geen SQL-migratie.
+- **Route** [`app/(app)/[orgSlug]/teams/[teamId]/page.tsx`](../app/(app)/[orgSlug]/teams/[teamId]/page.tsx): auth via org-context; 404 bij onbekend/gearchiveerd team.
+- **UI** [`components/team/`](../components/team/): `TeamDetailDashboard`, `TeamImpactHero` (KPI's), `TeamActivityBreakdown` (eco/sociaal-tabs op interventies).
+- **Drill-down** [`components/dashboard/impact-overview-card.tsx`](../components/dashboard/impact-overview-card.tsx): optionele `teamLinkBase`; alleen intern dashboard (`InternalDashboard`), niet op TV/embed.
+- **Tests**: unit (`tenant-team-data`, `team-activity-breakdown`), component (team-link in impact card), E2E [`tests/e2e/team-detail.spec.ts`](../tests/e2e/team-detail.spec.ts) (env: `PLAYWRIGHT_ORG_SLUG`, `PLAYWRIGHT_LOGIN_EMAIL`, `PLAYWRIGHT_LOGIN_PASSWORD`).
+
+**Wat volgt (fase B):** team-ledenrooster, vergelijking met org-gemiddelde, registratiefilters op dashboard.
+
+## Sessie 2026-05-21 (instellingen)
 
 Wat gedaan:
 - `fix(login)`: unieke `key`-props op magic-link- en wachtwoord-`Form` zodat

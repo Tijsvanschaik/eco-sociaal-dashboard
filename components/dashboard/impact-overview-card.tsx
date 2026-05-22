@@ -1,15 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import { registrationPlaceholderPhotoUrl } from "@/components/dashboard/registration-placeholder";
 import { ImpactStoryRotator } from "@/components/dashboard/impact-story-rotator";
+import { registrationPlaceholderPhotoUrl } from "@/components/dashboard/registration-placeholder";
 import { Icon } from "@/components/ui/icon";
 import type { TeamBreakdownRow } from "@/lib/dashboard";
 import {
+  type ImpactStoryPhotoSource,
   attachStoryImages,
   buildImpactStories,
-  type ImpactStoryPhotoSource,
 } from "@/lib/impact-stories";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,8 @@ export type ImpactOverviewCardProps = {
   fitToContainer?: boolean;
   forceShowAllTeams?: boolean;
   showTeamRanks?: boolean;
+  /** Basis-URL voor team drill-down, bijv. `/lev-groep/teams`. */
+  teamLinkBase?: string;
   teamBreakdown: TeamBreakdownRow[];
   periodLabel: string;
   registrationCount: number;
@@ -48,13 +51,14 @@ export type ImpactOverviewCardProps = {
 
 export function ImpactOverviewCard({
   className,
-  eodDays,
+  eodDays: _eodDays,
   fitToContainer = false,
   forceShowAllTeams = false,
   showTeamRanks = false,
+  teamLinkBase,
   teamBreakdown,
   periodLabel,
-  registrationCount,
+  registrationCount: _registrationCount,
   storyPhotoSources = [],
   totalCo2Kg,
   totalSocialScore,
@@ -105,6 +109,7 @@ export function ImpactOverviewCard({
           fitToContainer={fitToContainer}
           hasMore={!forceShowAllTeams && teamBreakdown.length > MAX_VISIBLE_TEAMS}
           maxCombinedImpact={maxCombinedImpact}
+          teamLinkBase={teamLinkBase}
           teams={visibleTeams}
           onToggleShowAll={() => setShowAllTeams((value) => !value)}
           periodLabel={periodLabel}
@@ -130,8 +135,10 @@ function ImpactHero({
 }) {
   const stories = useMemo(() => {
     const built = buildImpactStories({ totalCo2Kg, totalSocialScore });
-    return attachStoryImages(built, storyPhotoSources, (registration) =>
-      registration.photoUrl ?? registrationPlaceholderPhotoUrl(registration.id),
+    return attachStoryImages(
+      built,
+      storyPhotoSources,
+      (registration) => registration.photoUrl ?? registrationPlaceholderPhotoUrl(registration.id),
     );
   }, [storyPhotoSources, totalCo2Kg, totalSocialScore]);
 
@@ -238,6 +245,7 @@ function TeamBreakdownPanel({
   fitToContainer = false,
   hasMore,
   maxCombinedImpact,
+  teamLinkBase,
   teams,
   onToggleShowAll,
   periodLabel,
@@ -248,6 +256,7 @@ function TeamBreakdownPanel({
   fitToContainer?: boolean;
   hasMore: boolean;
   maxCombinedImpact: number;
+  teamLinkBase?: string;
   teams: TeamBreakdownRow[];
   onToggleShowAll: () => void;
   periodLabel: string;
@@ -289,6 +298,7 @@ function TeamBreakdownPanel({
           {teams.map((team, index) => (
             <TeamBar
               key={team.id}
+              href={teamLinkBase ? `${teamLinkBase}/${team.id}` : undefined}
               maxCombinedImpact={maxCombinedImpact}
               rank={showRanks ? index + 1 : undefined}
               team={team}
@@ -328,10 +338,12 @@ function TeamBreakdownPanel({
 }
 
 function TeamBar({
+  href,
   maxCombinedImpact,
   team,
   rank,
 }: {
+  href?: string;
   maxCombinedImpact: number;
   team: TeamBreakdownRow;
   rank?: number;
@@ -340,8 +352,8 @@ function TeamBar({
   const barWidthPercent =
     maxCombinedImpact > 0 ? Math.min(100, (combined / maxCombinedImpact) * 100) : 0;
 
-  return (
-    <li className="space-y-2">
+  const content = (
+    <>
       <div className="flex min-w-0 items-baseline gap-2 text-sm font-semibold text-foreground">
         {rank ? (
           <span className="flex-none text-xs font-extrabold text-primary">
@@ -349,6 +361,13 @@ function TeamBar({
           </span>
         ) : null}
         <span className="truncate">{team.name}</span>
+        {href ? (
+          <Icon
+            aria-hidden
+            name="chevron_right"
+            className="ml-auto shrink-0 text-base text-muted-foreground"
+          />
+        ) : null}
       </div>
       <div
         aria-label={`${team.name}: ${formatKg(team.co2SavedKg)} kilogram CO2, ${formatScore(team.socialScoreTotal)} sociale punten`}
@@ -382,8 +401,23 @@ function TeamBar({
           </div>
         ) : null}
       </div>
-    </li>
+    </>
   );
+
+  if (href) {
+    return (
+      <li>
+        <Link
+          className="block min-h-11 space-y-2 rounded-[1rem] p-2 -mx-2 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          href={href}
+        >
+          {content}
+        </Link>
+      </li>
+    );
+  }
+
+  return <li className="space-y-2">{content}</li>;
 }
 
 function BarSegment({

@@ -28,6 +28,17 @@ const interventions = [
     categoryColor: "#22aa66",
     categoryId: "33333333-3333-3333-3333-333333333333",
   },
+  {
+    id: "44444444-4444-4444-4444-444444444444",
+    name: "Energiecoach",
+    ecoUnit: "uur",
+    socialUnit: "personen",
+    factorKg: 0.2,
+    socialScoreFactor: 1,
+    categoryName: "Energie",
+    categoryColor: "#ffaa00",
+    categoryId: "55555555-5555-5555-5555-555555555555",
+  },
 ];
 
 describe("RegistrationForm", () => {
@@ -44,11 +55,11 @@ describe("RegistrationForm", () => {
         orgId="99999999-9999-9999-9999-999999999999"
         orgSlug="lev-groep"
         teams={teams}
-        userId="44444444-4444-4444-4444-444444444444"
+        userId="66666666-6666-6666-6666-666666666666"
       />,
     );
 
-    const submit = screen.getByRole("button", { name: /impact opslaan/i });
+    const submit = screen.getAllByRole("button", { name: /impact opslaan/i })[0]!;
     expect(submit).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "3" } });
@@ -64,7 +75,7 @@ describe("RegistrationForm", () => {
         orgId="99999999-9999-9999-9999-999999999999"
         orgSlug="lev-groep"
         teams={teams}
-        userId="44444444-4444-4444-4444-444444444444"
+        userId="66666666-6666-6666-6666-666666666666"
       />,
     );
 
@@ -81,13 +92,13 @@ describe("RegistrationForm", () => {
         orgId="99999999-9999-9999-9999-999999999999"
         orgSlug="lev-groep"
         teams={teams}
-        userId="44444444-4444-4444-4444-444444444444"
+        userId="66666666-6666-6666-6666-666666666666"
       />,
     );
 
     fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "2.5" } });
     fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "4" } });
-    const submit = screen.getByRole("button", { name: /impact opslaan/i });
+    const submit = screen.getAllByRole("button", { name: /impact opslaan/i })[0]!;
 
     await waitFor(() => expect(submit).toBeEnabled());
     fireEvent.click(submit);
@@ -96,5 +107,87 @@ describe("RegistrationForm", () => {
       expect(createRegistration).toHaveBeenCalledTimes(1);
       expect(refresh).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("filters interventions by category tab", () => {
+    render(
+      <RegistrationForm
+        interventions={interventions}
+        orgId="99999999-9999-9999-9999-999999999999"
+        orgSlug="lev-groep"
+        teams={teams}
+        userId="66666666-6666-6666-6666-666666666666"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /filter op energie/i }));
+
+    expect(screen.getByRole("button", { name: /energiecoach/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^fietsen$/i })).not.toBeInTheDocument();
+  });
+
+  it("filters interventions by search query", () => {
+    render(
+      <RegistrationForm
+        interventions={interventions}
+        orgId="99999999-9999-9999-9999-999999999999"
+        orgSlug="lev-groep"
+        teams={teams}
+        userId="66666666-6666-6666-6666-666666666666"
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/zoek activiteit/i), {
+      target: { value: "fiets" },
+    });
+
+    expect(screen.getByRole("button", { name: /fietsen/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /energiecoach/i })).not.toBeInTheDocument();
+  });
+
+  it("shows impact preview after valid quantities are entered", async () => {
+    render(
+      <RegistrationForm
+        interventions={interventions}
+        orgId="99999999-9999-9999-9999-999999999999"
+        orgSlug="lev-groep"
+        teams={teams}
+        userId="66666666-6666-6666-6666-666666666666"
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "4" } });
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/jouw impact/i).length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText("Sociale score").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("punten").length).toBeGreaterThan(0);
+  });
+
+  it("shows success actions after submit", async () => {
+    render(
+      <RegistrationForm
+        interventions={interventions}
+        orgId="99999999-9999-9999-9999-999999999999"
+        orgSlug="lev-groep"
+        teams={teams}
+        userId="66666666-6666-6666-6666-666666666666"
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "2" } });
+    fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "3" } });
+    const submit = screen.getAllByRole("button", { name: /impact opslaan/i })[0]!;
+
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(await screen.findByRole("link", { name: /bekijk dashboard/i })).toHaveAttribute(
+      "href",
+      "/lev-groep/dashboard",
+    );
+    expect(screen.getByRole("button", { name: /nog een registratie/i })).toBeInTheDocument();
   });
 });
