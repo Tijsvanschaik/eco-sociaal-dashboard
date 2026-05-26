@@ -351,7 +351,7 @@ export function EditableNumberCell({
             "flex w-full",
             stackUnit
               ? "flex-col items-end gap-1"
-              : cn("h-9 items-center", align === "right" ? "justify-end gap-1.5" : "gap-1.5"),
+              : "flex h-9 items-center gap-1.5",
           )}
         >
           <input
