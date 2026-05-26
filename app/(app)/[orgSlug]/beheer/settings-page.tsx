@@ -8,7 +8,8 @@ import { MembersTab } from "@/components/settings/members-tab";
 import { TeamsTab } from "@/components/settings/teams-tab";
 import { Icon } from "@/components/ui/icon";
 import { getOrgContextBySlug } from "@/lib/organizations";
-import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { getEmailMap } from "@/lib/user-emails";
 import { cn } from "@/lib/utils";
 
 type Params = Promise<{ orgSlug: string }>;
@@ -182,17 +183,4 @@ function SettingsTabsNav({ activeTab, orgSlug }: { activeTab: TabId; orgSlug: st
       </ul>
     </nav>
   );
-}
-
-async function getEmailMap(userIds: string[]) {
-  const uniqueIds = Array.from(new Set(userIds));
-  if (uniqueIds.length === 0) return new Map<string, string>();
-
-  const admin = createServiceRoleClient();
-  const { data } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-  const emails = new Map<string, string>();
-  for (const user of data.users) {
-    if (uniqueIds.includes(user.id) && user.email) emails.set(user.id, user.email);
-  }
-  return emails;
 }

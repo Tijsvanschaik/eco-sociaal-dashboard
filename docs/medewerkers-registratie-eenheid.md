@@ -10,7 +10,7 @@ Versie: mei 2026 — bij twijfel: vraag je teamleider hoe jullie lokaal tellen.
 Bij elke registratie kies je **activiteit (interventie)**, **team**, **datum** en **twee hoeveelheden**:
 
 1. **Eco-hoeveelheid** — voor de CO₂-berekening (label staat bij de activiteit, bijv. *uur*, *km*, *stuk*, *kg*).
-2. **Sociale hoeveelheid** — voor de sociale score (eigen label, bijv. *personen*, *deelnemers*, soms ook *uur*).
+2. **Sociale hoeveelheid** — altijd **personen** (bewoners, deelnemers, bezoekers). De zwaarte per activiteit zit in een vaste factor op de achtergrond.
 
 De app rekent dat om naar de cijfers op het dashboard en TV. Jullie tellen zo **consistent mogelijk**; de factoren staan vast per activiteit (beheerders stellen die in).
 
@@ -29,14 +29,25 @@ Andere labels kunnen je beheerder instellen; volg het **label naast het eco-veld
 
 ---
 
-## Sociale eenheid — zo tellen
+## Sociale eenheid — zo tellen (altijd **personen**)
 
-Het **sociale label** kan anders zijn dan eco (bijv. eco = *uur*, sociaal = *personen betrokken*).
+Tel **mensen die bereikt of betrokken** zijn — niet uren, km of stuks herhalen in het sociale veld.
 
-- Tel wat het label vraagt: aantal personen, deelnemers, bewoners, enz.
-- Mag **niet hetzelfde getal** zijn als eco als jullie dat inhoudelijk niet klopt — vul beide velden eerlijk in.
+| Type activiteit | Personen tellen als… |
+| --- | --- |
+| **Coach / advies / spreekuur** | Bewoners waarmee je contact had (1 bezoek ≈ 1 persoon, tenzij gezin expliciet meerdere) |
+| **Lezing / workshop / evenement** | Aantal **aanwezigen** (eco = 1 sessie/event) |
+| **Groen / opruimen / buurtactie** | Deelnemers die actief meedoen (bewoners, vrijwilligers, leerlingen) |
+| **Repaircafé / kledingbank / ruil** | **Bezoeker of ontvanger** per item (eco = stuks) |
+| **Kledingatelier** | Deelnemers aan de sessie |
+| **Hergebruik materialen (kg)** | Personen op locatie betrokken bij het materiaal — **niet** kg |
+| **Mobiliteit (km)** | Bewoners bereikt via gesprek/stimulering; puur teamrit zonder bewoners → **1** (eigen inzet) |
+| **Afval kantoor** | Collega's actief betrokken bij de actie |
 
-Vraag je teamleider als je niet weet welk label bij welke activiteit hoort.
+- Mag **niet hetzelfde getal** zijn als eco als dat inhoudelijk niet klopt.
+- Minimum **1 persoon** in de app — kies de eerlijkste telwijze hierboven.
+
+Vraag je teamleider bij twijfel. Uitgebreide tabel: **`docs/reviews/2026-05-26-lev-social-factors-review.md`**
 
 ---
 

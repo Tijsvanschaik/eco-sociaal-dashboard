@@ -1,8 +1,19 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
 import { formatRegistrationUnit } from "@/components/dashboard/registration-card";
 import { registrationInsetPanelClassName } from "@/components/registration/registration-section";
+import { InfoHint } from "@/components/ui/info-hint";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
+import {
+  getEcoQuantityHelp,
+  getSocialQuantityHelp,
+  QUANTITIES_PANEL_HELP,
+  type MetricsHelpContent,
+} from "@/lib/copy/eco-social-metrics-help";
 import type { InterventionOption } from "@/lib/tenant-dashboard-data";
 import { cn } from "@/lib/utils";
 
@@ -11,9 +22,9 @@ export const inputSurfaceClassName =
 
 type QuantityFieldsProps = {
   onEcoBlur: () => void;
-  onEcoChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onEcoChange: (value: number) => void;
   onSocialBlur: () => void;
-  onSocialChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSocialChange: (value: number) => void;
   quantity: number;
   selectedIntervention?: InterventionOption;
   socialQuantity: number;
@@ -30,6 +41,13 @@ export function QuantityFields({
 }: QuantityFieldsProps) {
   return (
     <DashboardPanel
+      action={
+        <InfoHint
+          content={QUANTITIES_PANEL_HELP}
+          label="Uitleg hoeveelheden bij registratie"
+          side="left"
+        />
+      }
       contentClassName="grid gap-4 lg:grid-cols-2"
       description="Eco en sociaal tellen apart — vul beide velden in."
       icon="speed"
@@ -39,6 +57,7 @@ export function QuantityFields({
       <QuantityInset
         ariaLabel="Eco-hoeveelheid"
         description="Voor de CO₂-berekening van deze activiteit."
+        helpContent={getEcoQuantityHelp(selectedIntervention?.ecoUnit)}
         factorHint={
           selectedIntervention
             ? `× ${formatFactor(selectedIntervention.factorKg)} kg CO₂`
@@ -55,6 +74,7 @@ export function QuantityFields({
       <QuantityInset
         ariaLabel="Sociale hoeveelheid"
         description="Voor de sociale score (kan afwijken van eco)."
+        helpContent={getSocialQuantityHelp(selectedIntervention?.ecoUnit)}
         factorHint={
           selectedIntervention
             ? `× ${formatFactor(selectedIntervention.socialScoreFactor)} punten`
@@ -76,6 +96,7 @@ function QuantityInset({
   ariaLabel,
   description,
   factorHint,
+  helpContent,
   icon,
   label,
   onBlur,
@@ -87,14 +108,24 @@ function QuantityInset({
   ariaLabel: string;
   description: string;
   factorHint?: string;
+  helpContent: MetricsHelpContent;
   icon: string;
   label: string;
   onBlur: () => void;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (value: number) => void;
   tone: "primary" | "tertiary";
   unitLabel?: string;
   value: number;
 }) {
+  const [draft, setDraft] = useState(() => formatQuantityDisplay(value));
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused) {
+      setDraft(formatQuantityDisplay(value));
+    }
+  }, [isFocused, value]);
+
   const iconTone =
     tone === "tertiary"
       ? "bg-tertiary-container text-tertiary"
@@ -111,7 +142,14 @@ function QuantityInset({
         <Icon name={icon} filled className="text-xl" />
       </span>
       <div className="space-y-1">
-        <p className="text-sm font-bold tracking-tight text-foreground">{label}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-bold tracking-tight text-foreground">{label}</p>
+          <InfoHint
+            content={helpContent}
+            label={`Uitleg ${label.toLowerCase()}`}
+            side="top"
+          />
+        </div>
         <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
       </div>
       <div className="flex items-center gap-3">
@@ -119,13 +157,31 @@ function QuantityInset({
           aria-label={ariaLabel}
           className={cn("h-14 min-w-0 flex-1 text-2xl font-extrabold", inputSurfaceClassName)}
           inputMode="decimal"
-          min="0.001"
           name={ariaLabel}
-          onBlur={onBlur}
-          onChange={onChange}
-          step="0.001"
-          type="number"
-          value={Number.isFinite(value) && value > 0 ? value : ""}
+          onBlur={() => {
+            setIsFocused(false);
+            onBlur();
+          }}
+          onChange={(event) => {
+            const raw = event.target.value;
+            if (raw !== "" && !/^[\d.,]*$/.test(raw)) return;
+
+            setDraft(raw);
+
+            const parsed = parseQuantityInput(raw);
+            if (parsed === null) {
+              if (raw === "") onChange(0);
+              return;
+            }
+
+            onChange(parsed);
+          }}
+          onFocus={() => {
+            setIsFocused(true);
+            setDraft(formatQuantityDisplay(value));
+          }}
+          type="text"
+          value={isFocused ? draft : formatQuantityDisplay(value)}
         />
         {unitLabel ? (
           <span className="flex min-w-[4rem] flex-col items-center justify-center px-2 text-center text-sm font-semibold text-muted-foreground">
@@ -147,4 +203,18 @@ function formatFactor(value: number): string {
     maximumFractionDigits: 3,
     minimumFractionDigits: 0,
   }).format(value);
+}
+
+function formatQuantityDisplay(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return "";
+  return String(value);
+}
+
+function parseQuantityInput(raw: string): number | null {
+  const normalized = raw.trim().replace(",", ".");
+  if (normalized === "" || normalized === ".") return null;
+  if (!/^\d*(\.\d*)?$/.test(normalized)) return null;
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
 }

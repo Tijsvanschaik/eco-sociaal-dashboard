@@ -1,12 +1,17 @@
 import Link from "next/link";
 
-import { tenantPageMainClassName } from "@/components/app-shell/tenant-page-layout";
+import {
+  tenantPageHeaderClassName,
+  tenantPageMainClassName,
+} from "@/components/app-shell/tenant-page-layout";
+import { InternalRecentRegistrationsSection } from "@/components/dashboard/internal-recent-registrations-section";
 import type { RegistrationCardData } from "@/components/dashboard/registration-card";
 import { ProgressSlide } from "@/components/public/progress-slide";
-import { RecentRegistrationsSlide } from "@/components/public/recent-registrations-slide";
 import { TotalImpactSlide } from "@/components/public/total-impact-slide";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import type { DashboardFeedFilters } from "@/lib/registrations/dashboard-filters";
+import type { RecentRegistration, TeamOption } from "@/lib/tenant-dashboard-data";
 import type { DashboardSnapshot } from "@/lib/dashboard";
 import type { WeeklyTimeseriesRow } from "@/lib/timeseries";
 
@@ -20,25 +25,31 @@ function toStoryPhotoSources(registrations: RegistrationCardData[]) {
 }
 
 export function InternalDashboard({
+  feedFilters,
   orgSlug,
   orgName,
-  year,
   recentRegistrations,
+  showTeamFilter,
   snapshot,
+  teams,
   timeseries,
+  year,
 }: {
+  feedFilters: DashboardFeedFilters;
   orgSlug: string;
   orgName: string;
-  year: number;
-  recentRegistrations: RegistrationCardData[];
+  recentRegistrations: RecentRegistration[];
+  showTeamFilter: boolean;
   snapshot: DashboardSnapshot;
+  teams: TeamOption[];
   timeseries: WeeklyTimeseriesRow[];
+  year: number;
 }) {
   const periodLabel = String(year);
 
   return (
     <main className={tenantPageMainClassName}>
-      <header className="w-full">
+      <header className={tenantPageHeaderClassName}>
         <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
           Welkom op het <span className="text-primary">{orgName}</span> impact dashboard
         </h1>
@@ -58,7 +69,13 @@ export function InternalDashboard({
         timeseries={timeseries}
       />
 
-      <RecentRegistrationsSlide registrations={recentRegistrations} />
+      <InternalRecentRegistrationsSection
+        filters={feedFilters}
+        orgSlug={orgSlug}
+        registrations={recentRegistrations}
+        showTeamFilter={showTeamFilter}
+        teams={teams}
+      />
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden">
         <Button

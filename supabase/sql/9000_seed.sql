@@ -134,7 +134,7 @@ select
   cats.id,
   iv.name,
   iv.unit_label,
-  iv.unit_label,
+  'personen',
   iv.factor,
   iv.social_factor
 from cats

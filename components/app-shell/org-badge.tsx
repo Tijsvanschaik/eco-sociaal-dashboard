@@ -28,15 +28,15 @@ export function OrgBadge({ org, userDisplayName, switchableOrgs, className }: Or
   return (
     <div
       className={cn(
-        "flex flex-col items-center text-center",
-        isCollapsed ? "pt-1 pb-0" : "pt-6 pb-2",
+        "flex flex-col items-center text-center pt-6 pb-2",
+        isCollapsed && "md:pt-1 md:pb-0",
         className,
       )}
     >
       <div
         className={cn(
-          "flex items-center justify-center overflow-hidden rounded-2xl",
-          isCollapsed ? "h-10 w-10" : "mb-4 h-16 w-16",
+          "mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl",
+          isCollapsed && "md:mb-0 md:h-10 md:w-10",
           org.logoUrl
             ? "bg-card shadow-sm"
             : "bg-primary-container text-lg font-extrabold tracking-tight text-on-primary-container",
@@ -47,27 +47,25 @@ export function OrgBadge({ org, userDisplayName, switchableOrgs, className }: Or
           <img
             alt={`Logo van ${org.name}`}
             src={org.logoUrl}
-            className="h-full w-full object-contain p-2"
+            className="h-full w-full object-contain p-1.5 md:p-2"
           />
         ) : (
           initials
         )}
       </div>
-      {!isCollapsed && (
-        <>
-          <h1 className="max-w-[12rem] truncate text-xl font-extrabold tracking-tight text-primary">
-            {userDisplayName}
-          </h1>
-          <span className="mt-1 max-w-[12rem] truncate text-sm text-muted-foreground">
-            {org.name}
-          </span>
-          {showSwitcher && (
-            <div className="mt-3">
-              <OrgSwitcher current={org} orgs={switchableOrgs ?? []} />
-            </div>
-          )}
-        </>
-      )}
+      <div className={cn(isCollapsed && "md:hidden")}>
+        <h1 className="max-w-[12rem] truncate text-xl font-extrabold tracking-tight text-primary">
+          {userDisplayName}
+        </h1>
+        <span className="mt-1 max-w-[12rem] truncate text-sm text-muted-foreground">
+          {org.name}
+        </span>
+        {showSwitcher && (
+          <div className="mt-3">
+            <OrgSwitcher current={org} orgs={switchableOrgs ?? []} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

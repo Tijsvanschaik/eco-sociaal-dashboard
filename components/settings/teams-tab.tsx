@@ -7,7 +7,14 @@ import { archiveTeam, createTeam, updateTeam } from "@/app/(app)/[orgSlug]/behee
 import { EditableTextCell } from "@/components/settings/editable-cells";
 import { EmptyState, Field, FormError } from "@/components/settings/form-fields";
 import {
+  MobileRowActionGroup,
+  SettingsMobileField,
+  SettingsMobileRowCard,
+} from "@/components/settings/mobile-row-card";
+import {
   cellTextClassName,
+  desktopTableWrapClassName,
+  mobileDataListClassName,
   tableHeadActionsClassName,
   tableHeadClassName,
   tableHeadRightClassName,
@@ -79,41 +86,58 @@ export function TeamsTab({ orgSlug, teamMemberships, teams }: TeamsTabProps) {
             message="Nog geen teams. Voeg een team toe zodat medewerkers kunnen registreren."
           />
         ) : (
-          <div className="-mx-6 mt-6 overflow-x-auto sm:-mx-8">
-            <table className="w-full min-w-[36rem] table-fixed text-left text-sm">
-              <colgroup>
-                <col className="w-[58%]" />
-                <col className="w-[28%]" />
-                <col className="w-[14%]" />
-              </colgroup>
-              <thead>
-                <tr className={cn(tableRowBorderClassName, "border-b-2 border-border/80")}>
-                  <th className={tableHeadClassName} scope="col">
-                    Team
-                  </th>
-                  <th className={tableHeadRightClassName} scope="col">
-                    Leden
-                  </th>
-                  <th className={tableHeadActionsClassName} scope="col">
-                    <span className="sr-only">Acties</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {teams.map((team, index) => (
-                  <TeamRow
-                    key={team.id}
-                    isLast={index === teams.length - 1}
-                    memberCount={memberCountByTeam.get(team.id) ?? 0}
-                    onArchive={() => setArchiveModal({ type: "archive-team", team })}
-                    onSaved={() => router.refresh()}
-                    orgSlug={orgSlug}
-                    team={team}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className={mobileDataListClassName}>
+              {teams.map((team) => (
+                <TeamRow
+                  key={`${team.id}-mobile`}
+                  layout="card"
+                  memberCount={memberCountByTeam.get(team.id) ?? 0}
+                  onArchive={() => setArchiveModal({ type: "archive-team", team })}
+                  onSaved={() => router.refresh()}
+                  orgSlug={orgSlug}
+                  team={team}
+                />
+              ))}
+            </div>
+
+            <div className={desktopTableWrapClassName}>
+              <table className="w-full table-fixed text-left text-sm">
+                <colgroup>
+                  <col className="w-[58%]" />
+                  <col className="w-[28%]" />
+                  <col className="w-[14%]" />
+                </colgroup>
+                <thead>
+                  <tr className={cn(tableRowBorderClassName, "border-b-2 border-border/80")}>
+                    <th className={tableHeadClassName} scope="col">
+                      Team
+                    </th>
+                    <th className={tableHeadRightClassName} scope="col">
+                      Leden
+                    </th>
+                    <th className={tableHeadActionsClassName} scope="col">
+                      <span className="sr-only">Acties</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teams.map((team, index) => (
+                    <TeamRow
+                      key={team.id}
+                      isLast={index === teams.length - 1}
+                      layout="table"
+                      memberCount={memberCountByTeam.get(team.id) ?? 0}
+                      onArchive={() => setArchiveModal({ type: "archive-team", team })}
+                      onSaved={() => router.refresh()}
+                      orgSlug={orgSlug}
+                      team={team}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </SettingsSection>
 
@@ -145,14 +169,16 @@ export function TeamsTab({ orgSlug, teamMemberships, teams }: TeamsTabProps) {
 }
 
 function TeamRow({
-  isLast,
+  isLast = true,
+  layout,
   memberCount,
   onArchive,
   onSaved,
   orgSlug,
   team,
 }: {
-  isLast: boolean;
+  isLast?: boolean;
+  layout: "card" | "table";
   memberCount: number;
   onArchive: () => void;
   onSaved: () => void;
@@ -188,6 +214,60 @@ function TeamRow({
     });
   }
 
+  const nameEditor = (
+    <EditableTextCell
+      editing={editingField === "name"}
+      isPending={isPending}
+      label="Teamnaam"
+      onCancel={() => setEditingField(null)}
+      onSave={saveName}
+      onStartEdit={() => {
+        if (isPending) return;
+        setError(null);
+        setEditingField("name");
+      }}
+      value={team.name}
+    >
+      <span className={cn(cellTextClassName, "truncate")}>{team.name}</span>
+    </EditableTextCell>
+  );
+
+  if (layout === "card") {
+    return (
+      <SettingsMobileRowCard>
+        <div className="flex items-start gap-2">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <span
+              aria-hidden
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-tertiary-container text-tertiary"
+            >
+              <Icon name="groups" filled className="text-base" />
+            </span>
+            <div className="min-w-0 flex-1 space-y-2">
+              <SettingsMobileField label="Teamnaam">{nameEditor}</SettingsMobileField>
+              <SettingsMobileField label="Leden">
+                <MemberCountBadge count={memberCount} />
+              </SettingsMobileField>
+            </div>
+          </div>
+          <MobileRowActionGroup>
+            <RowIconButton
+              icon="delete"
+              label={`${team.name} archiveren`}
+              onClick={onArchive}
+              tone="destructive"
+            />
+          </MobileRowActionGroup>
+        </div>
+        {error ? (
+          <div className="mt-2">
+            <FormError message={error} />
+          </div>
+        ) : null}
+      </SettingsMobileRowCard>
+    );
+  }
+
   return (
     <>
       <tr
@@ -204,23 +284,7 @@ function TeamRow({
             >
               <Icon name="groups" filled className="text-base" />
             </span>
-            <div className="min-w-0 flex-1">
-              <EditableTextCell
-                editing={editingField === "name"}
-                isPending={isPending}
-                label="Teamnaam"
-                onCancel={() => setEditingField(null)}
-                onSave={saveName}
-                onStartEdit={() => {
-                  if (isPending) return;
-                  setError(null);
-                  setEditingField("name");
-                }}
-                value={team.name}
-              >
-                <span className={cn(cellTextClassName, "truncate")}>{team.name}</span>
-              </EditableTextCell>
-            </div>
+            <div className="min-w-0 flex-1">{nameEditor}</div>
           </div>
         </td>
         <td className="px-3 py-3.5 text-right">

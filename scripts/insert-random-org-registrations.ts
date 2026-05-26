@@ -38,6 +38,9 @@ function quantityForUnit(unit: string): number {
       return randRange(1, 10);
     case "liter":
       return randRange(1, 20);
+    case "personen":
+    case "deelnemers":
+      return randRange(1, 15);
     default:
       return 1;
   }

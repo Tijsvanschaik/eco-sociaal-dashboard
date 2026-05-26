@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
+import { createRegistration } from "@/app/(app)/[orgSlug]/registratie/actions";
+import { updateRegistration } from "@/app/(app)/[orgSlug]/registraties/actions";
 import { ImpactPreview } from "@/components/registration/impact-preview";
 import { InterventionPicker } from "@/components/registration/intervention-picker";
 import { PhotoField } from "@/components/registration/photo-field";
@@ -25,30 +27,48 @@ import { createClient } from "@/lib/supabase/client";
 import type { InterventionOption, TeamOption } from "@/lib/tenant-dashboard-data";
 import { cn } from "@/lib/utils";
 
-import { createRegistration } from "@/app/(app)/[orgSlug]/registratie/actions";
-
 function todayAsInputValue(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function RegistrationForm({
-  interventions,
-  orgId,
-  orgSlug,
-  teams,
-  userId,
-}: {
+type RegistrationFormProps = {
   interventions: InterventionOption[];
   orgId: string;
   orgSlug: string;
   teams: TeamOption[];
   userId: string;
-}) {
+  mode?: "create" | "edit";
+  registrationId?: string;
+  initialValues?: RegistrationInput;
+  initialPhotoUrl?: string | null;
+};
+
+export function RegistrationForm({
+  interventions,
+  initialPhotoUrl = null,
+  initialValues,
+  mode = "create",
+  orgId,
+  orgSlug,
+  registrationId,
+  teams,
+  userId,
+}: RegistrationFormProps) {
   const router = useRouter();
   const formTopRef = useRef<HTMLDivElement | null>(null);
+  const initialPhotoPathRef = useRef<string | null>(initialValues?.photoPath ?? null);
   const [state, setState] = useState<FormUiState>({ status: "idle" });
   const [isPending, startTransition] = useTransition();
-  const [photo, setPhoto] = useState<PhotoState>({ status: "idle" });
+  const [photo, setPhoto] = useState<PhotoState>(() => {
+    if (mode === "edit" && initialValues?.photoPath && initialPhotoUrl) {
+      return {
+        status: "ready",
+        path: initialValues.photoPath,
+        previewUrl: initialPhotoUrl,
+      };
+    }
+    return { status: "idle" };
+  });
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
 
   function getSupabase() {
@@ -57,16 +77,17 @@ export function RegistrationForm({
   }
 
   const defaultValues = useMemo<RegistrationInput>(
-    () => ({
-      happenedOn: todayAsInputValue(),
-      interventionId: interventions[0]?.id ?? "",
-      note: "",
-      photoPath: undefined,
-      quantity: 0,
-      socialQuantity: 0,
-      teamId: teams[0]?.id ?? "",
-    }),
-    [interventions, teams],
+    () =>
+      initialValues ?? {
+        happenedOn: todayAsInputValue(),
+        interventionId: interventions[0]?.id ?? "",
+        note: "",
+        photoPath: undefined,
+        quantity: 0,
+        socialQuantity: 0,
+        teamId: teams[0]?.id ?? "",
+      },
+    [initialValues, interventions, teams],
   );
 
   const form = useForm<RegistrationInput>({
@@ -84,6 +105,7 @@ export function RegistrationForm({
   const selectedTeamId = form.watch("teamId");
   const canSubmit = teams.length > 0 && interventions.length > 0 && photo.status !== "uploading";
   const submitDisabled = isPending || !form.formState.isValid || !canSubmit;
+  const isEdit = mode === "edit";
 
   useEffect(() => {
     const current =
@@ -92,6 +114,11 @@ export function RegistrationForm({
       if (current?.startsWith("blob:")) URL.revokeObjectURL(current);
     };
   }, [photo]);
+
+  async function deleteUploadedPhoto(path: string) {
+    if (path === initialPhotoPathRef.current) return;
+    await deleteRegistrationPhoto({ path, supabase: getSupabase() });
+  }
 
   async function handlePhotoChange(file: File | null) {
     if (!file) return;
@@ -103,7 +130,7 @@ export function RegistrationForm({
     }
 
     if (photo.status === "ready") {
-      await deleteRegistrationPhoto({ path: photo.path, supabase: getSupabase() });
+      await deleteUploadedPhoto(photo.path);
     }
 
     const previewUrl = URL.createObjectURL(file);
@@ -128,7 +155,7 @@ export function RegistrationForm({
 
   async function handleRemovePhoto() {
     if (photo.status === "ready") {
-      await deleteRegistrationPhoto({ path: photo.path, supabase: getSupabase() });
+      await deleteUploadedPhoto(photo.path);
     }
     if ("previewUrl" in photo && photo.previewUrl.startsWith("blob:")) {
       URL.revokeObjectURL(photo.previewUrl);
@@ -155,6 +182,19 @@ export function RegistrationForm({
       formData.set("note", values.note ?? "");
       if (values.photoPath) {
         formData.set("photoPath", values.photoPath);
+      }
+
+      if (isEdit && registrationId) {
+        formData.set("registrationId", registrationId);
+        const result = await updateRegistration(orgSlug, registrationId, formData);
+        if (result.status === "ok") {
+          initialPhotoPathRef.current = values.photoPath ?? null;
+          router.push(`/${orgSlug}/registraties`);
+          router.refresh();
+          return;
+        }
+        setState({ status: "error", message: result.message });
+        return;
       }
 
       const result = await createRegistration(orgSlug, formData);
@@ -291,7 +331,7 @@ export function RegistrationForm({
                 </div>
               ) : null}
 
-              {state.status === "success" ? (
+              {!isEdit && state.status === "success" ? (
                 <SuccessBanner
                   message={state.message}
                   onRegisterAnother={handleRegisterAnother}
@@ -309,14 +349,35 @@ export function RegistrationForm({
             />
           </div>
 
-          <div className="hidden justify-center pt-2 md:flex">
-            <SubmitButton disabled={submitDisabled} isPending={isPending} />
+          <div className="hidden justify-center gap-3 pt-2 md:flex">
+            {isEdit ? (
+              <Button
+                asChild
+                type="button"
+                variant="outline"
+                className="min-h-12 rounded-full border-border/70 bg-card px-6"
+              >
+                <Link href={`/${orgSlug}/registraties`}>Annuleren</Link>
+              </Button>
+            ) : null}
+            <SubmitButton disabled={submitDisabled} isEdit={isEdit} isPending={isPending} />
           </div>
 
-          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden">
+          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center gap-2 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden">
+            {isEdit ? (
+              <Button
+                asChild
+                type="button"
+                variant="outline"
+                className="pointer-events-auto min-h-12 rounded-full border-border/70 bg-card px-5"
+              >
+                <Link href={`/${orgSlug}/registraties`}>Annuleren</Link>
+              </Button>
+            ) : null}
             <SubmitButton
-              className="pointer-events-auto max-w-sm"
+              className="pointer-events-auto max-w-sm flex-1"
               disabled={submitDisabled}
+              isEdit={isEdit}
               isPending={isPending}
             />
           </div>
@@ -329,10 +390,12 @@ export function RegistrationForm({
 function SubmitButton({
   className,
   disabled,
+  isEdit,
   isPending,
 }: {
   className?: string;
   disabled: boolean;
+  isEdit: boolean;
   isPending: boolean;
 }) {
   return (
@@ -346,9 +409,9 @@ function SubmitButton({
       )}
       disabled={disabled}
     >
-      <Icon name="eco" filled className="text-lg" />
-      {isPending ? "Opslaan..." : "Impact opslaan"}
-      <Icon name="arrow_forward" className="text-lg" />
+      <Icon name={isEdit ? "save" : "eco"} filled className="text-lg" />
+      {isPending ? "Opslaan..." : isEdit ? "Wijzigingen opslaan" : "Impact opslaan"}
+      {!isEdit ? <Icon name="arrow_forward" className="text-lg" /> : null}
     </Button>
   );
 }

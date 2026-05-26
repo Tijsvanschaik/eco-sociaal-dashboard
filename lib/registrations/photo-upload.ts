@@ -81,6 +81,18 @@ export async function uploadRegistrationPhoto({
   return { status: "ok", path };
 }
 
+/** Probeert een object uit de registratie-bucket te verwijderen (best-effort). */
+export async function cleanupStoragePhoto(
+  supabase: SupabaseClient,
+  path: string | undefined | null,
+): Promise<void> {
+  if (!path) return;
+  const { error } = await supabase.storage.from(REGISTRATIONS_BUCKET).remove([path]);
+  if (error) {
+    console.error("[registration-photo] cleanup failed", error.message);
+  }
+}
+
 /** Probeert een object uit de registratie-bucket te verwijderen. */
 export async function deleteRegistrationPhoto({
   path,

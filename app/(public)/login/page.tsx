@@ -39,6 +39,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
     mode: mode === "password" ? undefined : "password",
   });
   const toggleLabel = mode === "password" ? "Gebruik magic link" : "Admin Login";
+  const toggleLabelCompact = mode === "password" ? "Magic link" : "Admin";
 
   const heading = mode === "password" ? "Admin login" : "Welkom!";
   const lede =
@@ -50,29 +51,31 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
     <div className="min-h-dvh bg-background p-4 md:p-6">
       <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6 md:flex-row">
         <main className="relative flex w-full flex-col rounded-[2rem] bg-card shadow-[0_20px_40px_rgba(54,50,45,0.04)] md:min-h-[calc(100dvh-3rem)] md:w-1/2">
-          <header className="flex w-full items-center justify-between p-6 md:p-8">
+          <header className="flex flex-row items-center justify-between gap-3 p-6 max-[360px]:flex-col max-[360px]:items-stretch md:p-8">
             <Link
               href="/"
               aria-label="Naar home"
-              className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="min-w-0 shrink rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-              <Logo />
+              <Logo className="h-7 w-auto max-w-[9.5rem] min-[400px]:max-w-[10.5rem] md:h-8 lg:max-w-none" />
             </Link>
-            <nav className="flex items-center gap-3 md:gap-6">
+            <nav className="flex shrink-0 items-center justify-end gap-2 min-[400px]:gap-3 lg:gap-6">
               <Link
                 href={toggleHref}
-                className="text-sm font-semibold text-muted-foreground transition-colors hover:text-primary"
+                className="inline-flex h-9 shrink-0 items-center whitespace-nowrap px-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary min-[400px]:text-sm"
                 data-testid="login-mode-toggle"
               >
-                {toggleLabel}
+                <span className="lg:hidden">{toggleLabelCompact}</span>
+                <span className="hidden lg:inline">{toggleLabel}</span>
               </Link>
               <a
                 href={CONTACT_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full bg-secondary px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+                className="inline-flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-secondary px-4 text-xs font-semibold text-foreground transition-colors hover:bg-accent min-[400px]:px-5 min-[400px]:text-sm"
               >
-                Contact opnemen
+                <span className="lg:hidden">Contact</span>
+                <span className="hidden lg:inline">Contact opnemen</span>
               </a>
             </nav>
           </header>

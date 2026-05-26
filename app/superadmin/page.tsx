@@ -1,7 +1,13 @@
 import Link from "next/link";
 
+import { SuperadminMetricGrid } from "@/components/superadmin/superadmin-metric-grid";
+import { SuperadminOrgListPanel } from "@/components/superadmin/superadmin-org-list-panel";
+import {
+  SuperadminPageHeader,
+  SuperadminPageMain,
+} from "@/components/superadmin/superadmin-page-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Icon } from "@/components/ui/icon";
 import { createClient } from "@/lib/supabase/server";
 
 function formatNumber(value: number) {
@@ -33,91 +39,60 @@ export default async function SuperadminPage() {
     );
   }
 
+  const orgRows = (organizations ?? []).map((org) => ({
+    eodBaselineKg: org.eod_baseline_kg,
+    id: org.id,
+    memberCount: memberCounts.get(org.id) ?? 0,
+    name: org.name,
+    publicShareEnabled: org.public_share_enabled,
+    publicShareSlug: org.public_share_slug,
+    registrationCount: registrationCounts.get(org.id) ?? 0,
+    slug: org.slug,
+  }));
+
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">Organisaties</h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Bekijk alle tenants, controleer de basisconfiguratie en voeg nieuwe organisaties toe.
-          </p>
-        </div>
-        <Button asChild className="min-h-11 sm:w-auto">
-          <Link href="/superadmin/orgs/new">Nieuwe organisatie</Link>
-        </Button>
-      </section>
+    <SuperadminPageMain>
+      <SuperadminPageHeader
+        actions={
+          <Button asChild className="min-h-11 rounded-full" variant="brand">
+            <Link href="/superadmin/orgs/new">
+              <Icon name="add" />
+              Nieuwe organisatie
+            </Link>
+          </Button>
+        }
+        description="Bekijk alle tenants, controleer de basisconfiguratie en voeg nieuwe organisaties toe."
+        eyebrow="Platformbeheer"
+        title="Organisaties"
+      />
 
-      <section className="grid gap-4 sm:grid-cols-3">
-        <MetricCard label="Organisaties" value={formatNumber((organizations ?? []).length)} />
-        <MetricCard
-          label="Gebruikerskoppelingen"
-          value={formatNumber((memberships ?? []).length)}
-        />
-        <MetricCard label="Registraties" value={formatNumber((registrations ?? []).length)} />
-      </section>
+      <SuperadminMetricGrid
+        metrics={[
+          {
+            description: "Actieve tenants op het platform.",
+            icon: "domain",
+            label: "Organisaties",
+            tone: "primary",
+            value: formatNumber(orgRows.length),
+          },
+          {
+            description: "Totaal aantal gekoppelde gebruikers over alle tenants.",
+            icon: "group",
+            label: "Gebruikerskoppelingen",
+            tone: "neutral",
+            value: formatNumber((memberships ?? []).length),
+          },
+          {
+            description: "Alle geregistreerde eco-sociale activiteiten.",
+            icon: "edit_note",
+            label: "Registraties",
+            tone: "tertiary",
+            value: formatNumber((registrations ?? []).length),
+          },
+        ]}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tenant-overzicht</CardTitle>
-          <CardDescription>Read-only overzicht over alle organisaties heen.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {(organizations ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Er zijn nog geen organisaties aangemaakt.
-            </p>
-          ) : (
-            (organizations ?? []).map((org) => (
-              <div
-                key={org.id}
-                className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{org.name}</p>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                      /{org.slug}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {memberCounts.get(org.id) ?? 0} leden · {registrationCounts.get(org.id) ?? 0}{" "}
-                    registraties · publieke link{" "}
-                    {org.public_share_enabled && org.public_share_slug ? "aan" : "uit"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    EOD-baseline:{" "}
-                    {org.eod_baseline_kg ? `${org.eod_baseline_kg} kg` : "placeholder"}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild size="sm" variant="secondary">
-                    <Link href={`/${org.slug}/dashboard`}>Tenant-dashboard</Link>
-                  </Button>
-                  {org.public_share_enabled && org.public_share_slug && (
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/p/${org.public_share_slug}`}>Publieke link</Link>
-                    </Button>
-                  )}
-                  <Button asChild size="sm">
-                    <Link href={`/superadmin/orgs/${org.id}`}>Bekijk details</Link>
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
-    </main>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card>
-      <CardHeader className="gap-1">
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-3xl">{value}</CardTitle>
-      </CardHeader>
-    </Card>
+      <SuperadminOrgListPanel organizations={orgRows} />
+    </SuperadminPageMain>
   );
 }

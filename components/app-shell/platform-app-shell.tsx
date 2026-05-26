@@ -78,20 +78,23 @@ function PlatformBadge({
   return (
     <div
       className={cn(
-        "flex flex-col items-center text-center",
-        isCollapsed ? "pt-1 pb-0" : "pt-6 pb-2",
+        "flex flex-col items-center text-center pt-6 pb-2",
+        isCollapsed && "md:pt-1 md:pb-0",
         className,
       )}
     >
-      <Logo className={cn(isCollapsed ? "mb-0 h-6 w-auto" : "mb-5 h-8 w-auto")} />
-      {!isCollapsed && (
-        <>
-          <h1 className="text-xl font-extrabold tracking-tight text-primary">Superadmin</h1>
-          <span className="mt-1 max-w-[12rem] truncate text-sm text-muted-foreground">
-            {userDisplayName}
-          </span>
-        </>
-      )}
+      <Logo
+        className={cn(
+          "mb-5 h-8 w-auto",
+          isCollapsed && "md:mb-0 md:h-6 md:w-auto",
+        )}
+      />
+      <div className={cn(isCollapsed && "md:hidden")}>
+        <h1 className="text-xl font-extrabold tracking-tight text-primary">Superadmin</h1>
+        <span className="mt-1 max-w-[12rem] truncate text-sm text-muted-foreground">
+          {userDisplayName}
+        </span>
+      </div>
     </div>
   );
 }

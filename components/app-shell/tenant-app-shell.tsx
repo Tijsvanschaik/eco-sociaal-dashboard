@@ -65,7 +65,12 @@ export function TenantAppShell({
 }: TenantAppShellProps) {
   const mainItems: SidebarItem[] = [
     { kind: "link", label: "Dashboard", href: `/${org.slug}/dashboard`, icon: "dashboard" },
-    { kind: "link", label: "Registratie", href: `/${org.slug}/registratie`, icon: "edit_note" },
+    {
+      kind: "link",
+      label: "Registraties",
+      href: `/${org.slug}/registraties`,
+      icon: "edit_note",
+    },
   ];
   // Admins van de org én superadmins mogen bij instellingen. Voor superadmins
   // zonder org-membership zorgt de server-action-laag voor schrijfrechten via

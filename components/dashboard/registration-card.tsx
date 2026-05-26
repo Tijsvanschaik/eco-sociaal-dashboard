@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { RegistrationPlaceholder } from "@/components/dashboard/registration-placeholder";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
@@ -56,9 +58,11 @@ export function formatRegistrationUnit(unit: string | null): string {
 
 export function RegistrationCard({
   compact = false,
+  editHref = null,
   registration,
 }: {
   compact?: boolean;
+  editHref?: string | null;
   registration: RegistrationCardData;
 }) {
   const {
@@ -79,7 +83,7 @@ export function RegistrationCard({
   } = registration;
 
   return (
-    <article className="group flex h-full min-h-0 flex-col overflow-hidden rounded-[2rem] bg-card shadow-[0_20px_40px_rgba(54,50,45,0.04)] transition-transform hover:-translate-y-0.5">
+    <article className="group relative flex h-full min-h-0 flex-col overflow-hidden rounded-[2rem] bg-card shadow-[0_20px_40px_rgba(54,50,45,0.04)] transition-transform hover:-translate-y-0.5">
       <div
         className={cn(
           "relative w-full shrink-0 overflow-hidden",
@@ -166,12 +170,26 @@ export function RegistrationCard({
           className={cn(
             "mt-auto grid grid-cols-1 border-t border-border text-sm",
             compact ? "gap-1.5 pt-2" : "gap-2 pt-3",
+            editHref && (compact ? "pr-10" : "pr-11"),
           )}
         >
           <MetaRow icon="groups" label={teamLabel} />
           <MetaRow icon="event" label={formatRegistrationDate(happenedOn)} />
         </dl>
       </div>
+
+      {editHref ? (
+        <Link
+          aria-label="Registratie bewerken"
+          className={cn(
+            "absolute z-10 inline-flex items-center justify-center rounded-full border border-border/60 bg-card text-muted-foreground shadow-[0_8px_20px_rgba(54,50,45,0.12)] backdrop-blur-sm transition hover:border-primary/40 hover:bg-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+            compact ? "bottom-3 right-3 h-8 w-8" : "bottom-4 right-4 h-9 w-9",
+          )}
+          href={editHref}
+        >
+          <Icon name="edit" className={compact ? "text-base" : "text-lg"} />
+        </Link>
+      ) : null}
     </article>
   );
 }

@@ -3,6 +3,8 @@
 import type { ChangeEventHandler, InputHTMLAttributes, ReactNode } from "react";
 
 import { Icon } from "@/components/ui/icon";
+import { InfoHint } from "@/components/ui/info-hint";
+import type { MetricsHelpContent } from "@/lib/copy/eco-social-metrics-help";
 import { cn } from "@/lib/utils";
 
 import {
@@ -32,10 +34,25 @@ export function EmptyState({ icon, message }: { icon: string; message: string })
   );
 }
 
-export function FormSection({ children, title }: { children: ReactNode; title: string }) {
+export function FormSection({
+  children,
+  hint,
+  hintLabel,
+  title,
+}: {
+  children: ReactNode;
+  hint?: MetricsHelpContent;
+  hintLabel?: string;
+  title: string;
+}) {
   return (
     <section className="space-y-4 border-t border-border/40 pt-5">
-      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      <div className="flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        {hint && hintLabel ? (
+          <InfoHint content={hint} label={hintLabel} side="top" size="sm" />
+        ) : null}
+      </div>
       {children}
     </section>
   );
@@ -45,6 +62,8 @@ export function Field({
   className,
   defaultValue,
   helper,
+  hint,
+  hintLabel,
   label,
   name,
   type = "text",
@@ -53,12 +72,19 @@ export function Field({
   className?: string;
   defaultValue?: string | number;
   helper?: string;
+  hint?: MetricsHelpContent;
+  hintLabel?: string;
   label: string;
   name: string;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, "name" | "defaultValue">) {
   return (
     <label className={cn("flex flex-col gap-1.5", className)} htmlFor={name}>
-      <span className={modalFieldLabelClassName}>{label}</span>
+      <span className={cn(modalFieldLabelClassName, "inline-flex items-center gap-1.5")}>
+        {label}
+        {hint && hintLabel ? (
+          <InfoHint content={hint} label={hintLabel} side="top" size="sm" />
+        ) : null}
+      </span>
       <input
         id={name}
         name={name}

@@ -15,6 +15,10 @@ vi.mock("@/app/(app)/[orgSlug]/registratie/actions", () => ({
   createRegistration: (...args: unknown[]) => createRegistration(...args),
 }));
 
+vi.mock("@/app/(app)/[orgSlug]/registraties/actions", () => ({
+  updateRegistration: vi.fn(),
+}));
+
 const teams = [{ id: "11111111-1111-1111-1111-111111111111", name: "Team Helmond" }];
 const interventions = [
   {
@@ -47,6 +51,14 @@ function getSubmitButton() {
   return submit;
 }
 
+function getEcoQuantityInput() {
+  return screen.getByRole("textbox", { name: "Eco-hoeveelheid" });
+}
+
+function getSocialQuantityInput() {
+  return screen.getByRole("textbox", { name: "Sociale hoeveelheid" });
+}
+
 describe("RegistrationForm", () => {
   beforeEach(() => {
     refresh.mockReset();
@@ -68,13 +80,13 @@ describe("RegistrationForm", () => {
     const submit = getSubmitButton();
     expect(submit).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "3" } });
-    fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "5" } });
+    fireEvent.change(getEcoQuantityInput(), { target: { value: "3" } });
+    fireEvent.change(getSocialQuantityInput(), { target: { value: "5" } });
 
     await waitFor(() => expect(submit).toBeEnabled());
   });
 
-  it("shows an error when a negative quantity is entered", async () => {
+  it("shows an error when quantity is left empty on blur", async () => {
     render(
       <RegistrationForm
         interventions={interventions}
@@ -85,8 +97,10 @@ describe("RegistrationForm", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "-2" } });
-    fireEvent.blur(screen.getByLabelText(/eco-hoeveelheid/i));
+    fireEvent.focus(getEcoQuantityInput());
+    fireEvent.change(getEcoQuantityInput(), { target: { value: "3" } });
+    fireEvent.change(getEcoQuantityInput(), { target: { value: "" } });
+    fireEvent.blur(getEcoQuantityInput());
 
     expect(await screen.findByText(/groter zijn dan 0/i)).toBeInTheDocument();
   });
@@ -102,8 +116,8 @@ describe("RegistrationForm", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "2.5" } });
-    fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "4" } });
+    fireEvent.change(getEcoQuantityInput(), { target: { value: "2.5" } });
+    fireEvent.change(getSocialQuantityInput(), { target: { value: "4" } });
     const submit = getSubmitButton();
 
     await waitFor(() => expect(submit).toBeEnabled());
@@ -162,8 +176,8 @@ describe("RegistrationForm", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "10" } });
-    fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "4" } });
+    fireEvent.change(getEcoQuantityInput(), { target: { value: "10" } });
+    fireEvent.change(getSocialQuantityInput(), { target: { value: "4" } });
 
     await waitFor(() => {
       expect(screen.getAllByText(/jouw impact/i).length).toBeGreaterThan(0);
@@ -183,8 +197,8 @@ describe("RegistrationForm", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText(/eco-hoeveelheid/i), { target: { value: "2" } });
-    fireEvent.change(screen.getByLabelText(/sociale hoeveelheid/i), { target: { value: "3" } });
+    fireEvent.change(getEcoQuantityInput(), { target: { value: "2" } });
+    fireEvent.change(getSocialQuantityInput(), { target: { value: "3" } });
     const submit = getSubmitButton();
 
     await waitFor(() => expect(submit).toBeEnabled());

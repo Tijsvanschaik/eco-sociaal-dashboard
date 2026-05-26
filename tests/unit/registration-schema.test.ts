@@ -1,4 +1,7 @@
-import { registrationSchema } from "@/lib/registrations/schema";
+import {
+  registrationSchema,
+  registrationUpdateFromFormData,
+} from "@/lib/registrations/schema";
 import { describe, expect, it } from "vitest";
 
 const validInput = {
@@ -45,5 +48,22 @@ describe("registrationSchema", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe("registrationUpdateFromFormData", () => {
+  it("parses update form data including registrationId", () => {
+    const formData = new FormData();
+    formData.set("registrationId", "33333333-3333-3333-3333-333333333333");
+    formData.set("teamId", validInput.teamId);
+    formData.set("interventionId", validInput.interventionId);
+    formData.set("quantity", String(validInput.quantity));
+    formData.set("socialQuantity", String(validInput.socialQuantity));
+    formData.set("happenedOn", validInput.happenedOn);
+    formData.set("note", validInput.note ?? "");
+
+    const parsed = registrationUpdateFromFormData(formData);
+    expect(parsed.registrationId).toBe("33333333-3333-3333-3333-333333333333");
+    expect(parsed.quantity).toBe(validInput.quantity);
   });
 });

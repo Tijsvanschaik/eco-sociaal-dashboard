@@ -53,8 +53,8 @@ describe("<InterventionsTab />", () => {
     );
 
     expect(screen.getByRole("heading", { name: /interventies/i })).toBeInTheDocument();
-    expect(screen.getByText("Fietsen")).toBeInTheDocument();
-    expect(screen.getByText("Energiecoach")).toBeInTheDocument();
+    expect(screen.getAllByText("Fietsen").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Energiecoach").length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole("button", { name: /nieuwe interventie/i }));
 
@@ -72,7 +72,7 @@ describe("<InterventionsTab />", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /filter op mobiliteit/i }));
 
-    expect(screen.getByText("Fietsen")).toBeInTheDocument();
+    expect(screen.getAllByText("Fietsen").length).toBeGreaterThan(0);
     expect(screen.queryByText("Energiecoach")).not.toBeInTheDocument();
   });
 
@@ -99,8 +99,13 @@ describe("<InterventionsTab />", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /categorie bewerken: mobiliteit/i }));
+    const categoryButtons = screen.getAllByRole("button", {
+      name: /categorie bewerken: mobiliteit/i,
+    });
+    fireEvent.click(categoryButtons[0]!);
 
-    expect(screen.getByRole("combobox", { name: /categorie bewerken/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("combobox", { name: /categorie bewerken/i }).length).toBeGreaterThan(
+      0,
+    );
   });
 });

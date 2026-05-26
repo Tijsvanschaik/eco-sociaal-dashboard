@@ -44,8 +44,8 @@ describe("<MembersTab />", () => {
     );
 
     expect(screen.getByRole("heading", { name: /medewerkers/i })).toBeInTheDocument();
-    expect(screen.getByText("admin@lev.nl")).toBeInTheDocument();
-    expect(screen.getByText("worker@lev.nl")).toBeInTheDocument();
+    expect(screen.getAllByText("admin@lev.nl").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("worker@lev.nl").length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole("button", { name: /medewerker toevoegen/i }));
 
@@ -63,12 +63,14 @@ describe("<MembersTab />", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /rol bewerken: medewerker/i }));
+    const roleButtons = screen.getAllByRole("button", { name: /rol bewerken: medewerker/i });
+    fireEvent.click(roleButtons[0]!);
 
-    expect(screen.getByRole("combobox", { name: /rol bewerken/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("combobox", { name: /rol bewerken/i }).length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole("button", { name: /team bewerken: lev helmond/i }));
+    const teamButtons = screen.getAllByRole("button", { name: /team bewerken: lev helmond/i });
+    fireEvent.click(teamButtons[0]!);
 
-    expect(screen.getByRole("combobox", { name: /team bewerken/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("combobox", { name: /team bewerken/i }).length).toBeGreaterThan(0);
   });
 });

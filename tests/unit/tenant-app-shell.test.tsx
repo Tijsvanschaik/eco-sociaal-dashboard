@@ -25,7 +25,7 @@ describe("<TenantAppShell />", () => {
     );
 
     expect(screen.getAllByRole("link", { name: /^dashboard$/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("link", { name: /^registratie$/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: /^registraties$/i }).length).toBeGreaterThan(0);
     expect(screen.queryAllByRole("link", { name: /instellingen/i })).toHaveLength(0);
     expect(screen.queryAllByRole("link", { name: /superadmin/i })).toHaveLength(0);
   });

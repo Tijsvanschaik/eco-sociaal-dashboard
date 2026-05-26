@@ -1,6 +1,7 @@
 import type { DashboardSnapshot } from "@/lib/dashboard";
 import { buildDashboardSnapshot } from "@/lib/dashboard";
 import { getOrgContextBySlug } from "@/lib/organizations";
+import { canEditRegistration } from "@/lib/registrations/list-filters";
 import { REGISTRATIONS_BUCKET } from "@/lib/registrations/photo-upload";
 import type { createClient } from "@/lib/supabase/server";
 import type { RecentRegistration } from "@/lib/tenant-dashboard-data";
@@ -97,7 +98,7 @@ export async function getTenantTeamDetailData(
     supabase
       .from("registrations")
       .select(
-        "id, team_id, intervention_id, quantity, social_quantity, happened_on, note, photo_path, co2_kg_cached, social_score_cached",
+        "id, user_id, team_id, intervention_id, quantity, social_quantity, happened_on, note, photo_path, co2_kg_cached, social_score_cached",
       )
       .eq("org_id", context.org.id)
       .eq("team_id", teamId)
@@ -184,6 +185,10 @@ export async function getTenantTeamDetailData(
       const category = intervention ? categoryMap.get(intervention.categoryId) : null;
       return {
         id: registration.id,
+        userId: registration.user_id,
+        teamId: registration.team_id,
+        categoryId: intervention?.categoryId ?? null,
+        canEdit: canEditRegistration(context.role, context.userId, registration.user_id),
         quantity: registration.quantity,
         socialQuantity: Number(registration.social_quantity ?? 0),
         happenedOn: registration.happened_on,

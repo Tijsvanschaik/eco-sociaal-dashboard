@@ -2,7 +2,7 @@
 
 import { calculateCo2, calculateSocialScore } from "@/lib/impact";
 import { getOrgContextBySlug } from "@/lib/organizations";
-import { REGISTRATIONS_BUCKET } from "@/lib/registrations/photo-upload";
+import { cleanupStoragePhoto } from "@/lib/registrations/photo-upload";
 import { registrationInputFromFormData } from "@/lib/registrations/schema";
 import { revalidateOrgPaths } from "@/lib/revalidate-org-paths";
 import { createClient } from "@/lib/supabase/server";
@@ -45,7 +45,7 @@ export async function createRegistration(
       .eq("is_archived", false)
       .maybeSingle();
     if (!intervention) {
-      await cleanupOrphanPhoto(supabase, input.photoPath);
+      await cleanupStoragePhoto(supabase, input.photoPath);
       return { status: "error", message: "Deze interventie is niet meer beschikbaar." };
     }
 
@@ -57,7 +57,7 @@ export async function createRegistration(
       .eq("is_archived", false)
       .maybeSingle();
     if (!team) {
-      await cleanupOrphanPhoto(supabase, input.photoPath);
+      await cleanupStoragePhoto(supabase, input.photoPath);
       return { status: "error", message: "Dit team is niet meer beschikbaar." };
     }
 
@@ -70,7 +70,7 @@ export async function createRegistration(
         .eq("user_id", context.userId)
         .maybeSingle();
       if (!teamMembership) {
-        await cleanupOrphanPhoto(supabase, input.photoPath);
+        await cleanupStoragePhoto(supabase, input.photoPath);
         return { status: "error", message: "Je mag alleen registreren voor je eigen team." };
       }
     }
@@ -129,7 +129,7 @@ export async function createRegistration(
           isSuperadmin: context.isSuperadmin,
         },
       });
-      await cleanupOrphanPhoto(supabase, input.photoPath);
+      await cleanupStoragePhoto(supabase, input.photoPath);
       return {
         status: "error",
         message: `Opslaan geweigerd door database: ${error.message}`,
@@ -148,21 +148,5 @@ export async function createRegistration(
 
     console.error("createRegistration unexpected error:", error);
     return { status: "error", message: "Er ging iets mis. Probeer het opnieuw." };
-  }
-}
-
-/**
- * Best-effort: verwijder een geüploade foto die bij een mislukte registratie
- * hoort, zodat we geen weesbestanden in Storage achterlaten. Fouten hier
- * worden alleen gelogd — de gebruiker krijgt al een nette foutmelding.
- */
-async function cleanupOrphanPhoto(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  path: string | undefined,
-) {
-  if (!path) return;
-  const { error } = await supabase.storage.from(REGISTRATIONS_BUCKET).remove([path]);
-  if (error) {
-    console.error("createRegistration orphan cleanup failed:", error.message);
   }
 }

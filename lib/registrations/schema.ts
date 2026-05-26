@@ -39,6 +39,12 @@ export const registrationSchema = z.object({
 
 export type RegistrationInput = z.infer<typeof registrationSchema>;
 
+export const registrationUpdateSchema = registrationSchema.extend({
+  registrationId: z.string().uuid("Ongeldige registratie."),
+});
+
+export type RegistrationUpdateInput = z.infer<typeof registrationUpdateSchema>;
+
 export function registrationInputFromFormData(formData: FormData): RegistrationInput {
   return registrationSchema.parse({
     teamId: formData.get("teamId"),
@@ -50,6 +56,19 @@ export function registrationInputFromFormData(formData: FormData): RegistrationI
     // FormData.get levert `null` als het veld ontbreekt; zod .optional accepteert
     // alleen undefined. We fallen bewust terug op undefined zodat een
     // registratie-zonder-foto netjes door de schema heen komt.
+    photoPath: formData.get("photoPath") ?? undefined,
+  });
+}
+
+export function registrationUpdateFromFormData(formData: FormData): RegistrationUpdateInput {
+  return registrationUpdateSchema.parse({
+    registrationId: formData.get("registrationId"),
+    teamId: formData.get("teamId"),
+    interventionId: formData.get("interventionId"),
+    quantity: formData.get("quantity"),
+    socialQuantity: formData.get("socialQuantity"),
+    happenedOn: formData.get("happenedOn"),
+    note: formData.get("note"),
     photoPath: formData.get("photoPath") ?? undefined,
   });
 }

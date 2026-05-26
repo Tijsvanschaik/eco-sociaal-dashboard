@@ -90,11 +90,15 @@
       Eco/Sociaal/Eco-sociaal-selector, impact-rotator met registratiefoto's,
       registratiekaarten (kleuren, copy, notities, foto-placeholders). *(Zie
       **Sessie 2026-05-21 (avond)**.)*
-- [ ] Slice D (deel 2, rest) - Bento-grid layout + activiteitenfeed-filters
+- [x] Slice D (deel 2, rest) - Activiteitenfeed op intern dashboard: filters
+      (periode + team via URL-params), bewerk-icoon op kaarten (admin/eigen
+      registratie), responsive layout (`md` 2-koloms grid, filters naast elkaar
+      vanaf `md`). Bento-grid slide 2 blijft optioneel open.
 - [x] Slice E - Registratie-pagina
 - [x] Slice F - Instellingen (tabs: inline-edit tables/rijen, modals voor create,
       gedeelde `components/settings/*`, full-width layout; zie **Sessie 2026-05-21 (instellingen)**)
-- [ ] Slice G - Superadmin-surfaces (content)
+- [x] Slice G - Superadmin-surfaces (content): `DashboardPanel`, metric-tiles,
+      org-lijst en tenantdetail visueel aligned met tenant-design system
 - [x] Slice H - Publieke surfaces (`/p`, `/tv`, `/embed`): drie gedeelde
       slide-componenten, `KioskSlideshow` voor TV/embed-rotate, `KioskStack`
       voor share/embed-stack. Embed configureerbaar via `?mode=`, `?screens=`,
@@ -104,29 +108,41 @@
 
 ## Openstaand (later)
 
-- [ ] EOD-baseline van LEV opvragen (blijft voorlopig placeholder-waarde)
-- [ ] Embed-whitelist aanscherpen: `EMBED_FRAME_ANCESTORS` staat op Vercel
-      nu open (`*`) zolang we de definitieve intranet-/partnerdomeinen niet
-      kennen. Zodra bekend: terug naar expliciete whitelist conform
-      `40-security.mdc`.
-- [ ] PWA (manifest + icons + service worker) - pas als we het praktisch nodig hebben
-- [ ] Productiebaseline van de nieuwe `0004`-view draaien en daarna types via CLI
-      opnieuw genereren tegen live schema
-- [ ] **Storage bucket voor org-logo uploads**: bucket + RLS-policies in dezelfde
-      pad-structuur als `registrations` (`<org_id>/<user_id>/<uuid>.<ext>`), zodat
-      admins in `/instellingen` het logo direct kunnen uploaden in plaats van
-      alleen een externe URL op te geven. Vergt SQL-migratie + client-upload-
-      helper + update van `orgProfileSchema` + `updateOrgProfile`.
-- [ ] **User-invite-flow testen**: magic-link + wachtwoord-flow voor
-      `/instellingen -> Medewerkers -> Toevoegen` end-to-end valideren op dev
-      (nieuwe e-mail ontvangt link, kan inloggen, ziet juiste org/rol, kan
-      registreren). Nu nog niet expliciet getest sinds de settings-rework.
-- [ ] **Instellingen — resterende polish**: user-invite E2E, logo-upload-bucket
-      (zie openstaand), mobile layout nalopen op kleine schermen.
-- [ ] **Registration-filters implementeren**: `components/dashboard/registrations-filters.tsx`
-      bestaat nog niet (werd voorheen leeg ingecheckt, nu verwijderd). Filters
-      op team / categorie / periode voor de "Recente registraties"-lijst op
-      het interne dashboard.
+### Omgevingen
+- **Dev + staging** zijn de actieve omgevingen (Vercel + Supabase). **Productie
+  bestaat nog niet** — alles wat “prod” heet in oudere notities is vooruitlopend.
+- Alle SQL `0001`–`0011` + `9000_seed.sql` staat **gedraaid op staging**
+  (bevestigd 2026-05-26). Types op staging nog verifiëren/regenereren indien
+  nodig.
+
+### Wacht op LEV
+- [ ] **Embed-whitelist**: `EMBED_FRAME_ANCESTORS` staat op staging/Vercel bewust
+      open (`*`) tot LEV de definitieve intranet-/partnerdomeinen aanlevert.
+      Daarna expliciete whitelist conform `40-security.mdc`.
+
+### Onboarding & mail
+- [ ] **User-invite-flow valideren** (E2E): magic-link + wachtwoord via
+      `/instellingen → Medewerkers → Toevoegen` (login, juiste org/rol,
+      registratie).
+- [ ] **Externe mailprovider integreren** voor transactionele mail (invites,
+      magic links). Supabase Auth-mail zit op het huidige abonnement vast aan
+      **~2 mails/uur** — te weinig voor betrouwbare onboarding; wachtwoord-
+      fallback op `/login` blijft tot externe mail live is.
+
+### Mobile / install
+- [ ] **PWA** (manifest + icons + service worker): oorspronkelijk uitgesteld in
+      Fase 0 (ADR 0002); nog **niet geïmplementeerd** (geen manifest in repo).
+      Relevant voor mobile-first registratie — scope-item om op te pakken.
+
+### Overig polish
+- [ ] **Storage bucket org-logo uploads** (nu alleen externe URL in Instellingen)
+- [ ] **Instellingen mobile layout** nalopen
+- [ ] **Dashboard bento-layout slide 2** (optioneel)
+- [ ] **Team-detail fase B**: ledenrooster, vergelijking org-gemiddelde
+
+### Bewust geen LEV-input meer
+- **EOD-baseline**: geen LEV-input meer nodig; metric blijft org-instelling /
+  placeholder in de app tot admins zelf een baseline zetten.
 
 ## Sessie 2026-05-16 — sociale score
 
@@ -248,10 +264,55 @@ sociaal (`kg CO₂` / `punten`), en registratiekaarten + impact-hero aantrekkeli
 
 ## Laatste sessie
 
-Datum: 2026-05-22 (avond)  
-Wat gedaan: mobile UX-polish op dashboard, registratie en team-pagina's — gedeelde tenant-padding (`tenantPageMainClassName`), impact-rotator full-width foto + grid-stacking voor dots, compacte team-bars, score-kaarten gestapeld op mobiel, compacte activiteitenkaarten, registratiepagina-header verwijderd.  
-Wat volgt: Slice D rest (bento-grid + registratiefilters op dashboard); user-invite E2E; browser-smoke registratie op mobiel.  
+Datum: 2026-05-26  
+Wat gedaan: Slice D rest + Slice G + feed-polish (filters, zwevend bewerk-icoon, responsive grid). Planning bijgewerkt: staging = enige deploy-omgeving naast dev; alle SQL daar gedraaid; EOD geen LEV-blocker meer.  
+Wat volgt (prioriteit): (1) invite E2E + externe mailprovider, (2) embed-domeinen van LEV, (3) PWA, (4) logo-bucket + overig polish.  
 Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (workers: zelfde wachtwoord).
+
+## Sessie 2026-05-26 (middag) — dashboard feed polish
+
+**Doel:** feed UX finetunen na eerste implementatie Slice D rest.
+
+- Categorie-filter uit activiteitenfeed gehaald (periode + team blijft).
+- Bewerk-actie: klein zwevend potlood rechtsonder op kaart (`aria-label="Registratie bewerken"`).
+- Kaartgrid: `md:grid-cols-2` i.p.v. `sm` (1 kolom langer op small tablets).
+- Filterrij: gestapeld op mobiel; Periode + Team naast elkaar vanaf `md` (label boven control blijft).
+
+## Sessie 2026-05-26 — dashboard feed filters + superadmin polish
+
+**Doel:** Slice D rest (activiteitenfeed) en Slice G (superadmin content) afwerken.
+
+- **Filters** [`lib/registrations/dashboard-filters.ts`](../lib/registrations/dashboard-filters.ts), [`components/dashboard/registrations-filters.tsx`](../components/dashboard/registrations-filters.tsx): periode (30d/90d/dit jaar) en team. Dashboard route leest `?period=&team=`.
+- **Feed-sectie** [`components/dashboard/internal-recent-registrations-section.tsx`](../components/dashboard/internal-recent-registrations-section.tsx): vervangt naakte `RecentRegistrationsSlide` op intern dashboard; link naar `/registraties`.
+- **Bewerken** [`components/dashboard/registration-card.tsx`](../components/dashboard/registration-card.tsx): optionele `editHref` wanneer `canEdit` (admin of eigen registratie).
+- **Data** [`lib/tenant-dashboard-data.ts`](../lib/tenant-dashboard-data.ts): recente query filtert server-side; `RecentRegistration` uitgebreid met `userId`, `teamId`, `categoryId`, `canEdit`.
+- **Superadmin** [`components/superadmin/*`](../components/superadmin/), pages onder `app/superadmin/`: metric-grid, org-lijst-panel, page-header layout; danger zone via `DashboardPanel`.
+- **Tests**: `dashboard-filters`, `registrations-filters`, `registration-card` edit-link.
+
+## Sessie 2026-05-26 — info-hints + registratie-invoer fix
+
+**Doel:** medewerkers en beheerders korte uitleg geven bij eco/sociaal metingen, zonder de UI te verzwaren.
+
+- **Component** [`components/ui/info-hint.tsx`](../components/ui/info-hint.tsx): Radix Popover op ⓘ (tap/klik + toetsenbord; mobile-first i.p.v. hover-only). `MetricsHelpBody` ondersteunt optionele secties + footer.
+- **Copy** [`lib/copy/eco-social-metrics-help.ts`](../lib/copy/eco-social-metrics-help.ts): gedeelde teksten voor interventies-tab, registratievelden (context per eco-eenheid) en modal; `QUANTITIES_PANEL_HELP` opgesplitst in **Eco** / **Sociaal** + afsluitzin eco-sociale score.
+- **Registratie** [`components/registration/quantity-fields.tsx`](../components/registration/quantity-fields.tsx): hints op panel + velden; **bugfix** controlled input (`value > 0` maskeerde tussentijdse invoer zoals `0,5`).
+- **Instellingen** [`components/settings/interventions-tab.tsx`](../components/settings/interventions-tab.tsx): hints op titel, tabelkoppen en create-modal.
+- **Form** [`components/settings/form-fields.tsx`](../components/settings/form-fields.tsx): `Field` + `FormSection` accepteren optionele `hint` / `hintLabel`.
+- **Tests**: `info-hint`, `eco-social-metrics-help`, `quantity-fields`, aanpassingen `registration-form` + `vitest.setup` (`ResizeObserver`-mock).
+
+**Optioneel later:** hints op ingeklapte mobiele interventie-cards; copy in `medewerkers-registratie-eenheid.md` alignen met nieuwe sociale uitleg (uren óf personen).
+
+## Sessie 2026-05-26 — registraties-overzicht + bewerken/verwijderen
+
+**Doel:** registraties beheren via dedicated pagina; sidebar-dubbeling opgelost.
+
+- **Routes** [`app/(app)/[orgSlug]/registraties/`](../app/(app)/[orgSlug]/registraties/): lijst + `[id]/bewerken`; create blijft op `/registratie`.
+- **Data** [`lib/tenant-registrations-list-data.ts`](../lib/tenant-registrations-list-data.ts), [`lib/tenant-registration-edit-data.ts`](../lib/tenant-registration-edit-data.ts), [`lib/registrations/list-filters.ts`](../lib/registrations/list-filters.ts).
+- **Actions** [`app/(app)/[orgSlug]/registraties/actions.ts`](../app/(app)/[orgSlug]/registraties/actions.ts): update + delete met impact-recalc en storage cleanup; [`cleanupStoragePhoto`](../lib/registrations/photo-upload.ts) gedeeld.
+- **UI** [`components/registrations/registrations-list.tsx`](../components/registrations/registrations-list.tsx) — instellingen-styling (`SettingsSection`, tabel, `RowIconButton`, `ConfirmArchiveModal`).
+- **Form** [`components/registration/registration-form.tsx`](../components/registration/registration-form.tsx): `mode="edit"` met foto replace/remove.
+- **Nav** [`components/app-shell/tenant-app-shell.tsx`](../components/app-shell/tenant-app-shell.tsx): sidebar → `/registraties`.
+- **Tests**: unit voor list-filters, list component, update schema.
 
 ## Sessie 2026-05-22 (avond) — mobile UX-polish
 
@@ -565,6 +626,44 @@ Samenvatting om later aan te sluiten:
 Intern dashboard (`internal-dashboard.tsx`) en publieke stack blijven slide 2 in **twee kolommen**.
 
 
+## Originele scope vs. stand (mei 2026)
+
+Bron: `README.md`, `.cursor/rules/00-project.mdc`, Fase 0–5 in dit bestand.
+
+### Oorspronkelijk MVP — afgerond
+| Onderdeel | Status |
+| --- | --- |
+| Multi-tenant registratie + CO₂/sociale score | ✅ |
+| Intern dashboard | ✅ |
+| TV `/tv/[slug]` | ✅ |
+| Embed `/embed/[slug]` | ✅ |
+| Publieke share `/p/[slug]` | ✅ |
+| Magic-link auth + RLS | ✅ (+ wachtwoord-fallback) |
+| Org-beheer (teams, interventies, medewerkers) | ✅ |
+| Superadmin (org aanmaken, tenantdetail) | ✅ |
+| Charts / tijdreeks | ✅ |
+| UI-restyle Stitch (Fase 5) | ✅ |
+
+### Uitgesteld in oorspronkelijke scope — nog open
+| Onderdeel | Oorspronkelijk | Nu |
+| --- | --- | --- |
+| **PWA** | Fase 0 bewust niet (ADR 0002) | Nog niet gebouwd; wel op planning |
+| **Embed-whitelist** | Expliciete domeinen | Wacht op LEV (enige LEV-input) |
+| **Transactionele mail** | Supabase magic-link | Limiet ~2/uur → externe provider nodig |
+
+### Buiten oorspronkelijke MVP gebouwd (scope-creep, wel gewenst)
+- Registraties-overzicht + bewerken/verwijderen (`/registraties`)
+- Team-detailpagina + drill-down
+- Eco/sociale eenheden split + sociale score (0008/0009/0011)
+- Info-hints eco/sociaal
+- Dashboard activiteitenfeed-filters + bewerk-icoon
+- Superadmin visual polish (Slice G)
+
+### EOD
+- Oorspronkelijk: centrale impactvertaling (Earth Overshoot Day).
+- **Besluit mei 2026:** geen LEV-input meer voor EOD-baseline; metric blijft in
+  app via org-instelling/placeholder.
+
 ## Tijdelijke auth-opmerking
 
 - [x] Tijdelijke wachtwoord-login toegevoegd op `/login` als fallback voor admins
@@ -572,15 +671,19 @@ Intern dashboard (`internal-dashboard.tsx`) en publieke stack blijven slide 2 in
 
 ## SQL-runs per omgeving
 
-| SQL-bestand | Gedraaid op dev | Gedraaid op staging | Gedraaid op productie |
+| SQL-bestand | Dev | Staging | Productie |
 | --- | --- | --- | --- |
-| `0001_init.sql` | 2026-04-17 |  |  |
-| `0002_views.sql` | 2026-04-17 |  |  |
-| `0003_platform_admins.sql` |  |  |  |
-| `0004_public_dashboard_timeseries.sql` |  |  |  |
-| `0005_registration_photos_storage.sql` | 2026-04-21 |  |  |
-| `0006_org_profile.sql` | 2026-04-21 |  |  |
-| `0007_public_recent_registrations.sql` |  |  |  |
-| `0008_social_score.sql` |  |  |  |
-| `0009_eco_social_units.sql` | 2026-05-21 |  |  |
-| `9000_seed.sql` | 2026-05-21 (LEV-thema’s + destructive `lev-groep` reset; vereist `0009`) |  |  |
+| `0001_init.sql` | 2026-04-17 | ✅ 2026-05-26 | n.v.t. |
+| `0002_views.sql` | 2026-04-17 | ✅ 2026-05-26 | n.v.t. |
+| `0003_platform_admins.sql` | — | ✅ 2026-05-26 | n.v.t. |
+| `0004_public_dashboard_timeseries.sql` | — | ✅ 2026-05-26 | n.v.t. |
+| `0005_registration_photos_storage.sql` | 2026-04-21 | ✅ 2026-05-26 | n.v.t. |
+| `0006_org_profile.sql` | 2026-04-21 | ✅ 2026-05-26 | n.v.t. |
+| `0007_public_recent_registrations.sql` | — | ✅ 2026-05-26 | n.v.t. |
+| `0008_social_score.sql` | — | ✅ 2026-05-26 | n.v.t. |
+| `0009_eco_social_units.sql` | 2026-05-21 | ✅ 2026-05-26 | n.v.t. |
+| `0010_fix_intervention_social_units.sql` | 2026-05-26 | ✅ 2026-05-26 | n.v.t. |
+| `0011_lev_social_metrics.sql` | 2026-05-26 | ✅ 2026-05-26 | n.v.t. |
+| `9000_seed.sql` | 2026-05-21 | ✅ 2026-05-26 | n.v.t. |
+
+**Productie** bestaat nog niet. Staging is de referentie-omgeving voor UAT/LEV.

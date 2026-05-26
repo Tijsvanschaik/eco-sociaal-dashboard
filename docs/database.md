@@ -15,6 +15,8 @@ Update dit document bij **elke migratie** (iedere nieuwe file in `supabase/sql/`
 | `supabase/sql/0007_public_recent_registrations.sql` | Publieke view voor recente registraties op `/tv` en `/embed` (incl. note + photo_path) |
 | `supabase/sql/0008_social_score.sql` | Sociale score: kolommen op `interventions`/`registrations`, anon-grant, herddefiniëren publieke totals/team/category/timeseries + `public_recent_registrations` |
 | `supabase/sql/0009_eco_social_units.sql` | `eco_unit` + `social_unit` (tekst) op interventies; `social_quantity` op registraties; drop `unit`; reset historische `social_score_cached`; view `public_recent_registrations` |
+| `supabase/sql/0010_fix_intervention_social_units.sql` | Data-fix: `social_unit = personen` waar die gelijk was aan eco-label; herbereken `social_score_cached` (geen wipe users/registraties) |
+| `supabase/sql/0011_lev_social_metrics.sql` | Goedgekeurde LEV sociale metrics (review 2026-05-26): `social_unit = personen`, factoren ADR 0007 per interventienaam, herbereken cache |
 | `supabase/sql/9000_seed.sql` | Dev-seed LEV (`lev-groep`): wipe tenant‑stam + alle registraties/ledentabellen‑rijen voor die org, daarna teams + 6 thema‑categorieën + interventies (ADR 0007) |
 
 ## Schema (export)

@@ -29,9 +29,9 @@ describe("<TeamsTab />", () => {
     render(<TeamsTab orgSlug="lev-groep" teamMemberships={teamMemberships} teams={teams} />);
 
     expect(screen.getByRole("heading", { name: /teams/i })).toBeInTheDocument();
-    expect(screen.getByText("LEV Helmond")).toBeInTheDocument();
-    expect(screen.getByText("LEV Eindhoven")).toBeInTheDocument();
-    expect(screen.getByText("2 medewerkers")).toBeInTheDocument();
+    expect(screen.getAllByText("LEV Helmond").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("LEV Eindhoven").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("2 medewerkers").length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole("button", { name: /nieuw team/i }));
 
@@ -41,7 +41,8 @@ describe("<TeamsTab />", () => {
   it("opens inline editing when clicking a team name", () => {
     render(<TeamsTab orgSlug="lev-groep" teamMemberships={teamMemberships} teams={teams} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /teamnaam bewerken: lev helmond/i }));
+    const editButtons = screen.getAllByRole("button", { name: /teamnaam bewerken: lev helmond/i });
+    fireEvent.click(editButtons[0]!);
 
     expect(screen.getByDisplayValue("LEV Helmond")).toBeInTheDocument();
   });

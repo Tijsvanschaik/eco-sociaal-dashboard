@@ -7,12 +7,31 @@ export const sectionLabelClassName = "text-sm font-medium text-muted-foreground"
 export const cellTextClassName = "text-sm font-medium text-foreground";
 
 export const tableHeadClassName =
-  "px-3 py-3 text-left text-sm font-medium text-muted-foreground first:pl-6 sm:first:pl-8";
+  "whitespace-nowrap px-3 py-3.5 align-middle text-left text-sm font-semibold leading-none text-muted-foreground first:pl-6 sm:first:pl-8";
 export const tableHeadRightClassName =
-  "px-3 py-3 text-right text-sm font-medium text-muted-foreground";
-export const tableHeadActionsClassName = "px-6 py-3 sm:px-8";
+  "whitespace-nowrap px-3 py-3.5 align-middle text-right text-sm font-semibold leading-none text-muted-foreground";
+export const tableHeadActionsClassName = "whitespace-nowrap px-6 py-3.5 align-middle sm:px-8";
+
+/** Label + info-hint in table headers — keeps icon and text on one baseline. */
+export const tableHeadHintClassName =
+  "inline-flex min-h-5 items-center gap-1 whitespace-nowrap leading-none";
 export const tableRowBorderClassName = "border-b border-border/65";
 export const tableSectionBorderClassName = "border-l border-border/50";
+
+export const mobileRowCardClassName =
+  "rounded-[1.25rem] border border-border/60 bg-card p-4 shadow-sm";
+export const mobileRowCardFieldClassName = "space-y-1";
+export const mobileRowCardLabelClassName = "text-xs font-medium text-muted-foreground";
+export const mobileDataListClassName = "mt-6 space-y-3 md:hidden";
+export const desktopTableWrapClassName = "mt-6 hidden overflow-x-hidden md:block -mx-6 sm:-mx-8";
+
+/** Wide data tables (e.g. registraties) that may still need horizontal scroll on smaller desktops. */
+export const desktopTableScrollClassName =
+  "mt-6 hidden overflow-x-auto md:block -mx-6 sm:-mx-8";
+
+export const tableBodyCellClassName = "max-w-0 overflow-hidden px-3 py-3.5";
+export const tableBodyCellRightClassName = `${tableBodyCellClassName} text-right tabular-nums`;
+export const tableBodyCellActionsClassName = "w-0 whitespace-nowrap px-6 py-3.5 sm:px-8";
 
 export const inlineInputClassName =
   "h-9 w-full min-w-0 rounded-sm border border-primary/50 bg-card px-2.5 text-sm font-medium text-foreground shadow-sm outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30";

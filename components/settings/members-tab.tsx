@@ -12,7 +12,14 @@ import {
 import { EditableSelectCell } from "@/components/settings/editable-cells";
 import { EmptyState, Field, FormError, SelectField } from "@/components/settings/form-fields";
 import {
+  MobileRowActionGroup,
+  SettingsMobileField,
+  SettingsMobileRowCard,
+} from "@/components/settings/mobile-row-card";
+import {
   cellTextClassName,
+  desktopTableWrapClassName,
+  mobileDataListClassName,
   tableHeadActionsClassName,
   tableHeadClassName,
   tableRowBorderClassName,
@@ -109,62 +116,98 @@ export function MembersTab({
             message="Nog geen medewerkers. Voeg de eerste medewerker toe via de knop hierboven."
           />
         ) : (
-          <div className="-mx-6 mt-6 overflow-x-auto sm:-mx-8">
-            <table className="w-full min-w-[44rem] table-fixed text-left text-sm">
-              <colgroup>
-                <col className="w-[40%]" />
-                <col className="w-[18%]" />
-                <col className="w-[26%]" />
-                <col className="w-[16%]" />
-              </colgroup>
-              <thead>
-                <tr className={cn(tableRowBorderClassName, "border-b-2 border-border/80")}>
-                  <th className={tableHeadClassName} scope="col">
-                    Medewerker
-                  </th>
-                  <th className={tableHeadClassName} scope="col">
-                    Rol
-                  </th>
-                  <th className={tableHeadClassName} scope="col">
-                    Team
-                  </th>
-                  <th className={tableHeadActionsClassName} scope="col">
-                    <span className="sr-only">Acties</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {memberships.map((membership, index) => {
-                  const email = emailByUserId[membership.user_id] ?? membership.user_id;
-                  const displayName = email.split("@")[0] ?? email;
-                  const teamId = teamIdByUserId.get(membership.user_id) ?? "";
-                  const teamName = teamId ? (teamById.get(teamId) ?? "Onbekend team") : "Geen team";
+          <>
+            <div className={mobileDataListClassName}>
+              {memberships.map((membership) => {
+                const email = emailByUserId[membership.user_id] ?? membership.user_id;
+                const displayName = email.split("@")[0] ?? email;
+                const teamId = teamIdByUserId.get(membership.user_id) ?? "";
+                const teamName = teamId ? (teamById.get(teamId) ?? "Onbekend team") : "Geen team";
 
-                  return (
-                    <MemberRow
-                      key={membership.user_id}
-                      displayName={displayName}
-                      email={email}
-                      isLast={index === memberships.length - 1}
-                      membership={membership}
-                      onRemove={() =>
-                        setArchiveModal({
-                          type: "remove-member",
-                          email,
-                          userId: membership.user_id,
-                        })
-                      }
-                      onSaved={() => router.refresh()}
-                      orgSlug={orgSlug}
-                      teamId={teamId}
-                      teamName={teamName}
-                      teamOptions={teamOptions}
-                    />
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                return (
+                  <MemberRow
+                    key={`${membership.user_id}-mobile`}
+                    displayName={displayName}
+                    email={email}
+                    layout="card"
+                    membership={membership}
+                    onRemove={() =>
+                      setArchiveModal({
+                        type: "remove-member",
+                        email,
+                        userId: membership.user_id,
+                      })
+                    }
+                    onSaved={() => router.refresh()}
+                    orgSlug={orgSlug}
+                    teamId={teamId}
+                    teamName={teamName}
+                    teamOptions={teamOptions}
+                  />
+                );
+              })}
+            </div>
+
+            <div className={desktopTableWrapClassName}>
+              <table className="w-full table-fixed text-left text-sm">
+                <colgroup>
+                  <col className="w-[40%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[26%]" />
+                  <col className="w-[16%]" />
+                </colgroup>
+                <thead>
+                  <tr className={cn(tableRowBorderClassName, "border-b-2 border-border/80")}>
+                    <th className={tableHeadClassName} scope="col">
+                      Medewerker
+                    </th>
+                    <th className={tableHeadClassName} scope="col">
+                      Rol
+                    </th>
+                    <th className={tableHeadClassName} scope="col">
+                      Team
+                    </th>
+                    <th className={tableHeadActionsClassName} scope="col">
+                      <span className="sr-only">Acties</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {memberships.map((membership, index) => {
+                    const email = emailByUserId[membership.user_id] ?? membership.user_id;
+                    const displayName = email.split("@")[0] ?? email;
+                    const teamId = teamIdByUserId.get(membership.user_id) ?? "";
+                    const teamName = teamId
+                      ? (teamById.get(teamId) ?? "Onbekend team")
+                      : "Geen team";
+
+                    return (
+                      <MemberRow
+                        key={membership.user_id}
+                        displayName={displayName}
+                        email={email}
+                        isLast={index === memberships.length - 1}
+                        layout="table"
+                        membership={membership}
+                        onRemove={() =>
+                          setArchiveModal({
+                            type: "remove-member",
+                            email,
+                            userId: membership.user_id,
+                          })
+                        }
+                        onSaved={() => router.refresh()}
+                        orgSlug={orgSlug}
+                        teamId={teamId}
+                        teamName={teamName}
+                        teamOptions={teamOptions}
+                      />
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </SettingsSection>
 
@@ -202,7 +245,8 @@ export function MembersTab({
 function MemberRow({
   displayName,
   email,
-  isLast,
+  isLast = true,
+  layout,
   membership,
   onRemove,
   onSaved,
@@ -213,7 +257,8 @@ function MemberRow({
 }: {
   displayName: string;
   email: string;
-  isLast: boolean;
+  isLast?: boolean;
+  layout: "card" | "table";
   membership: SettingsMember;
   onRemove: () => void;
   onSaved: () => void;
@@ -272,6 +317,93 @@ function MemberRow({
     });
   }
 
+  const roleEditor = (
+    <EditableSelectCell
+      editing={editingField === "role"}
+      isPending={isPending}
+      label="Rol"
+      onCancel={() => setEditingField(null)}
+      onSave={saveRole}
+      onStartEdit={() => {
+        if (isPending) return;
+        setError(null);
+        setEditingField("role");
+      }}
+      options={roleOptions}
+      value={membership.role}
+    >
+      <RoleBadge role={membership.role} />
+    </EditableSelectCell>
+  );
+
+  const teamEditor = isAdmin ? (
+    <span className="text-sm text-muted-foreground">N.v.t.</span>
+  ) : teamOptions.length === 0 ? (
+    <span className="text-sm text-muted-foreground">Geen team</span>
+  ) : (
+    <EditableSelectCell
+      editing={editingField === "team"}
+      isPending={isPending}
+      label="Team"
+      onCancel={() => setEditingField(null)}
+      onSave={saveTeam}
+      onStartEdit={() => {
+        if (isPending) return;
+        setError(null);
+        setEditingField("team");
+      }}
+      options={teamOptions}
+      value={teamId || teamOptions[0]?.value || ""}
+    >
+      <span className={cellTextClassName}>{teamName}</span>
+    </EditableSelectCell>
+  );
+
+  const identityBlock = (
+    <div className="flex min-w-0 items-center gap-3">
+      <span
+        aria-hidden
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-sm font-bold",
+          isAdmin ? "bg-primary-container text-primary" : "bg-secondary-container text-secondary",
+        )}
+      >
+        {initials}
+      </span>
+      <div className="min-w-0">
+        <p className={cn(cellTextClassName, "truncate")}>{displayName}</p>
+        <p className="truncate text-xs text-muted-foreground">{email}</p>
+      </div>
+    </div>
+  );
+
+  if (layout === "card") {
+    return (
+      <SettingsMobileRowCard>
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">{identityBlock}</div>
+          <MobileRowActionGroup>
+            <RowIconButton
+              icon="delete"
+              label={`${email} verwijderen`}
+              onClick={onRemove}
+              tone="destructive"
+            />
+          </MobileRowActionGroup>
+        </div>
+        <div className="mt-2.5 grid grid-cols-2 gap-3">
+          <SettingsMobileField label="Rol">{roleEditor}</SettingsMobileField>
+          <SettingsMobileField label="Team">{teamEditor}</SettingsMobileField>
+        </div>
+        {error ? (
+          <div className="mt-2">
+            <FormError message={error} />
+          </div>
+        ) : null}
+      </SettingsMobileRowCard>
+    );
+  }
+
   return (
     <>
       <tr
@@ -280,67 +412,9 @@ function MemberRow({
           !isLast && tableRowBorderClassName,
         )}
       >
-        <td className="px-6 py-3.5 sm:px-8">
-          <div className="flex min-w-0 items-center gap-3">
-            <span
-              aria-hidden
-              className={cn(
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-sm font-bold",
-                isAdmin
-                  ? "bg-primary-container text-primary"
-                  : "bg-secondary-container text-secondary",
-              )}
-            >
-              {initials}
-            </span>
-            <div className="min-w-0">
-              <p className={cn(cellTextClassName, "truncate")}>{displayName}</p>
-              <p className="truncate text-xs text-muted-foreground">{email}</p>
-            </div>
-          </div>
-        </td>
-        <td className="px-3 py-3.5">
-          <EditableSelectCell
-            editing={editingField === "role"}
-            isPending={isPending}
-            label="Rol"
-            onCancel={() => setEditingField(null)}
-            onSave={saveRole}
-            onStartEdit={() => {
-              if (isPending) return;
-              setError(null);
-              setEditingField("role");
-            }}
-            options={roleOptions}
-            value={membership.role}
-          >
-            <RoleBadge role={membership.role} />
-          </EditableSelectCell>
-        </td>
-        <td className="px-3 py-3.5">
-          {isAdmin ? (
-            <span className="text-sm text-muted-foreground">N.v.t.</span>
-          ) : teamOptions.length === 0 ? (
-            <span className="text-sm text-muted-foreground">Geen team</span>
-          ) : (
-            <EditableSelectCell
-              editing={editingField === "team"}
-              isPending={isPending}
-              label="Team"
-              onCancel={() => setEditingField(null)}
-              onSave={saveTeam}
-              onStartEdit={() => {
-                if (isPending) return;
-                setError(null);
-                setEditingField("team");
-              }}
-              options={teamOptions}
-              value={teamId || teamOptions[0]?.value || ""}
-            >
-              <span className={cellTextClassName}>{teamName}</span>
-            </EditableSelectCell>
-          )}
-        </td>
+        <td className="px-6 py-3.5 sm:px-8">{identityBlock}</td>
+        <td className="px-3 py-3.5">{roleEditor}</td>
+        <td className="px-3 py-3.5">{teamEditor}</td>
         <td className="px-6 py-3.5 text-right sm:px-8">
           <RowIconButton
             icon="delete"

@@ -17,6 +17,7 @@ function EditableCellTrigger({
   children,
   disabled,
   label,
+  multiline = false,
   onClick,
   truncateContent = true,
   value,
@@ -25,6 +26,7 @@ function EditableCellTrigger({
   children: ReactNode;
   disabled?: boolean;
   label: string;
+  multiline?: boolean;
   onClick: () => void;
   truncateContent?: boolean;
   value: string;
@@ -33,7 +35,11 @@ function EditableCellTrigger({
     <button
       type="button"
       aria-label={`${label} bewerken: ${value}`}
-      className={cn(editableTriggerClassName, align === "right" && "justify-end text-right")}
+      className={cn(
+        editableTriggerClassName,
+        multiline && "h-auto min-h-9 py-1.5",
+        align === "right" && "justify-end text-right",
+      )}
       disabled={disabled}
       onClick={onClick}
       title="Klik om te bewerken"
@@ -276,7 +282,26 @@ export function formatDecimal(value: number): string {
   }).format(value);
 }
 
-export function MetricValue({ unit, value }: { unit: string; value: number }) {
+export function MetricValue({
+  stackUnit = false,
+  unit,
+  value,
+}: {
+  stackUnit?: boolean;
+  unit: string;
+  value: number;
+}) {
+  if (stackUnit) {
+    return (
+      <span className="inline-flex flex-col items-end gap-0.5 leading-tight">
+        <span className="text-sm font-semibold tabular-nums text-foreground">
+          {formatDecimal(value)}
+        </span>
+        <span className="text-xs text-muted-foreground">{unit}</span>
+      </span>
+    );
+  }
+
   return (
     <span className="text-sm">
       <span className="font-semibold text-foreground">{formatDecimal(value)}</span>
@@ -316,13 +341,17 @@ export function EditableNumberCell({
     }
   }, [editing]);
 
+  const stackUnit = align === "right";
+
   return (
     <div className={cn(editableCellShellClassName, align === "right" && "justify-end")}>
       {editing ? (
         <div
           className={cn(
-            "flex h-9 w-full items-center",
-            align === "right" ? "justify-end gap-1.5" : "gap-1.5",
+            "flex w-full",
+            stackUnit
+              ? "flex-col items-end gap-1"
+              : cn("h-9 items-center", align === "right" ? "justify-end gap-1.5" : "gap-1.5"),
           )}
         >
           <input
@@ -350,18 +379,26 @@ export function EditableNumberCell({
               }
             }}
           />
-          <span className="shrink-0 text-sm text-muted-foreground">{suffix}</span>
+          <span
+            className={cn(
+              "shrink-0 text-muted-foreground",
+              stackUnit ? "text-xs leading-tight" : "text-sm",
+            )}
+          >
+            {suffix}
+          </span>
         </div>
       ) : (
         <EditableCellTrigger
           align={align}
           disabled={isPending}
           label={label}
+          multiline={stackUnit}
           onClick={onStartEdit}
           truncateContent={false}
           value={`${formatDecimal(value)} ${suffix}`}
         >
-          <MetricValue unit={suffix} value={value} />
+          <MetricValue stackUnit={stackUnit} unit={suffix} value={value} />
         </EditableCellTrigger>
       )}
     </div>

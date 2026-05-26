@@ -116,8 +116,9 @@ export function SuperadminOrgForm() {
         )}
 
         <Button
-          className="min-h-11 w-full sm:w-auto"
+          className="min-h-11 w-full rounded-full sm:w-auto"
           disabled={isPending || !form.formState.isValid}
+          variant="brand"
         >
           {isPending ? "Aanmaken..." : "Organisatie aanmaken"}
         </Button>

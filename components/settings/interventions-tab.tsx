@@ -22,14 +22,25 @@ import {
   SelectField,
 } from "@/components/settings/form-fields";
 import {
+  MobileRowActionGroup,
+  SettingsMobileField,
+  SettingsMobileRowCard,
+} from "@/components/settings/mobile-row-card";
+import {
   cellTextClassName,
+  desktopTableWrapClassName,
+  mobileDataListClassName,
   modalFieldHelperClassName,
   sectionDescriptionClassName,
   sectionLabelClassName,
   sectionShellClassName,
   sectionTitleClassName,
+  tableBodyCellActionsClassName,
+  tableBodyCellClassName,
+  tableBodyCellRightClassName,
   tableHeadActionsClassName,
   tableHeadClassName,
+  tableHeadHintClassName,
   tableHeadRightClassName,
   tableRowBorderClassName,
   tableSectionBorderClassName,
@@ -41,8 +52,19 @@ import {
 } from "@/components/settings/settings-ui";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { InfoHint } from "@/components/ui/info-hint";
 import { Modal, ModalActions } from "@/components/ui/modal";
 import { iconForCategory } from "@/lib/category-icons";
+import {
+  CO2_FACTOR_COLUMN_HELP,
+  ECO_UNIT_COLUMN_HELP,
+  INTERVENTION_ECO_SECTION_HELP,
+  INTERVENTION_SOCIAL_SECTION_HELP,
+  INTERVENTIONS_OVERVIEW_HELP,
+  SOCIAL_SCORE_COLUMN_HELP,
+  SOCIAL_UNIT_COLUMN_HELP,
+  type MetricsHelpContent,
+} from "@/lib/copy/eco-social-metrics-help";
 import { cn } from "@/lib/utils";
 
 export type SettingsCategory = {
@@ -113,7 +135,14 @@ export function InterventionsTab({ categories, interventions, orgSlug }: Interve
         <header className="space-y-5 pb-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-1">
-              <h3 className={sectionTitleClassName}>Interventies</h3>
+              <div className="flex items-center gap-2">
+                <h3 className={sectionTitleClassName}>Interventies</h3>
+                <InfoHint
+                  content={INTERVENTIONS_OVERVIEW_HELP}
+                  label="Uitleg interventies en impact"
+                  side="bottom"
+                />
+              </div>
               <p className={sectionDescriptionClassName}>
                 Stel activiteiten in die medewerkers kunnen kiezen bij registratie. Klik op een
                 waarde om te bewerken.
@@ -193,58 +222,96 @@ export function InterventionsTab({ categories, interventions, orgSlug }: Interve
             message="Geen interventies in deze categorie. Kies een andere filter."
           />
         ) : (
-          <div className="-mx-6 mt-6 overflow-x-auto sm:-mx-8">
-            <table className="w-full min-w-[52rem] table-fixed text-left text-sm">
-              <colgroup>
-                <col className="w-[26%]" />
-                <col className="w-[14%]" />
-                <col className="w-[10%]" />
-                <col className="w-[12%]" />
-                <col className="w-[10%]" />
-                <col className="w-[12%]" />
-                <col className="w-[6%]" />
-              </colgroup>
-              <thead>
-                <tr className={cn(tableRowBorderClassName, "border-b-2 border-border/80")}>
-                  <th className={tableHeadClassName} scope="col">
-                    Interventie
-                  </th>
-                  <th className={tableHeadClassName} scope="col">
-                    Categorie
-                  </th>
-                  <th className={tableHeadClassName} scope="col">
-                    Eco-eenheid
-                  </th>
-                  <th className={tableHeadRightClassName} scope="col">
-                    CO₂-factor
-                  </th>
-                  <th className={cn(tableHeadClassName, tableSectionBorderClassName)} scope="col">
-                    Sociale eenheid
-                  </th>
-                  <th className={tableHeadRightClassName} scope="col">
-                    Score
-                  </th>
-                  <th className={tableHeadActionsClassName} scope="col">
-                    <span className="sr-only">Acties</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredInterventions.map((intervention, index) => (
-                  <InterventionRow
-                    key={intervention.id}
-                    categories={categories}
-                    category={categoryMap.get(intervention.category_id)}
-                    intervention={intervention}
-                    isLast={index === filteredInterventions.length - 1}
-                    onDelete={() => setArchiveModal({ type: "archive-intervention", intervention })}
-                    onSaved={() => router.refresh()}
-                    orgSlug={orgSlug}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className={mobileDataListClassName}>
+              {filteredInterventions.map((intervention) => (
+                <InterventionRow
+                  key={`${intervention.id}-mobile`}
+                  categories={categories}
+                  category={categoryMap.get(intervention.category_id)}
+                  intervention={intervention}
+                  layout="card"
+                  onDelete={() => setArchiveModal({ type: "archive-intervention", intervention })}
+                  onSaved={() => router.refresh()}
+                  orgSlug={orgSlug}
+                />
+              ))}
+            </div>
+
+            <div className={desktopTableWrapClassName}>
+              <table className="w-full table-fixed text-left text-sm">
+                <colgroup>
+                  <col className="w-[24%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[4%]" />
+                </colgroup>
+                <thead>
+                  <tr className={cn(tableRowBorderClassName, "border-b-2 border-border/80")}>
+                    <th className={tableHeadClassName} scope="col">
+                      Interventie
+                    </th>
+                    <th className={tableHeadClassName} scope="col">
+                      Categorie
+                    </th>
+                    <th className={tableHeadClassName} scope="col">
+                      <ColumnHeadWithHint
+                        hint={ECO_UNIT_COLUMN_HELP}
+                        hintLabel="Uitleg eco-eenheid"
+                        label="Eco-eenheid"
+                      />
+                    </th>
+                    <th className={tableHeadRightClassName} scope="col">
+                      <ColumnHeadWithHint
+                        align="end"
+                        hint={CO2_FACTOR_COLUMN_HELP}
+                        hintLabel="Uitleg CO₂-factor"
+                        label="CO₂-factor"
+                      />
+                    </th>
+                    <th className={cn(tableHeadClassName, tableSectionBorderClassName)} scope="col">
+                      <ColumnHeadWithHint
+                        hint={SOCIAL_UNIT_COLUMN_HELP}
+                        hintLabel="Uitleg sociale eenheid"
+                        label="Sociale eenheid"
+                      />
+                    </th>
+                    <th className={tableHeadRightClassName} scope="col">
+                      <ColumnHeadWithHint
+                        align="end"
+                        hint={SOCIAL_SCORE_COLUMN_HELP}
+                        hintLabel="Uitleg sociale score-factor"
+                        label="Score"
+                      />
+                    </th>
+                    <th className={tableHeadActionsClassName} scope="col">
+                      <span className="sr-only">Acties</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredInterventions.map((intervention, index) => (
+                    <InterventionRow
+                      key={intervention.id}
+                      categories={categories}
+                      category={categoryMap.get(intervention.category_id)}
+                      intervention={intervention}
+                      isLast={index === filteredInterventions.length - 1}
+                      layout="table"
+                      onDelete={() =>
+                        setArchiveModal({ type: "archive-intervention", intervention })
+                      }
+                      onSaved={() => router.refresh()}
+                      orgSlug={orgSlug}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
 
@@ -288,7 +355,8 @@ function InterventionRow({
   categories,
   category,
   intervention,
-  isLast,
+  isLast = true,
+  layout,
   onDelete,
   onSaved,
   orgSlug,
@@ -296,11 +364,13 @@ function InterventionRow({
   categories: SettingsCategory[];
   category?: SettingsCategory;
   intervention: SettingsIntervention;
-  isLast: boolean;
+  isLast?: boolean;
+  layout: "card" | "table";
   onDelete: () => void;
   onSaved: () => void;
   orgSlug: string;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const [editingField, setEditingField] = useState<EditableField | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -341,6 +411,149 @@ function InterventionRow({
     });
   }
 
+  const nameEditor = (
+    <EditableTextCell
+      align="left"
+      editing={editingField === "name"}
+      isPending={isPending}
+      label="Naam"
+      onCancel={cancelEditing}
+      onSave={(value) => saveField("name", value)}
+      onStartEdit={() => startEditing("name")}
+      value={intervention.name}
+    >
+      <span className={cn(cellTextClassName, "truncate")}>{intervention.name}</span>
+    </EditableTextCell>
+  );
+
+  const categoryEditor = (
+    <EditableCategoryCell
+      categories={categories}
+      category={category}
+      editing={editingField === "categoryId"}
+      isPending={isPending}
+      onCancel={cancelEditing}
+      onSave={(value) => saveField("categoryId", value)}
+      onStartEdit={() => startEditing("categoryId")}
+      value={intervention.category_id}
+    />
+  );
+
+  const ecoUnitEditor = (
+    <EditableTextCell
+      editing={editingField === "ecoUnit"}
+      isPending={isPending}
+      label="Eco-eenheid"
+      onCancel={cancelEditing}
+      onSave={(value) => saveField("ecoUnit", value)}
+      onStartEdit={() => startEditing("ecoUnit")}
+      value={intervention.eco_unit}
+    >
+      <UnitBadge label={intervention.eco_unit} />
+    </EditableTextCell>
+  );
+
+  const co2FactorEditor = (
+    <EditableNumberCell
+      align="right"
+      editing={editingField === "co2FactorKg"}
+      isPending={isPending}
+      label="CO₂-factor"
+      onCancel={cancelEditing}
+      onSave={(value) => saveField("co2FactorKg", value)}
+      onStartEdit={() => startEditing("co2FactorKg")}
+      suffix={`kg/${intervention.eco_unit}`}
+      value={intervention.co2_factor_kg}
+    />
+  );
+
+  const socialUnitEditor = (
+    <EditableTextCell
+      editing={editingField === "socialUnit"}
+      isPending={isPending}
+      label="Sociale eenheid"
+      onCancel={cancelEditing}
+      onSave={(value) => saveField("socialUnit", value)}
+      onStartEdit={() => startEditing("socialUnit")}
+      value={intervention.social_unit}
+    >
+      <UnitBadge label={intervention.social_unit} />
+    </EditableTextCell>
+  );
+
+  const socialScoreEditor = (
+    <EditableNumberCell
+      align="right"
+      editing={editingField === "socialScoreFactor"}
+      isPending={isPending}
+      label="Sociale score"
+      onCancel={cancelEditing}
+      onSave={(value) => saveField("socialScoreFactor", value)}
+      onStartEdit={() => startEditing("socialScoreFactor")}
+      suffix={`score/${intervention.social_unit}`}
+      value={intervention.social_score_factor}
+    />
+  );
+
+  const deleteAction = (
+    <RowIconButton
+      icon="delete"
+      label={`${intervention.name} verwijderen`}
+      onClick={onDelete}
+      tone="destructive"
+    />
+  );
+
+  if (layout === "card") {
+    return (
+      <SettingsMobileRowCard>
+        <div className="flex items-start gap-2">
+          <CategoryIconSquare color={category?.color ?? "#6b7280"} icon={icon} />
+          <div className="min-w-0 flex-1 space-y-2">
+            <SettingsMobileField label="Interventie">{nameEditor}</SettingsMobileField>
+            <SettingsMobileField label="Categorie">{categoryEditor}</SettingsMobileField>
+          </div>
+          <MobileRowActionGroup>
+            <RowIconButton
+              icon="delete"
+              label={`${intervention.name} verwijderen`}
+              onClick={onDelete}
+              tone="destructive"
+            />
+            <button
+              type="button"
+              aria-expanded={expanded}
+              aria-label={expanded ? "Minder details tonen" : "Meer details tonen"}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-card hover:text-foreground"
+              onClick={() => setExpanded((current) => !current)}
+            >
+              <Icon
+                name={expanded ? "expand_less" : "expand_more"}
+                className="text-xl"
+                aria-hidden
+              />
+            </button>
+          </MobileRowActionGroup>
+        </div>
+
+        {expanded ? (
+          <div className="mt-2.5 grid grid-cols-2 gap-3 border-t border-border/50 pt-2.5">
+            <SettingsMobileField label="Eco-eenheid">{ecoUnitEditor}</SettingsMobileField>
+            <SettingsMobileField label="CO₂-factor">{co2FactorEditor}</SettingsMobileField>
+            <SettingsMobileField label="Sociale eenheid">{socialUnitEditor}</SettingsMobileField>
+            <SettingsMobileField label="Score">{socialScoreEditor}</SettingsMobileField>
+          </div>
+        ) : null}
+
+        {error ? (
+          <div className="mt-2">
+            <FormError message={error} />
+          </div>
+        ) : null}
+      </SettingsMobileRowCard>
+    );
+  }
+
   return (
     <>
       <tr
@@ -349,97 +562,20 @@ function InterventionRow({
           !isLast && tableRowBorderClassName,
         )}
       >
-        <td className="px-6 py-3.5 sm:px-8">
+        <td className="max-w-0 overflow-hidden px-6 py-3.5 sm:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <CategoryIconSquare color={category?.color ?? "#6b7280"} icon={icon} />
-            <div className="min-w-0 flex-1">
-              <EditableTextCell
-                align="left"
-                editing={editingField === "name"}
-                isPending={isPending}
-                label="Naam"
-                onCancel={cancelEditing}
-                onSave={(value) => saveField("name", value)}
-                onStartEdit={() => startEditing("name")}
-                value={intervention.name}
-              >
-                <span className={cn(cellTextClassName, "truncate")}>{intervention.name}</span>
-              </EditableTextCell>
-            </div>
+            <div className="min-w-0 flex-1">{nameEditor}</div>
           </div>
         </td>
-        <td className="px-3 py-3.5">
-          <EditableCategoryCell
-            categories={categories}
-            category={category}
-            editing={editingField === "categoryId"}
-            isPending={isPending}
-            onCancel={cancelEditing}
-            onSave={(value) => saveField("categoryId", value)}
-            onStartEdit={() => startEditing("categoryId")}
-            value={intervention.category_id}
-          />
+        <td className={tableBodyCellClassName}>{categoryEditor}</td>
+        <td className={tableBodyCellClassName}>{ecoUnitEditor}</td>
+        <td className={tableBodyCellRightClassName}>{co2FactorEditor}</td>
+        <td className={cn(tableBodyCellClassName, tableSectionBorderClassName)}>
+          {socialUnitEditor}
         </td>
-        <td className="px-3 py-3.5">
-          <EditableTextCell
-            editing={editingField === "ecoUnit"}
-            isPending={isPending}
-            label="Eco-eenheid"
-            onCancel={cancelEditing}
-            onSave={(value) => saveField("ecoUnit", value)}
-            onStartEdit={() => startEditing("ecoUnit")}
-            value={intervention.eco_unit}
-          >
-            <UnitBadge label={intervention.eco_unit} />
-          </EditableTextCell>
-        </td>
-        <td className="px-3 py-3.5 text-right tabular-nums">
-          <EditableNumberCell
-            align="right"
-            editing={editingField === "co2FactorKg"}
-            isPending={isPending}
-            label="CO₂-factor"
-            onCancel={cancelEditing}
-            onSave={(value) => saveField("co2FactorKg", value)}
-            onStartEdit={() => startEditing("co2FactorKg")}
-            suffix={`kg/${intervention.eco_unit}`}
-            value={intervention.co2_factor_kg}
-          />
-        </td>
-        <td className={cn("px-3 py-3.5", tableSectionBorderClassName)}>
-          <EditableTextCell
-            editing={editingField === "socialUnit"}
-            isPending={isPending}
-            label="Sociale eenheid"
-            onCancel={cancelEditing}
-            onSave={(value) => saveField("socialUnit", value)}
-            onStartEdit={() => startEditing("socialUnit")}
-            value={intervention.social_unit}
-          >
-            <UnitBadge label={intervention.social_unit} />
-          </EditableTextCell>
-        </td>
-        <td className="px-3 py-3.5 text-right tabular-nums">
-          <EditableNumberCell
-            align="right"
-            editing={editingField === "socialScoreFactor"}
-            isPending={isPending}
-            label="Sociale score"
-            onCancel={cancelEditing}
-            onSave={(value) => saveField("socialScoreFactor", value)}
-            onStartEdit={() => startEditing("socialScoreFactor")}
-            suffix={`score/${intervention.social_unit}`}
-            value={intervention.social_score_factor}
-          />
-        </td>
-        <td className="px-6 py-3.5 text-right sm:px-8">
-          <RowIconButton
-            icon="delete"
-            label={`${intervention.name} verwijderen`}
-            onClick={onDelete}
-            tone="destructive"
-          />
-        </td>
+        <td className={tableBodyCellRightClassName}>{socialScoreEditor}</td>
+        <td className={cn(tableBodyCellActionsClassName, "text-right")}>{deleteAction}</td>
       </tr>
       {error ? (
         <tr>
@@ -563,13 +699,13 @@ function CategoryFilterButton({
 
 function CategoryLabel({ color, name }: { color: string; name: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+    <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-sm text-muted-foreground">
       <span
         aria-hidden
         className="h-2 w-2 shrink-0 rounded-sm"
         style={{ backgroundColor: color }}
       />
-      {name}
+      <span className="truncate">{name}</span>
     </span>
   );
 }
@@ -773,17 +909,23 @@ function InterventionCreateModal({
             />
           </div>
 
-          <FormSection title="Eco-impact">
+          <FormSection
+            hint={INTERVENTION_ECO_SECTION_HELP}
+            hintLabel="Uitleg eco-impact instellen"
+            title="Eco-impact"
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
-                helper="Label bij registratie voor de eco-hoeveelheid."
+                hint={ECO_UNIT_COLUMN_HELP}
+                hintLabel="Uitleg eco-eenheid"
                 label="Eco-eenheid"
                 name="ecoUnit"
                 placeholder="uur"
                 required
               />
               <Field
-                helper="Kg CO₂ bespaard per eco-eenheid."
+                hint={CO2_FACTOR_COLUMN_HELP}
+                hintLabel="Uitleg CO₂ per eco-eenheid"
                 label="CO₂ per eco-eenheid (kg)"
                 min="0"
                 name="co2FactorKg"
@@ -795,17 +937,23 @@ function InterventionCreateModal({
             </div>
           </FormSection>
 
-          <FormSection title="Sociale impact">
+          <FormSection
+            hint={INTERVENTION_SOCIAL_SECTION_HELP}
+            hintLabel="Uitleg sociale impact instellen"
+            title="Sociale impact"
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
-                helper="Label bij registratie voor de sociale hoeveelheid."
+                hint={SOCIAL_UNIT_COLUMN_HELP}
+                hintLabel="Uitleg sociale eenheid"
                 label="Sociale eenheid"
                 name="socialUnit"
                 placeholder="personen"
                 required
               />
               <Field
-                helper="Relatieve score per sociale eenheid."
+                hint={SOCIAL_SCORE_COLUMN_HELP}
+                hintLabel="Uitleg score per sociale eenheid"
                 label="Score per sociale eenheid"
                 min="0"
                 name="socialScoreFactor"
@@ -826,4 +974,36 @@ function InterventionCreateModal({
 
 function UnitBadge({ label }: { label: string }) {
   return <span className="text-sm font-medium text-foreground">{label}</span>;
+}
+
+function ColumnHeadWithHint({
+  align = "start",
+  hint,
+  hintLabel,
+  label,
+}: {
+  align?: "center" | "end" | "start";
+  hint: MetricsHelpContent;
+  hintLabel: string;
+  label: string;
+}) {
+  return (
+    <span
+      className={cn(
+        tableHeadHintClassName,
+        align === "end" && "w-full justify-end",
+        align === "center" && "w-full justify-center",
+      )}
+    >
+      <span>{label}</span>
+      <InfoHint
+        align={align}
+        className="-mr-0.5"
+        content={hint}
+        label={hintLabel}
+        side="bottom"
+        size="sm"
+      />
+    </span>
+  );
 }

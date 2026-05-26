@@ -16,7 +16,9 @@ Hosting: Vercel (app) + Supabase (DB/auth/storage).
 - `/login` — inlogpagina (magic-link + tijdelijke wachtwoordfallback).
 - `/(app)/[orgSlug]/dashboard` — read-only tenantoverzicht; KPI's en charts gefilterd op **huidig kalenderjaar** (`happened_on`).
 - `/(app)/[orgSlug]/teams/[teamId]` — team-detailpagina (drill-down vanaf dashboard); activiteiten per interventie, trend, recente registraties gefilterd op team.
-- `/(app)/[orgSlug]/registratie` — aparte registratieflow.
+- `/(app)/[orgSlug]/registraties` — overzicht van registraties (workers: eigen; admins: alle org-registraties met bewerken/verwijderen).
+- `/(app)/[orgSlug]/registraties/[id]/bewerken` — bestaande registratie bewerken (hergebruikt registratieformulier).
+- `/(app)/[orgSlug]/registratie` — nieuwe registratie aanmaken (sidebar-CTA).
 - `/(app)/[orgSlug]/instellingen` — admin-only orgbeheer (voorheen `/beheer`).
 - `/superadmin` — platform-overzicht, read-only over alle tenants heen.
 - `/superadmin/orgs/new` — nieuwe organisatie aanmaken + eerste admin uitnodigen.
@@ -99,4 +101,4 @@ Implementatie: `lib/impact-stories.ts`, `components/dashboard/impact-story-rotat
 2. Regenereer types in Supabase dashboard en plak ze in `supabase/types/supabase.ts`.
 
 ## Open vragen
-- [ ] Deploy-URL en embed-whitelist definitief zetten voor productie.
+- [ ] Deploy-URL en embed-whitelist definitief zetten (staging; productie volgt later).

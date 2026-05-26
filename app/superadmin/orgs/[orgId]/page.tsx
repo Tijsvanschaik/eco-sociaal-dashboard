@@ -1,9 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
+import {
+  formatRegistrationCo2Kg,
+  formatRegistrationDate,
+  formatRegistrationSocialScore,
+} from "@/components/dashboard/registration-card";
+import { SuperadminMetricGrid } from "@/components/superadmin/superadmin-metric-grid";
 import { SuperadminResetRegistrationsPanel } from "@/components/superadmin-reset-registrations-panel";
+import {
+  SuperadminPageHeader,
+  SuperadminPageMain,
+} from "@/components/superadmin/superadmin-page-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Icon } from "@/components/ui/icon";
 import { createClient } from "@/lib/supabase/server";
 import { getSuperadminOrgOverview } from "@/lib/tenant-dashboard-data";
 
@@ -30,135 +41,179 @@ export default async function SuperadminOrgDetailPage({ params }: { params: Para
   if (!data) notFound();
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">/{data.org.slug}</p>
-          <h1 className="text-3xl font-semibold tracking-tight">{data.org.name}</h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Read-only tenantdetail voor support en kwaliteitscontrole.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline">
-            <Link href="/superadmin">Terug</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href={`/${data.org.slug}/dashboard`}>Tenant-dashboard</Link>
-          </Button>
-          {data.org.publicShareEnabled && data.org.publicShareSlug && (
-            <Button asChild>
-              <Link href={`/p/${data.org.publicShareSlug}`}>Publieke link</Link>
+    <SuperadminPageMain>
+      <SuperadminPageHeader
+        actions={
+          <>
+            <Button asChild className="rounded-full" variant="outline">
+              <Link href="/superadmin">
+                <Icon name="arrow_back" className="text-base" />
+                Terug
+              </Link>
             </Button>
-          )}
-        </div>
-      </section>
+            <Button asChild className="rounded-full" variant="secondary">
+              <Link href={`/${data.org.slug}/dashboard`}>
+                <Icon name="dashboard" className="text-base" />
+                Tenant-dashboard
+              </Link>
+            </Button>
+            {data.org.publicShareEnabled && data.org.publicShareSlug ? (
+              <Button asChild className="rounded-full" variant="brand">
+                <Link href={`/p/${data.org.publicShareSlug}`}>
+                  <Icon name="share" className="text-base" />
+                  Publieke link
+                </Link>
+              </Button>
+            ) : null}
+          </>
+        }
+        description="Read-only tenantdetail voor support, onboarding en kwaliteitscontrole."
+        eyebrow={`/${data.org.slug}`}
+        title={data.org.name}
+      />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-        <MetricCard label="CO2 bespaard" value={`${formatKg(data.snapshot.totalCo2Kg)} kg`} />
-        <MetricCard
-          label="Sociale score"
-          value={formatSocialScoreMetric(data.snapshot.totalSocialScore)}
-        />
-        <MetricCard label="Registraties" value={`${data.snapshot.registrationCount}`} />
-        <MetricCard label="Actieve collega's" value={`${data.snapshot.activeUserCount}`} />
-        <MetricCard label="EOD opgeschoven" value={`${data.snapshot.eodDays} dagen`} />
-      </section>
+      <SuperadminMetricGrid
+        metrics={[
+          {
+            description: "Totale eco-impact van deze tenant.",
+            icon: "eco",
+            label: "CO₂ bespaard",
+            tone: "tertiary",
+            unit: "kg",
+            value: formatKg(data.snapshot.totalCo2Kg),
+          },
+          {
+            description: "Totale sociale score van deze tenant.",
+            icon: "favorite",
+            label: "Sociale score",
+            tone: "primary",
+            unit: "punten",
+            value: formatSocialScoreMetric(data.snapshot.totalSocialScore),
+          },
+          {
+            description: "Aantal geregistreerde activiteiten.",
+            icon: "edit_note",
+            label: "Registraties",
+            tone: "neutral",
+            value: String(data.snapshot.registrationCount),
+          },
+          {
+            description: "Unieke medewerkers met minstens één registratie.",
+            icon: "group",
+            label: "Actieve collega's",
+            tone: "neutral",
+            value: String(data.snapshot.activeUserCount),
+          },
+          {
+            description: "Berekende verschuiving t.o.v. de EOD-baseline.",
+            icon: "calendar_month",
+            label: "EOD opgeschoven",
+            tone: "primary",
+            unit: "dagen",
+            value: String(data.snapshot.eodDays),
+          },
+        ]}
+      />
 
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Organisatie-status</CardTitle>
-            <CardDescription>Snelle checks voor support en onboarding.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <p>
-              Publieke share-link:{" "}
-              <span className="font-medium">
-                {data.org.publicShareEnabled && data.org.publicShareSlug ? "aan" : "uit"}
-              </span>
-            </p>
-            <p>
-              Publieke slug:{" "}
-              <span className="font-medium">
-                {data.org.publicShareSlug ?? "nog niet ingesteld"}
-              </span>
-            </p>
-            <p>
-              EOD-baseline:{" "}
-              <span className="font-medium">
-                {data.org.eodBaselineKg ? `${data.org.eodBaselineKg} kg` : "placeholder"}
-              </span>
-            </p>
-          </CardContent>
-        </Card>
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <DashboardPanel
+          description="Snelle checks voor support en onboarding."
+          icon="settings"
+          iconTone="neutral"
+          title="Organisatie-status"
+        >
+          <dl className="space-y-3 text-sm">
+            <StatusRow
+              label="Publieke share-link"
+              value={data.org.publicShareEnabled && data.org.publicShareSlug ? "Aan" : "Uit"}
+            />
+            <StatusRow
+              label="Publieke slug"
+              value={data.org.publicShareSlug ?? "Nog niet ingesteld"}
+            />
+            <StatusRow
+              label="EOD-baseline"
+              value={data.org.eodBaselineKg ? `${data.org.eodBaselineKg} kg` : "Placeholder"}
+            />
+          </dl>
+        </DashboardPanel>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recente registraties</CardTitle>
-            <CardDescription>Laatste 8 registraties binnen deze tenant.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {data.recentRegistrations.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nog geen registraties beschikbaar.</p>
-            ) : (
-              data.recentRegistrations.map((registration) => (
-                <div key={registration.id} className="rounded-lg border p-3">
+        <DashboardPanel
+          description="Laatste 8 registraties binnen deze tenant."
+          icon="history"
+          iconTone="primary"
+          title="Recente registraties"
+        >
+          {data.recentRegistrations.length === 0 ? (
+            <p className="rounded-[1.5rem] bg-card p-6 text-sm text-muted-foreground shadow-[0_20px_40px_rgba(54,50,45,0.04)]">
+              Nog geen registraties beschikbaar.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {data.recentRegistrations.map((registration) => (
+                <li
+                  key={registration.id}
+                  className="rounded-[1.25rem] border border-border/60 bg-card p-4 shadow-sm"
+                >
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{registration.interventionLabel}</p>
+                    <div className="min-w-0">
+                      <p className="font-bold text-foreground">{registration.interventionLabel}</p>
                       <p className="text-sm text-muted-foreground">{registration.teamLabel}</p>
                     </div>
-                    <p className="text-sm font-medium text-right">
-                      {formatKg(registration.co2KgCached)} kg ·{" "}
-                      {formatSocialScoreMetric(registration.socialScoreCached)} score
+                    <p className="shrink-0 text-right text-sm font-semibold">
+                      <span className="text-tertiary">
+                        {formatRegistrationCo2Kg(registration.co2KgCached)} kg
+                      </span>
+                      {" · "}
+                      <span className="text-primary">
+                        {formatRegistrationSocialScore(registration.socialScoreCached)} punten
+                      </span>
                     </p>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    {registration.quantity} op {registration.happenedOn}
+                    {registration.quantity} op {formatRegistrationDate(registration.happenedOn)}
                   </p>
-                  {registration.note && <p className="mt-2 text-sm">{registration.note}</p>}
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+                  {registration.note ? (
+                    <p className="mt-2 text-sm leading-relaxed text-foreground">{registration.note}</p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </DashboardPanel>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <BreakdownCard
+        <BreakdownPanel
           emptyText="Nog geen teamdata beschikbaar."
           items={data.snapshot.teamBreakdown.slice(0, 6)}
           title="Top teams"
         />
-        <BreakdownCard
+        <BreakdownPanel
           emptyText="Nog geen categoriedata beschikbaar."
           items={data.snapshot.categoryBreakdown}
           title="Per categorie"
         />
       </section>
-      <section>
-        <SuperadminResetRegistrationsPanel
-          orgId={data.org.id}
-          registrationCount={data.snapshot.registrationCount}
-        />
-      </section>
-    </main>
+
+      <SuperadminResetRegistrationsPanel
+        orgId={data.org.id}
+        registrationCount={data.snapshot.registrationCount}
+      />
+    </SuperadminPageMain>
   );
 }
 
-function MetricCard({ label, value }: { label: string; value: string }) {
+function StatusRow({ label, value }: { label: string; value: string }) {
   return (
-    <Card>
-      <CardHeader className="gap-1">
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-3xl">{value}</CardTitle>
-      </CardHeader>
-    </Card>
+    <div className="flex flex-wrap items-baseline justify-between gap-2 rounded-[1rem] bg-card px-4 py-3 shadow-sm">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-semibold text-foreground">{value}</dd>
+    </div>
   );
 }
 
-function BreakdownCard({
+function BreakdownPanel({
   emptyText,
   items,
   title,
@@ -176,33 +231,31 @@ function BreakdownCard({
   const rows = items.filter((item) => item.registrationCount > 0);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{emptyText}</p>
-        ) : (
-          rows.map((item) => (
-            <div
+    <DashboardPanel description="Impactverdeling binnen deze tenant." icon="leaderboard" title={title}>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{emptyText}</p>
+      ) : (
+        <ul className="space-y-3">
+          {rows.map((item) => (
+            <li
               key={item.id}
-              className="flex items-center justify-between gap-4 rounded-lg border p-3"
+              className="flex items-center justify-between gap-4 rounded-[1.25rem] border border-border/60 bg-card p-4 shadow-sm"
             >
-              <div>
-                <p className="font-medium">{item.name}</p>
-              </div>
+              <p className="font-bold text-foreground">{item.name}</p>
               <div className="text-right text-sm">
-                <p className="font-medium">
-                  {formatKg(item.co2SavedKg)} kg · {formatSocialScoreMetric(item.socialScoreTotal)}{" "}
-                  score
+                <p className="font-semibold">
+                  <span className="text-tertiary">{formatKg(item.co2SavedKg)} kg</span>
+                  {" · "}
+                  <span className="text-primary">
+                    {formatSocialScoreMetric(item.socialScoreTotal)} punten
+                  </span>
                 </p>
                 <p className="text-muted-foreground">{item.registrationCount} registraties</p>
               </div>
-            </div>
-          ))
-        )}
-      </CardContent>
-    </Card>
+            </li>
+          ))}
+        </ul>
+      )}
+    </DashboardPanel>
   );
 }
