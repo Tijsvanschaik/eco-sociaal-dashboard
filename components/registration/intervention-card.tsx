@@ -24,7 +24,8 @@ export function InterventionCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={cn(
-        "group relative flex h-full min-h-[7.5rem] w-full flex-col items-center justify-between gap-2 rounded-[1.25rem] border-2 bg-card p-3 text-center shadow-[0_12px_30px_rgba(54,50,45,0.04)] transition-all",
+        "group relative flex h-full w-full flex-col items-center justify-between gap-2 rounded-[1.25rem] border-2 bg-card p-3 text-center shadow-[0_12px_30px_rgba(54,50,45,0.04)] transition-all",
+        "max-sm:flex-row max-sm:items-center max-sm:justify-start max-sm:gap-2.5 max-sm:rounded-xl max-sm:p-2.5 max-sm:text-left sm:min-h-[7.5rem]",
         selected
           ? "shadow-[0_12px_30px_rgba(54,50,45,0.12)]"
           : "border-transparent hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(54,50,45,0.08)]",
@@ -36,19 +37,19 @@ export function InterventionCard({
     >
       <span
         aria-hidden
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.9rem] text-foreground transition-transform group-hover:scale-105"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.75rem] text-foreground transition-transform group-hover:scale-105 sm:h-11 sm:w-11 sm:rounded-[0.9rem]"
         style={{
           backgroundColor: selected ? color : `${color}22`,
           color: selected ? "#fff" : color,
         }}
       >
-        <Icon name={icon} filled className="text-2xl" />
+        <Icon name={icon} filled className="text-xl sm:text-2xl" />
       </span>
-      <span className="flex flex-col gap-0.5">
-        <span className="line-clamp-2 text-sm font-extrabold leading-tight text-foreground">
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="line-clamp-2 text-xs font-extrabold leading-tight text-foreground sm:text-sm">
           {intervention.name}
         </span>
-        <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="hidden text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground sm:block">
           {intervention.categoryName}
         </span>
       </span>

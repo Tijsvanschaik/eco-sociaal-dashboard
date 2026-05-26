@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { tenantPageMainClassName } from "@/components/app-shell/tenant-page-layout";
 import type { RegistrationCardData } from "@/components/dashboard/registration-card";
 import { ProgressSlide } from "@/components/public/progress-slide";
 import { RecentRegistrationsSlide } from "@/components/public/recent-registrations-slide";
@@ -36,14 +37,11 @@ export function InternalDashboard({
   const periodLabel = String(year);
 
   return (
-    <main className="relative min-h-dvh w-full min-w-0 space-y-8 bg-[color-mix(in_srgb,var(--card)_92%,var(--background)_8%)] px-10 pt-6 pb-28 sm:pt-10 sm:pb-28 md:py-10">
-      <header className="w-full space-y-3 px-6 sm:px-10">
+    <main className={tenantPageMainClassName}>
+      <header className="w-full">
         <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
           Welkom op het <span className="text-primary">{orgName}</span> impact dashboard
         </h1>
-        <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
-          Live overzicht van jullie impact — per team en categorie.
-        </p>
       </header>
 
       <TotalImpactSlide

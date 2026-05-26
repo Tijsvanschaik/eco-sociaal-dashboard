@@ -125,7 +125,7 @@ export function InterventionPicker({
           message="Geen activiteiten gevonden. Pas je zoekterm of filter aan."
         />
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 xl:grid-cols-4">
           {filteredInterventions.map((intervention) => (
             <li key={intervention.id}>
               <InterventionCard

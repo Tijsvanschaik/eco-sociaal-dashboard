@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { tenantPageMainClassName } from "@/components/app-shell/tenant-page-layout";
 import { GeneralTab } from "@/components/settings/general-tab";
 import { InterventionsTab } from "@/components/settings/interventions-tab";
 import { MembersTab } from "@/components/settings/members-tab";
@@ -92,8 +93,8 @@ export default async function SettingsPage({
   const emailMap = await getEmailMap(userIds);
 
   return (
-    <main className="relative min-h-dvh w-full min-w-0 space-y-8 bg-[color-mix(in_srgb,var(--card)_92%,var(--background)_8%)] px-10 pt-6 pb-28 sm:pt-10 sm:pb-28 md:py-10">
-      <header className="w-full space-y-3 px-6 pt-6 sm:px-10 sm:pt-10">
+    <main className={tenantPageMainClassName}>
+      <header className="w-full space-y-3">
         <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           {context.org.name}
         </p>

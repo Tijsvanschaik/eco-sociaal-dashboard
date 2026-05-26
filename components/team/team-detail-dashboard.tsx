@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { tenantPageMainClassName } from "@/components/app-shell/tenant-page-layout";
 import { ProgressSlide } from "@/components/public/progress-slide";
 import { RecentRegistrationsSlide } from "@/components/public/recent-registrations-slide";
 import { TeamActivityBreakdown } from "@/components/team/team-activity-breakdown";
@@ -28,8 +29,8 @@ export function TeamDetailDashboard({
   const segments = snapshot.teamBreakdown[0]?.segments ?? [];
 
   return (
-    <main className="relative min-h-dvh w-full min-w-0 space-y-8 bg-[color-mix(in_srgb,var(--card)_92%,var(--background)_8%)] px-10 pt-6 pb-28 sm:pt-10 sm:pb-28 md:py-10">
-      <header className="w-full space-y-4 px-6 sm:px-10">
+    <main className={tenantPageMainClassName}>
+      <header className="w-full space-y-4">
         <Link
           className="inline-flex min-h-11 items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/5"
           href={`/${orgSlug}/dashboard`}

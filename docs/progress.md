@@ -248,10 +248,23 @@ sociaal (`kg CO₂` / `punten`), en registratiekaarten + impact-hero aantrekkeli
 
 ## Laatste sessie
 
-Datum: 2026-05-22  
-Wat gedaan: Slice E — registratiepagina redesign (categorie-filter + zoek, live impact-preview, component-split, sticky submit mobiel, success-banner). Unit tests groen (139).  
-Wat volgt: Slice D rest (bento-grid + registratiefilters op dashboard); user-invite E2E.  
+Datum: 2026-05-22 (avond)  
+Wat gedaan: mobile UX-polish op dashboard, registratie en team-pagina's — gedeelde tenant-padding (`tenantPageMainClassName`), impact-rotator full-width foto + grid-stacking voor dots, compacte team-bars, score-kaarten gestapeld op mobiel, compacte activiteitenkaarten, registratiepagina-header verwijderd.  
+Wat volgt: Slice D rest (bento-grid + registratiefilters op dashboard); user-invite E2E; browser-smoke registratie op mobiel.  
 Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (workers: zelfde wachtwoord).
+
+## Sessie 2026-05-22 (avond) — mobile UX-polish
+
+**Doel:** tenant-pagina's compacter en consistenter op mobiel, zonder desktop-layout te breken.
+
+- **Gedeelde layout** [`components/app-shell/tenant-page-layout.ts`](../components/app-shell/tenant-page-layout.ts): `tenantPageMainClassName` (`px-4` → `sm:px-6` → `md:px-10`); toegepast op dashboard, team-detail, registratie en instellingen.
+- **Dashboard** [`components/internal-dashboard.tsx`](../components/internal-dashboard.tsx): subtitle onder welkomst-header verwijderd.
+- **Impact-rotator** [`components/dashboard/impact-story-rotator.tsx`](../components/dashboard/impact-story-rotator.tsx): gestapelde layout op mobiel; foto full-width (16:10); grid-stacking i.p.v. absolute positioning zodat rotatie-dots niet over tekst vallen.
+- **Impact-overzicht** [`components/dashboard/impact-overview-card.tsx`](../components/dashboard/impact-overview-card.tsx): eco/sociaal-score kaarten `grid-cols-1` op mobiel; compactere linked team-bars (minder padding/gap).
+- **Registratie** [`app/(app)/[orgSlug]/registratie/page.tsx`](../app/(app)/[orgSlug]/registratie/page.tsx): pagina-header (org + titel + subtekst) verwijderd — form start direct met “Kies je activiteit”.
+- **Activiteitenpicker** [`components/registration/intervention-card.tsx`](../components/registration/intervention-card.tsx), [`intervention-picker.tsx`](../components/registration/intervention-picker.tsx): horizontale compacte kaarten op mobiel (icoon links, titel rechts; categorielabel verborgen; kleinere gap/padding).
+
+**Geen backend- of testwijzigingen** — visuele/layout-only.
 
 ## Sessie 2026-05-22 — registratiepagina Slice E
 
@@ -262,6 +275,7 @@ Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (workers: zelfde wachtwoord
 - **Intervention picker**: categorie-tabs, zoekveld, responsive kaartengrid (~33 interventies LEV).
 - **Live impact-preview**: kg CO₂, sociale punten, bomen-equivalent; sticky sidebar desktop, inline mobiel.
 - **Page layout** [`app/(app)/[orgSlug]/registratie/page.tsx`](../app/(app)/[orgSlug]/registratie/page.tsx): padding aligned met dashboard, card-styling, sticky submit mobiel, uitgebreide success-banner (dashboard-link + nog een registratie).
+- **Design polish (zelfde dag):** genummerde stappen vervangen door [`DashboardPanel`](../components/dashboard/dashboard-panel.tsx)-secties; header met org-eyebrow (instellingen-patroon); categorie-filters als gekleurde icon-knoppen (interventies-tab); hoeveelheden + impact als witte inset-kaarten / FactTiles (impact-overview); floating brand-submit op mobiel (dashboard FAB); geen `max-w-7xl`-wrapper.
 - **Tests**: `intervention-filters`, `impact-preview`, uitgebreide `registration-form` (filter, preview, success).
 
 **Geen backend-wijzigingen** — server action + Zod-schema ongewijzigd.

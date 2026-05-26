@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 const ROTATION_MS = 8000;
 
 const storyVisualClassName =
-  "relative inline-flex aspect-square h-full min-h-14 w-auto max-h-[9.5rem] shrink-0 self-stretch overflow-hidden rounded-2xl shadow-sm sm:min-h-16";
+  "relative inline-flex aspect-[16/10] w-full shrink-0 overflow-hidden rounded-2xl shadow-sm sm:aspect-square sm:h-full sm:min-h-16 sm:w-auto sm:max-h-[9.5rem] sm:self-stretch";
 
 function StoryVisual({ story }: { story: ImpactStory }) {
   if (story.imageUrl) {
@@ -71,31 +71,31 @@ export function ImpactStoryRotator({ stories }: { stories: ImpactStory[] }) {
 
   return (
     <div aria-live="polite" className="pt-6 sm:pt-8">
-      <div className="relative min-h-[9rem] sm:min-h-[9.5rem]">
+      <div className="grid sm:min-h-[9.5rem]">
         {stories.map((story, index) => (
           <article
             key={story.id}
             aria-hidden={index !== activeIndex}
             className={cn(
-              "absolute inset-0 flex flex-col justify-center transition-opacity duration-700 ease-in-out",
-              index === activeIndex ? "opacity-100" : "pointer-events-none opacity-0",
+              "col-start-1 row-start-1 flex flex-col justify-start transition-opacity duration-700 ease-in-out sm:justify-center",
+              index === activeIndex ? "z-10 opacity-100" : "pointer-events-none opacity-0",
             )}
           >
-            <div className="flex items-stretch gap-4 sm:gap-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch sm:gap-5">
               <StoryVisual story={story} />
               <div className="min-w-0 space-y-2">
                 <h2
                   className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0"
                   {...(index === activeIndex ? { id: "impact-overview-heading" } : {})}
                 >
-                  <span className="text-[3.45rem] font-extrabold leading-none tracking-tight text-primary sm:text-[4.31rem]">
+                  <span className="text-[2.75rem] font-extrabold leading-none tracking-tight text-primary sm:text-[4.31rem]">
                     {story.formattedValue}
                   </span>
-                  <span className="text-[1.29rem] font-bold leading-snug text-foreground sm:text-[1.44rem]">
+                  <span className="text-lg font-bold leading-snug text-foreground sm:text-[1.44rem]">
                     {story.title}
                   </span>
                 </h2>
-                <p className="max-w-lg text-[1.15rem] leading-relaxed text-foreground/75">
+                <p className="max-w-lg text-base leading-relaxed text-foreground/75 sm:text-[1.15rem]">
                   {story.description}
                 </p>
               </div>

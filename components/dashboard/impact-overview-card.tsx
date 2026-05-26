@@ -168,7 +168,7 @@ function ImpactHero({
         )}
       </div>
 
-      <dl className="grid grid-cols-2 gap-4 pt-1 lg:mt-auto">
+      <dl className="grid grid-cols-1 gap-4 pt-1 sm:grid-cols-2 lg:mt-auto">
         <FactTile
           description="Dit is de som van de CO2 impact van alle eco-sociale activiteiten."
           icon="eco"
@@ -291,7 +291,8 @@ function TeamBreakdownPanel({
       ) : (
         <ol
           className={cn(
-            "flex min-h-0 flex-col gap-4",
+            "flex min-h-0 flex-col",
+            teamLinkBase ? "gap-2.5" : "gap-4",
             fitToContainer && "min-h-0 flex-1 overflow-y-auto overscroll-y-contain pr-1",
           )}
         >
@@ -365,7 +366,7 @@ function TeamBar({
           <Icon
             aria-hidden
             name="chevron_right"
-            className="ml-auto shrink-0 text-base text-muted-foreground"
+            className="ml-auto shrink-0 text-sm text-muted-foreground"
           />
         ) : null}
       </div>
@@ -408,7 +409,7 @@ function TeamBar({
     return (
       <li>
         <Link
-          className="block min-h-11 space-y-2 rounded-[1rem] p-2 -mx-2 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="group/team-link -mx-1 block space-y-1 rounded-lg px-1 py-0.5 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           href={href}
         >
           {content}
@@ -417,7 +418,7 @@ function TeamBar({
     );
   }
 
-  return <li className="space-y-2">{content}</li>;
+  return <li className="space-y-1">{content}</li>;
 }
 
 function BarSegment({
