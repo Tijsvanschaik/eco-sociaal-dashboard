@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Cell, Pie, PieChart, Tooltip } from "recharts";
 
+import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartResponsiveContainer,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { cn } from "@/lib/utils";
 
 export type CategorySlice = {
   co2SavedKg: number;
@@ -21,6 +23,12 @@ export type CategorySlice = {
 };
 
 type SliceMetricKey = keyof Pick<CategorySlice, "co2SavedKg" | "socialScoreTotal">;
+
+export type CategoryMetricTab = "eco" | "social";
+
+function metricTabToKey(tab: CategoryMetricTab): SliceMetricKey {
+  return tab === "eco" ? "co2SavedKg" : "socialScoreTotal";
+}
 
 function formatKg(value: number): string {
   return new Intl.NumberFormat("nl-NL", {
@@ -162,21 +170,36 @@ function CategoryMetricDonut({
 }
 
 /**
- * Donut per categorie — eco en sociaal gestapeld, zonder tabs.
+ * Donut per categorie — één metric tegelijk (tabs) of gestapeld eco + sociaal.
  */
 export function CategoryDonutChartBody({
+  activeTab,
   items,
+  layout = "tabs",
   limit = 6,
   periodLabel: _periodLabel,
   size = 252,
 }: {
+  /** Force one metric (controlled from panel header toggle). */
+  activeTab?: CategoryMetricTab;
   items: CategorySlice[];
+  layout?: "stacked" | "tabs";
   limit?: number;
   periodLabel?: string;
   size?: number;
 }) {
   const hasEco = useMemo(() => hasMetricTotal(items, "co2SavedKg"), [items]);
   const hasSocial = useMemo(() => hasMetricTotal(items, "socialScoreTotal"), [items]);
+  const [internalTab, setInternalTab] = useState<CategoryMetricTab>(hasEco ? "eco" : "social");
+
+  useEffect(() => {
+    if (activeTab) return;
+    if (internalTab === "eco" && !hasEco && hasSocial) setInternalTab("social");
+    if (internalTab === "social" && !hasSocial && hasEco) setInternalTab("eco");
+  }, [activeTab, hasEco, hasSocial, internalTab]);
+
+  const tab = activeTab ?? internalTab;
+  const useTabs = layout === "tabs" && hasEco && hasSocial && activeTab == null;
 
   if (items.filter((item) => item.registrationCount > 0).length === 0) {
     return (
@@ -194,9 +217,47 @@ export function CategoryDonutChartBody({
     );
   }
 
+  if (layout === "stacked") {
+    return (
+      <div className="space-y-8">
+        {hasEco ? (
+          <CategoryMetricDonut
+            centerSubtitle="kg CO₂ bespaard"
+            centerValueFormatter={formatKg}
+            items={items}
+            limit={limit}
+            metricFormatter={(value) => `${formatKg(value)} kg`}
+            metricKey="co2SavedKg"
+            size={size}
+          />
+        ) : null}
+
+        {hasSocial ? (
+          <CategoryMetricDonut
+            centerSubtitle="sociale punten"
+            centerValueFormatter={formatScore}
+            items={items}
+            limit={limit}
+            metricFormatter={(value) => `${formatScore(value)} punten`}
+            metricKey="socialScoreTotal"
+            size={size}
+          />
+        ) : null}
+      </div>
+    );
+  }
+
+  const metricKey = metricTabToKey(hasEco && hasSocial ? tab : hasEco ? "eco" : "social");
+
   return (
-    <div className="space-y-8">
-      {hasEco ? (
+    <div className="space-y-4">
+      {useTabs ? (
+        <div className="flex justify-end">
+          <CategoryMetricTabToggle tab={internalTab} onTabChange={setInternalTab} />
+        </div>
+      ) : null}
+
+      {metricKey === "co2SavedKg" ? (
         <CategoryMetricDonut
           centerSubtitle="kg CO₂ bespaard"
           centerValueFormatter={formatKg}
@@ -206,9 +267,7 @@ export function CategoryDonutChartBody({
           metricKey="co2SavedKg"
           size={size}
         />
-      ) : null}
-
-      {hasSocial ? (
+      ) : (
         <CategoryMetricDonut
           centerSubtitle="sociale punten"
           centerValueFormatter={formatScore}
@@ -218,8 +277,92 @@ export function CategoryDonutChartBody({
           metricKey="socialScoreTotal"
           size={size}
         />
-      ) : null}
+      )}
     </div>
+  );
+}
+
+export function CategoryMetricTabToggle({
+  tab,
+  onTabChange,
+}: {
+  tab: CategoryMetricTab;
+  onTabChange: (tab: CategoryMetricTab) => void;
+}) {
+  return (
+    <div className="inline-flex rounded-full bg-card p-1 shadow-sm">
+      <MetricTabButton active={tab === "eco"} label="Eco" onClick={() => onTabChange("eco")} />
+      <MetricTabButton
+        active={tab === "social"}
+        label="Sociaal"
+        onClick={() => onTabChange("social")}
+      />
+    </div>
+  );
+}
+
+export function CategoryDonutPanel({
+  description,
+  items,
+  periodLabel,
+  title,
+}: {
+  description: string;
+  items: CategorySlice[];
+  periodLabel?: string;
+  title: string;
+}) {
+  const hasEco = useMemo(() => hasMetricTotal(items, "co2SavedKg"), [items]);
+  const hasSocial = useMemo(() => hasMetricTotal(items, "socialScoreTotal"), [items]);
+  const [tab, setTab] = useState<CategoryMetricTab>(hasEco ? "eco" : "social");
+
+  useEffect(() => {
+    if (tab === "eco" && !hasEco && hasSocial) setTab("social");
+    if (tab === "social" && !hasSocial && hasEco) setTab("eco");
+  }, [hasEco, hasSocial, tab]);
+
+  return (
+    <DashboardPanel
+      action={
+        hasEco && hasSocial ? <CategoryMetricTabToggle tab={tab} onTabChange={setTab} /> : null
+      }
+      description={description}
+      icon="donut_small"
+      iconTone="primary"
+      title={title}
+    >
+      <CategoryDonutChartBody
+        activeTab={tab}
+        items={items}
+        layout="tabs"
+        periodLabel={periodLabel}
+      />
+    </DashboardPanel>
+  );
+}
+
+function MetricTabButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={cn(
+        "rounded-full px-3 py-1.5 text-xs font-semibold transition",
+        active
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+      onClick={onClick}
+      type="button"
+    >
+      {label}
+    </button>
   );
 }
 
@@ -241,7 +384,7 @@ export function CategoryDonutChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <CategoryDonutChartBody items={items} periodLabel={periodLabel} />
+        <CategoryDonutChartBody items={items} layout="tabs" periodLabel={periodLabel} />
       </CardContent>
     </Card>
   );
