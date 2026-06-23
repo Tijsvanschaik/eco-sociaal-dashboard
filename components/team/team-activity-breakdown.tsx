@@ -55,10 +55,10 @@ export function TeamActivityBreakdown({ periodLabel, segments }: TeamActivityBre
 
   return (
     <DashboardPanel
-      description={`Impact per interventie · ${periodLabel}`}
+      description={`Impact per activiteit · ${periodLabel}`}
       icon="list_alt"
       iconTone="tertiary"
-      title="Activiteiten per interventie"
+      title="Registraties per activiteit"
       action={
         hasEco && hasSocial ? (
           <div className="inline-flex rounded-full bg-card p-1 shadow-sm">
@@ -70,7 +70,7 @@ export function TeamActivityBreakdown({ periodLabel, segments }: TeamActivityBre
     >
       {sortedSegments.length === 0 ? (
         <p className="rounded-[1.25rem] border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
-          Nog geen activiteiten geregistreerd voor dit team.
+          Nog geen registraties voor dit team.
         </p>
       ) : (
         <ol className="space-y-4">

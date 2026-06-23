@@ -7,7 +7,7 @@ Versie: mei 2026 — bij twijfel: vraag je teamleider hoe jullie lokaal tellen.
 
 ## Wat je invult
 
-Bij elke registratie kies je **activiteit (interventie)**, **team**, **datum** en **twee hoeveelheden**:
+Bij elke registratie kies je een **activiteit**, **team**, **datum** en **twee hoeveelheden**:
 
 1. **Eco-hoeveelheid** — voor de CO₂-berekening (label staat bij de activiteit, bijv. *uur*, *km*, *stuk*, *kg*).
 2. **Sociale hoeveelheid** — altijd **personen** (bewoners, deelnemers, bezoekers). De zwaarte per activiteit zit in een vaste factor op de achtergrond.

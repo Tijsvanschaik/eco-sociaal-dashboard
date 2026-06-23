@@ -32,9 +32,36 @@
 -- 1. Organizatie (rij aanwezig vóór tenant‑wissen)
 -- -----------------------------------------------------------------------------
 insert into public.organizations (name, slug, public_share_enabled, public_share_slug,
-                                  eod_baseline_kg, eod_baseline_date)
-values ('LEV Groep', 'lev-groep', true, 'lev-groep', 50000, date '2024-01-01')
+                                  eod_baseline_kg, eod_baseline_date,
+                                  mission_short, description, impact_disclaimer)
+values (
+  'LEV Groep',
+  'lev-groep',
+  true,
+  'lev-groep',
+  50000,
+  date '2024-01-01',
+  'Welzijnsorganisatie die eco-sociale impact zichtbaar maakt voor medewerkers en samenleving.',
+  'LEV Groep zet zich in voor welzijn en duurzaamheid. Medewerkers registreren dagelijkse activiteiten; dit dashboard vertaalt die inzichten naar begrijpelijke impact — van CO₂-besparing tot sociale verbinding.',
+  'De getoonde cijfers zijn indicatief en bedoeld voor zichtbaarheid en bewustwording. Ze zijn geen wetenschappelijke metingen. Dit dashboard maakt deel uit van het bredere eco-sociale initiatief van LEV Groep — het staat niet op zichzelf.'
+)
 on conflict (slug) do nothing;
+
+update public.organizations
+set
+  mission_short = coalesce(
+    mission_short,
+    'Welzijnsorganisatie die eco-sociale impact zichtbaar maakt voor medewerkers en samenleving.'
+  ),
+  description = coalesce(
+    description,
+    'LEV Groep zet zich in voor welzijn en duurzaamheid. Medewerkers registreren dagelijkse activiteiten; dit dashboard vertaalt die inzichten naar begrijpelijke impact — van CO₂-besparing tot sociale verbinding.'
+  ),
+  impact_disclaimer = coalesce(
+    impact_disclaimer,
+    'De getoonde cijfers zijn indicatief en bedoeld voor zichtbaarheid en bewustwording. Ze zijn geen wetenschappelijke metingen. Dit dashboard maakt deel uit van het bredere eco-sociale initiatief van LEV Groep — het staat niet op zichzelf.'
+  )
+where slug = 'lev-groep';
 
 
 -- -----------------------------------------------------------------------------

@@ -83,7 +83,7 @@ export default async function SuperadminPage() {
             value: formatNumber((memberships ?? []).length),
           },
           {
-            description: "Alle geregistreerde eco-sociale activiteiten.",
+            description: "Alle registraties.",
             icon: "edit_note",
             label: "Registraties",
             tone: "tertiary",

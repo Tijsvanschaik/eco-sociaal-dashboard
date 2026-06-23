@@ -13,7 +13,7 @@ test.describe("team detail drill-down", () => {
   test("dashboard team link opens team detail page with KPIs", async ({ page }) => {
     if (!orgSlug || !loginEmail || !loginPassword) return;
 
-    await page.goto("/login?mode=password");
+    await page.goto("/admin");
     await page.getByLabel(/e-mail/i).fill(loginEmail);
     await page.getByLabel(/wachtwoord/i).fill(loginPassword);
     await page.getByRole("button", { name: /inloggen/i }).click();
@@ -30,7 +30,7 @@ test.describe("team detail drill-down", () => {
       page.getByRole("heading", { name: new RegExp(teamName, "i"), level: 1 }),
     ).toBeVisible();
     await expect(page.getByText("Eco score")).toBeVisible();
-    await expect(page.getByText("Activiteiten per interventie")).toBeVisible();
+    await expect(page.getByText("Registraties per activiteit")).toBeVisible();
   });
 
   test("unauthenticated users are redirected to login", async ({ page }) => {

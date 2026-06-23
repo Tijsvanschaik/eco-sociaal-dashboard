@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 type Params = Promise<{ orgSlug: string }>;
 type SearchParams = Promise<{ tab?: string | string[] }>;
 
-const TAB_IDS = ["algemeen", "medewerkers", "teams", "interventies"] as const;
+const TAB_IDS = ["algemeen", "medewerkers", "teams", "activiteiten"] as const;
 type TabId = (typeof TAB_IDS)[number];
 
 const TABS: Array<{ id: TabId; icon: string; label: string }> = [
@@ -35,14 +35,15 @@ const TABS: Array<{ id: TabId; icon: string; label: string }> = [
     label: "Teams",
   },
   {
-    id: "interventies",
+    id: "activiteiten",
     icon: "eco",
-    label: "Interventies",
+    label: "Activiteiten",
   },
 ];
 
 function parseTab(value: string | string[] | undefined): TabId {
   const raw = Array.isArray(value) ? value[0] : value;
+  if (raw === "interventies" || raw === "categorieen") return "activiteiten";
   return (TAB_IDS as readonly string[]).includes(raw ?? "") ? (raw as TabId) : "algemeen";
 }
 
@@ -113,7 +114,9 @@ export default async function SettingsPage({
               slug: context.org.slug,
               name: context.org.name,
               description: context.org.description,
+              impactDisclaimer: context.org.impactDisclaimer,
               logoUrl: context.org.logoUrl,
+              missionShort: context.org.missionShort,
               publicShareSlug: context.org.publicShareSlug,
               publicShareEnabled: context.org.publicShareEnabled,
               eodBaselineKg: context.org.eodBaselineKg,
@@ -133,7 +136,7 @@ export default async function SettingsPage({
         {activeTab === "teams" ? (
           <TeamsTab orgSlug={context.org.slug} teamMemberships={teamMemberships} teams={teams} />
         ) : null}
-        {activeTab === "interventies" ? (
+        {activeTab === "activiteiten" ? (
           <InterventionsTab
             categories={categories}
             interventions={interventions}
@@ -155,11 +158,11 @@ function SettingsTabsNav({ activeTab, orgSlug }: { activeTab: TabId; orgSlug: st
       aria-label="Instellingen onderwerpen"
       className="rounded-[1.75rem] bg-surface-container-low p-2 shadow-[0_20px_40px_rgba(54,50,45,0.04)]"
     >
-      <ul className="flex gap-1 overflow-x-auto">
+      <ul className="grid grid-cols-2 gap-1 sm:flex sm:flex-wrap sm:gap-1">
         {TABS.map((tab) => {
           const isActive = tab.id === activeTab;
           return (
-            <li key={tab.id} className="flex-none">
+            <li key={tab.id} className="min-w-0 sm:flex-none">
               <Link
                 href={
                   tab.id === "algemeen"
@@ -168,14 +171,14 @@ function SettingsTabsNav({ activeTab, orgSlug }: { activeTab: TabId; orgSlug: st
                 }
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors",
+                  "inline-flex w-full items-center justify-center gap-2 rounded-full px-3 py-2.5 text-sm font-semibold transition-colors sm:w-auto sm:justify-start sm:px-4",
                   isActive
                     ? "bg-card text-primary shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon name={tab.icon} className="text-base" filled={isActive} />
-                <span>{tab.label}</span>
+                <Icon name={tab.icon} className="shrink-0 text-base" filled={isActive} />
+                <span className="truncate">{tab.label}</span>
               </Link>
             </li>
           );

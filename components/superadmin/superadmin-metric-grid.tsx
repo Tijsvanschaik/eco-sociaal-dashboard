@@ -24,14 +24,7 @@ export function SuperadminMetricGrid({ metrics }: { metrics: SuperadminMetric[] 
   );
 }
 
-function SuperadminMetricTile({
-  description,
-  icon,
-  label,
-  tone,
-  unit,
-  value,
-}: SuperadminMetric) {
+function SuperadminMetricTile({ description, icon, label, tone, unit, value }: SuperadminMetric) {
   const iconTone =
     tone === "tertiary"
       ? "bg-tertiary-container text-tertiary"
@@ -40,7 +33,12 @@ function SuperadminMetricTile({
         : "bg-surface-container-high text-foreground";
 
   return (
-    <div className={cn("flex flex-col gap-3 p-5 transition-transform hover:-translate-y-0.5", insetPanelClassName)}>
+    <div
+      className={cn(
+        "flex flex-col gap-3 p-5 transition-transform hover:-translate-y-0.5",
+        insetPanelClassName,
+      )}
+    >
       <span
         className={cn(
           "inline-flex h-10 w-10 items-center justify-center rounded-[0.875rem] shadow-sm",
@@ -54,7 +52,9 @@ function SuperadminMetricTile({
           <dd className="text-2xl font-extrabold leading-none tracking-tight text-foreground sm:text-3xl">
             {value}
           </dd>
-          {unit ? <span className="text-sm font-semibold text-muted-foreground">{unit}</span> : null}
+          {unit ? (
+            <span className="text-sm font-semibold text-muted-foreground">{unit}</span>
+          ) : null}
         </div>
         <dt className="text-sm font-bold tracking-tight text-foreground">{label}</dt>
         <p className="text-xs leading-relaxed text-muted-foreground/90">{description}</p>

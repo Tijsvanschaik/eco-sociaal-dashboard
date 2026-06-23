@@ -106,43 +106,142 @@
       `public_recent_registrations` + service-role signed URLs voor foto's.
       *(Zie **Sessie 2026-05-21** voor kiosk heroes, tap-navigatie en vh-fill op slides 1–2.)*
 
-## Openstaand (later)
+## Fase 6 — Todo (geconsolideerd)
 
-### Omgevingen
-- **Dev + staging** zijn de actieve omgevingen (Vercel + Supabase). **Productie
-  bestaat nog niet** — alles wat “prod” heet in oudere notities is vooruitlopend.
-- Alle SQL `0001`–`0011` + `9000_seed.sql` staat **gedraaid op staging**
-  (bevestigd 2026-05-26). Types op staging nog verifiëren/regenereren indien
-  nodig.
+**ADR:** [`0009`](decisions/0009-impact-metaphors-terminology-and-content.md)  
+**Status:** streams 1–2, 4–5 afgerond; stream 3 + 6 **geparkeerd**; stream 7 deels; zie backlog hieronder.
 
-### Wacht op LEV
-- [ ] **Embed-whitelist**: `EMBED_FRAME_ANCESTORS` staat op staging/Vercel bewust
-      open (`*`) tot LEV de definitieve intranet-/partnerdomeinen aanlevert.
-      Daarna expliciete whitelist conform `40-security.mdc`.
+### Besluiten (afgerond)
 
-### Onboarding & mail
-- [ ] **User-invite-flow valideren** (E2E): magic-link + wachtwoord via
-      `/instellingen → Medewerkers → Toevoegen` (login, juiste org/rol,
-      registratie).
-- [ ] **Externe mailprovider integreren** voor transactionele mail (invites,
-      magic links). Supabase Auth-mail zit op het huidige abonnement vast aan
-      **~2 mails/uur** — te weinig voor betrouwbare onboarding; wachtwoord-
-      fallback op `/login` blijft tot externe mail live is.
+| Onderwerp | Besluit |
+| --- | --- |
+| Terminologie | Categorie · activiteit · registratie |
+| LEV carrousel | **Bomen geplant · harten bereikt** (twee slides; water uit MVP) |
+| Water & maaltijden (catalogus) | Driver = **CO₂**, niet sociale score |
+| Instellingen-tab | **Activiteiten** (categorieën + activiteiten in één tab) |
+| Routes | `/activiteit/nieuw`, `/activiteiten`, redirects |
+| Nav | Sidebar **Registraties**; CTA **Activiteit registreren** |
+| Charts | Gestapeld eco+sociaal, **geen tabs** |
+| Missie lang | Hergebruik `organizations.description` |
+| Missie kort + disclaimer | Nieuwe kolommen `mission_short`, `impact_disclaimer` |
+| Org-profiel UI | Logo-upload + rich-text velden op Instellingen → Algemeen |
+| Missie/disclaimer op slides & `/p` | **Uitgesteld** — pas na Illustratie X (stream 3) |
 
-### Mobile / install
-- [ ] **PWA** (manifest + icons + service worker): oorspronkelijk uitgesteld in
-      Fase 0 (ADR 0002); nog **niet geïmplementeerd** (geen manifest in repo).
-      Relevant voor mobile-first registratie — scope-item om op te pakken.
+---
 
-### Overig polish
-- [ ] **Storage bucket org-logo uploads** (nu alleen externe URL in Instellingen)
-- [ ] **Instellingen mobile layout** nalopen
-- [ ] **Dashboard bento-layout slide 2** (optioneel)
-- [ ] **Team-detail fase B**: ledenrooster, vergelijking org-gemiddelde
+### Stream 1 — Taal & navigatie
 
-### Bewust geen LEV-input meer
-- **EOD-baseline**: geen LEV-input meer nodig; metric blijft org-instelling /
-  placeholder in de app tot admins zelf een baseline zetten.
+- [x] UI-copy: categorie / activiteit / registratie (hele app + tests)
+- [x] Routes: `/activiteit/nieuw`, `/activiteiten`, `/activiteiten/[id]/bewerken`
+- [x] Redirects vanaf `/registratie*` (301/Next redirects)
+- [x] Sidebar **Activiteit registreren**; overzicht **Registraties**
+- [x] Instellingen-tab **Activiteiten**; labels create-flows (categorie vs. activiteit)
+
+---
+
+### Stream 2 — Activiteit-flow (delight)
+
+- [x] Confetti na succesvol opslaan (`prefers-reduced-motion` safe, geen geluid)
+
+---
+
+### Stream 3 — Illustratie X (impact-metaforen) ⏸️ GEPARKEERD
+
+**LEV live (2026-06-22):** alleen **bomen** (eco) + **harten** (sociaal). Glazen water tijdelijk uit default carrousel.
+
+- [x] `lib/impact-metaphors.ts` + unit tests
+- [x] `ImpactMetaphorCarousel` + `TreeScene`, `PeopleScene`
+- [x] Stagger spawn + carrousel; SVG; cap zichtbare items
+- [x] Dashboard + TV/embed + `/p` (`variant` compact | kiosk)
+- [x] Afbouwen `ImpactStoryRotator` + km-slide
+- [x] Recharts container-warnings opgelost (`ChartResponsiveContainer`)
+
+**Terugkomen later (stream 3 hervatten):**
+
+- [ ] Derde slide **glazen water** (of andere catalogus-metafoor) opnieuw inschakelen
+- [ ] Iconen-getal UX verder finetunen (schaal, dichtheid, animatie)
+- [ ] `WaterScene` / overige catalogus (`meals`, `solar`, `park`) + org pick-3
+- [ ] `--accent-water` token · `impact_metaphors` jsonb per org
+
+`WaterScene` en catalogus-code blijven in repo; default is `LEV_DEFAULT_METAPHOR_IDS = ["trees", "people"]`.
+
+---
+
+### Stream 4 — Charts vereenvoudigen
+
+- [x] Trend: gestapelde area eco+sociaal; tabs Eco/Sociaal/Eco-sociaal **verwijderen**
+- [x] Donut: gestapeld; Eco/Sociaal-tabs **verwijderen**
+- [x] TV/kiosk/share: zelfde default (geen tabs)
+- [x] Tests bijwerken
+
+---
+
+### Stream 5 — Organisatieprofiel (SQL + Instellingen + logo) ✅
+
+Eén stream: content-velden + logo-upload.
+
+- [x] SQL `0012_org_profile_content.sql`: `mission_short`, `impact_disclaimer` (+ bucket policies indien nodig)
+- [x] Storage bucket **org-logos** (SQL + RLS; upload via Instellingen)
+- [x] Instellingen → Algemeen: logo upload, missie kort, missie uitgebreid (`description`), disclaimer
+- [x] Markdown: textarea + veilige weergave (`SafeMarkdown` / `react-markdown`) voor uitgebreide missie + disclaimer
+- [x] Profielvelden: expliciet Opslaan/Annuleren, tekenlimiet + teller (280 / 4000 / 2000)
+- [x] Mobile: logo bovenaan, velden eronder
+- [x] LEV default-teksten in seed (`impact_disclaimer` + voorbeeld missie)
+- [x] Zod + server actions + types (handmatig gesynchroniseerd)
+
+**Later (optioneel):** WYSIWYG rich-text editor i.p.v. Markdown-textarea.
+
+---
+
+### Stream 6 — Missie & disclaimer op surfaces ⏸️ UITGESTELD
+
+Velden bestaan (stream 5). **Presentatie op dashboard/TV/`/p` uitgesteld** tot Illustratie X (stream 3) verder is — eerst visualisatie finetunen.
+
+- [ ] Beslissing + implementatie pas na stream 3-hervatting
+
+---
+
+### Stream 7 — Infra & backlog
+
+- [x] Terminologie app-breed: **categorie · activiteit · registratie** (nav, copy, tests, ADR 0009)
+- [x] Instellingen mobile layout: tab-nav 2×2 grid; activiteiten-tab kaarten tot `lg`; knoppen full-width op mobiel
+- [x] `docs/lev-categorien-en-interventies.md` → terminologie categorie / activiteit / registratie
+- [x] SQL **`0012`** gedraaid op staging (2026-06-22)
+- [ ] Embed-whitelist domeinen (wacht op LEV)
+- [ ] User-invite E2E (mailprovider: Resend — zie ADR [`0011`](decisions/0011-transactional-email-resend.md))
+- [x] Transactionele mail via Resend (login + admin/member invites, rate limit, NL-templates)
+- [x] PWA (manifest + service worker) — zie ADR [`0010`](decisions/0010-pwa-scope.md)
+- [ ] PWA handmatig end-to-end testen (install op iOS + Android, offline fallback, update-toast op staging)
+
+---
+
+### Omgevingen & SQL
+
+- Dev + staging actief; **productie nog niet**
+- SQL `0001`–`0011` + seed op staging (2026-05-26); **`0012_org_profile_content.sql` op staging** (2026-06-22)
+- EOD-baseline: geen LEV-blocker; org-instelling blijft
+
+---
+
+### Aanbevolen bouwvolgorde
+
+```
+1 → 2 → 3 → 4     (parallel mogelijk: 1+2, daarna 3+4)
+5                   (org-profiel; kan deels parallel aan 3)
+6                   (na beslissing)
+7                   (wanneer LEV/infra ready)
+```
+
+## Sessie 2026-06-22 — Fase 6 implementatie (streams 1–4 + deels 5)
+
+- **Stream 1:** routes `/activiteit/nieuw`, `/activiteiten`, `/activiteiten/[id]/bewerken`; redirects vanaf `/registratie*`; UI-copy thema/categorie/activiteit; sidebar + Instellingen-tab **Categorieën**.
+- **Stream 2:** confetti na succesvol opslaan (`lib/celebration/confetti.ts`, `prefers-reduced-motion` safe).
+- **Stream 3:** `ImpactMetaphorCarousel` (bomen · harten · glazen water); `ImpactStoryRotator` + km-slide verwijderd; dashboard + TV/embed + `/p`.
+- **Stream 4:** trend- en donut-charts gestapeld eco+sociaal, tabs verwijderd.
+- **Stream 5 (deels):** SQL `0012_org_profile_content.sql`; velden missie kort / disclaimer in Instellingen → Algemeen; logo-upload via `org-logos` bucket; LEV seed-defaults. Rich text uitgesteld.
+- **Stream 6:** bewust uitgesteld (presentatie missie/disclaimer op surfaces).
+- **CI:** `npm test` 185/185, `npm run lint`, `npm run typecheck` groen.
+- **Volgende stap:** `0012` draaien op dev/staging; logo-upload; stream 6 beslissing; catalogus-metaforen (solar/park/meals enter-exit).
 
 ## Sessie 2026-05-16 — sociale score
 
@@ -264,10 +363,31 @@ sociaal (`kg CO₂` / `punten`), en registratiekaarten + impact-hero aantrekkeli
 
 ## Laatste sessie
 
-Datum: 2026-05-26  
-Wat gedaan: Slice D rest + Slice G + feed-polish (filters, zwevend bewerk-icoon, responsive grid). Planning bijgewerkt: staging = enige deploy-omgeving naast dev; alle SQL daar gedraaid; EOD geen LEV-blocker meer.  
-Wat volgt (prioriteit): (1) invite E2E + externe mailprovider, (2) embed-domeinen van LEV, (3) PWA, (4) logo-bucket + overig polish.  
-Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (workers: zelfde wachtwoord).
+Datum: 2026-06-23  
+Wat gedaan: **Resend mailflow** (stream 7) — `admin.generateLink` + Resend API voor login, superadmin org-invite en member-provision; `NEXT_PUBLIC_APP_URL` voor callbacks; rate limit op login; NL-templates; ADR [`0011`](decisions/0011-transactional-email-resend.md).  
+Wat volgt: handmatig testen op productie (login + invite); user-invite E2E; embed-whitelist (wacht LEV).  
+Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (wachtwoord-fallback blijft beschikbaar)
+
+## Sessie 2026-06-22 — Fase 6 planning
+
+**Doel:** productwensen structureren vóór bouw; geen code in deze sessie.
+
+### Besluiten
+
+| Onderwerp | Besluit |
+| --- | --- |
+| Terminologie | Thema · categorie · activiteit |
+| LEV carrousel | Bomen geplant · harten bereikt · glazen water (CO₂) |
+| Instellingen-tab | Categorieën |
+| Missie lang | `organizations.description` |
+| Missie kort + disclaimer | Nieuwe kolommen; rich text in Instellingen |
+| Charts | Gestapeld, geen tabs |
+| Surfaces missie/disclaimer | Open (stream 6) |
+
+### Documentatie
+
+- ADR 0009: terminologie, metafoor-catalogus, animatie, disclaimer, implementatievolgorde
+- `progress.md`: Fase 6A–6E checklist (dit bestand)
 
 ## Sessie 2026-05-26 (middag) — dashboard feed polish
 
@@ -644,12 +764,23 @@ Bron: `README.md`, `.cursor/rules/00-project.mdc`, Fase 0–5 in dit bestand.
 | Charts / tijdreeks | ✅ |
 | UI-restyle Stitch (Fase 5) | ✅ |
 
-### Uitgesteld in oorspronkelijke scope — nog open
+### Fase 6 — gepland (ADR 0009)
+| Onderdeel | Stream | Status |
+| --- | --- | --- |
+| Terminologie + routes | 1 | 📋 |
+| Confetti | 2 | 📋 |
+| Illustratie X (bomen/harten/water) | 3 | 📋 |
+| Charts gestapeld | 4 | 📋 |
+| Org-profiel + logo + rich text | 5 | 📋 |
+| Missie/disclaimer op surfaces | 6 | ⚠️ knoop open |
+| Infra-backlog | 7 | 📋 |
+
+### Uitgesteld in oorspronkelijke scope — stream 7
 | Onderdeel | Oorspronkelijk | Nu |
 | --- | --- | --- |
-| **PWA** | Fase 0 bewust niet (ADR 0002) | Nog niet gebouwd; wel op planning |
-| **Embed-whitelist** | Expliciete domeinen | Wacht op LEV (enige LEV-input) |
-| **Transactionele mail** | Supabase magic-link | Limiet ~2/uur → externe provider nodig |
+| **PWA** | Fase 0 (ADR 0002) | Stream 7 |
+| **Embed-whitelist** | Expliciete domeinen | Stream 7, wacht LEV |
+| **Transactionele mail** | Supabase magic-link | ✅ Resend (ADR 0011) |
 
 ### Buiten oorspronkelijke MVP gebouwd (scope-creep, wel gewenst)
 - Registraties-overzicht + bewerken/verwijderen (`/registraties`)

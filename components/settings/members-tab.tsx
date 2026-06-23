@@ -485,7 +485,7 @@ function MemberCreateModal({
 
   return (
     <Modal
-      description="Medewerkers loggen zelf in via /login. Ze ontvangen geen uitnodigingsmail."
+      description="We sturen een login-link naar het opgegeven e-mailadres. De link werkt eenmalig en verloopt na een uur."
       footer={
         <ModalActions>
           <Button type="button" variant="outline" className="rounded-full" onClick={onClose}>

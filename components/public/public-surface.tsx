@@ -97,19 +97,7 @@ export function PublicSurface({ data, intervalMs, mode, slideOrder }: PublicSurf
 
   const slideMap: Record<PublicSlideId, ReactNode> = {
     "1": (
-      <TotalImpactSlide
-        isTv={expandRecent}
-        periodLabel={periodLabel}
-        snapshot={data.snapshot}
-        storyPhotoSources={data.recentRegistrations.map(
-          ({ id, photoUrl, co2KgCached, socialScoreCached }) => ({
-            id,
-            photoUrl: photoUrl ?? null,
-            co2KgCached,
-            socialScoreCached,
-          }),
-        )}
-      />
+      <TotalImpactSlide isTv={expandRecent} periodLabel={periodLabel} snapshot={data.snapshot} />
     ),
     "2": (
       <ProgressSlide

@@ -64,29 +64,29 @@ export async function getTenantRegistrationsListData(
 
   const [{ data: teams }, { data: categories }, { data: interventions }, availableYears] =
     await Promise.all([
-    supabase
-      .from("teams")
-      .select("id, name")
-      .eq("org_id", context.org.id)
-      .eq("is_archived", false)
-      .order("name"),
-    supabase
-      .from("categories")
-      .select("id, color")
-      .eq("org_id", context.org.id)
-      .eq("is_archived", false),
-    supabase
-      .from("interventions")
-      .select("id, name, eco_unit, social_unit, category_id")
-      .eq("org_id", context.org.id)
-      .eq("is_archived", false),
-    getRegistrationListYears(supabase, {
-      orgId: context.org.id,
-      scope,
-      selectedTeamId,
-      userId: context.userId,
-    }),
-  ]);
+      supabase
+        .from("teams")
+        .select("id, name")
+        .eq("org_id", context.org.id)
+        .eq("is_archived", false)
+        .order("name"),
+      supabase
+        .from("categories")
+        .select("id, color")
+        .eq("org_id", context.org.id)
+        .eq("is_archived", false),
+      supabase
+        .from("interventions")
+        .select("id, name, eco_unit, social_unit, category_id")
+        .eq("org_id", context.org.id)
+        .eq("is_archived", false),
+      getRegistrationListYears(supabase, {
+        orgId: context.org.id,
+        scope,
+        selectedTeamId,
+        userId: context.userId,
+      }),
+    ]);
 
   const years = availableYears;
   const year = resolveRegistrationListYear(requestedYear, years);

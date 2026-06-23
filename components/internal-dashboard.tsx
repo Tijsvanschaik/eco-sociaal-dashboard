@@ -5,24 +5,14 @@ import {
   tenantPageMainClassName,
 } from "@/components/app-shell/tenant-page-layout";
 import { InternalRecentRegistrationsSection } from "@/components/dashboard/internal-recent-registrations-section";
-import type { RegistrationCardData } from "@/components/dashboard/registration-card";
 import { ProgressSlide } from "@/components/public/progress-slide";
 import { TotalImpactSlide } from "@/components/public/total-impact-slide";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import type { DashboardSnapshot } from "@/lib/dashboard";
 import type { DashboardFeedFilters } from "@/lib/registrations/dashboard-filters";
 import type { RecentRegistration, TeamOption } from "@/lib/tenant-dashboard-data";
-import type { DashboardSnapshot } from "@/lib/dashboard";
 import type { WeeklyTimeseriesRow } from "@/lib/timeseries";
-
-function toStoryPhotoSources(registrations: RegistrationCardData[]) {
-  return registrations.map(({ id, photoUrl, co2KgCached, socialScoreCached }) => ({
-    id,
-    photoUrl: photoUrl ?? null,
-    co2KgCached,
-    socialScoreCached,
-  }));
-}
 
 export function InternalDashboard({
   feedFilters,
@@ -58,7 +48,6 @@ export function InternalDashboard({
       <TotalImpactSlide
         periodLabel={periodLabel}
         snapshot={snapshot}
-        storyPhotoSources={toStoryPhotoSources(recentRegistrations)}
         teamLinkBase={`/${orgSlug}/teams`}
       />
 
@@ -83,9 +72,9 @@ export function InternalDashboard({
           variant="brand"
           className="pointer-events-auto h-auto gap-2 px-6 py-3.5 text-base"
         >
-          <Link href={`/${orgSlug}/registratie`}>
+          <Link href={`/${orgSlug}/activiteit/nieuw`}>
             <Icon name="add" />
-            <span>Nieuwe Registratie</span>
+            <span>Activiteit registreren</span>
           </Link>
         </Button>
       </div>

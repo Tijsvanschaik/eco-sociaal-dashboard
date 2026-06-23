@@ -63,13 +63,15 @@ describe("<MembersTab />", () => {
       />,
     );
 
-    const roleButtons = screen.getAllByRole("button", { name: /rol bewerken: medewerker/i });
-    fireEvent.click(roleButtons[0]!);
+    const [roleButton] = screen.getAllByRole("button", { name: /rol bewerken: medewerker/i });
+    if (!roleButton) throw new Error("Expected role edit button");
+    fireEvent.click(roleButton);
 
     expect(screen.getAllByRole("combobox", { name: /rol bewerken/i }).length).toBeGreaterThan(0);
 
-    const teamButtons = screen.getAllByRole("button", { name: /team bewerken: lev helmond/i });
-    fireEvent.click(teamButtons[0]!);
+    const [teamButton] = screen.getAllByRole("button", { name: /team bewerken: lev helmond/i });
+    if (!teamButton) throw new Error("Expected team edit button");
+    fireEvent.click(teamButton);
 
     expect(screen.getAllByRole("combobox", { name: /team bewerken/i }).length).toBeGreaterThan(0);
   });

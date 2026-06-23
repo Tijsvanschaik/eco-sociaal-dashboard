@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { ResponsiveContainer } from "recharts";
 
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,41 @@ export type ChartConfig = Record<
 >;
 
 const ChartContext = React.createContext<ChartConfig | null>(null);
+
+const DEFAULT_CHART_INITIAL_DIMENSION = {
+  width: 360,
+  height: 260,
+} as const;
+
+type ChartResponsiveContainerProps = React.ComponentProps<typeof ResponsiveContainer> & {
+  /** Fallback height until ResizeObserver measures the parent. */
+  initialHeight?: number;
+  /** Fallback width until ResizeObserver measures the parent. */
+  initialWidth?: number;
+};
+
+export function ChartResponsiveContainer({
+  children,
+  height = "100%",
+  initialDimension,
+  initialHeight = DEFAULT_CHART_INITIAL_DIMENSION.height,
+  initialWidth = DEFAULT_CHART_INITIAL_DIMENSION.width,
+  minWidth = 0,
+  width = "100%",
+  ...props
+}: ChartResponsiveContainerProps) {
+  return (
+    <ResponsiveContainer
+      height={height}
+      initialDimension={initialDimension ?? { width: initialWidth, height: initialHeight }}
+      minWidth={minWidth}
+      width={width}
+      {...props}
+    >
+      {children}
+    </ResponsiveContainer>
+  );
+}
 
 export function ChartContainer({
   children,
@@ -30,7 +66,7 @@ export function ChartContainer({
   return (
     <ChartContext.Provider value={config}>
       <div
-        className={cn("h-[260px] w-full text-sm", className)}
+        className={cn("h-[260px] min-h-0 w-full min-w-0 text-sm", className)}
         style={style as React.CSSProperties}
         {...props}
       >

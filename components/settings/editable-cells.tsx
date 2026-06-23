@@ -16,6 +16,7 @@ function EditableCellTrigger({
   align = "left",
   children,
   disabled,
+  fillHeight = false,
   label,
   multiline = false,
   onClick,
@@ -25,6 +26,7 @@ function EditableCellTrigger({
   align?: "left" | "right";
   children: ReactNode;
   disabled?: boolean;
+  fillHeight?: boolean;
   label: string;
   multiline?: boolean;
   onClick: () => void;
@@ -37,7 +39,10 @@ function EditableCellTrigger({
       aria-label={`${label} bewerken: ${value}`}
       className={cn(
         editableTriggerClassName,
-        multiline && "h-auto min-h-9 py-1.5",
+        multiline && !fillHeight && "h-auto min-h-9 py-1.5",
+        (multiline || fillHeight) && "min-h-9 py-1.5",
+        fillHeight && "h-full",
+        multiline && fillHeight && "h-full",
         align === "right" && "justify-end text-right",
       )}
       disabled={disabled}
@@ -62,6 +67,7 @@ export function EditableTextCell({
   allowEmpty = false,
   children,
   editing,
+  fillHeight = false,
   inputType = "text",
   isPending,
   label,
@@ -76,6 +82,7 @@ export function EditableTextCell({
   allowEmpty?: boolean;
   children: ReactNode;
   editing: boolean;
+  fillHeight?: boolean;
   inputType?: "text" | "url" | "date" | "number";
   isPending: boolean;
   label: string;
@@ -93,12 +100,16 @@ export function EditableTextCell({
   }, [editing]);
 
   return (
-    <div className={editableCellShellClassName}>
+    <div className={cn(editableCellShellClassName, fillHeight && "h-full min-h-9")}>
       {editing ? (
         <input
           ref={inputRef}
           aria-label={`${label} bewerken`}
-          className={cn(inlineInputClassName, align === "right" && "text-right")}
+          className={cn(
+            inlineInputClassName,
+            align === "right" && "text-right",
+            fillHeight && "h-full",
+          )}
           defaultValue={value}
           disabled={isPending}
           min={min}
@@ -127,6 +138,7 @@ export function EditableTextCell({
         <EditableCellTrigger
           align={align}
           disabled={isPending}
+          fillHeight={fillHeight}
           label={label}
           onClick={onStartEdit}
           value={value || "—"}
@@ -313,6 +325,7 @@ export function MetricValue({
 export function EditableNumberCell({
   align = "left",
   editing,
+  fillHeight = false,
   isPending,
   label,
   onCancel,
@@ -323,6 +336,7 @@ export function EditableNumberCell({
 }: {
   align?: "left" | "right";
   editing: boolean;
+  fillHeight?: boolean;
   isPending: boolean;
   label: string;
   onCancel: () => void;
@@ -344,14 +358,19 @@ export function EditableNumberCell({
   const stackUnit = align === "right";
 
   return (
-    <div className={cn(editableCellShellClassName, align === "right" && "justify-end")}>
+    <div
+      className={cn(
+        editableCellShellClassName,
+        stackUnit && !fillHeight && "h-auto min-h-9 items-stretch",
+        (stackUnit || fillHeight) && "min-h-9",
+        fillHeight && "h-full items-stretch",
+      )}
+    >
       {editing ? (
         <div
           className={cn(
             "flex w-full",
-            stackUnit
-              ? "flex-col items-end gap-1"
-              : "flex h-9 items-center gap-1.5",
+            stackUnit ? "flex-col items-end gap-1" : "flex h-9 items-center gap-1.5",
           )}
         >
           <input
@@ -392,6 +411,7 @@ export function EditableNumberCell({
         <EditableCellTrigger
           align={align}
           disabled={isPending}
+          fillHeight={fillHeight}
           label={label}
           multiline={stackUnit}
           onClick={onStartEdit}

@@ -45,7 +45,7 @@ export function TeamImpactHero({
             {teamName}
           </h2>
           <p className="text-sm font-medium text-muted-foreground">
-            Overzicht van activiteiten en impact · {periodLabel}
+            Overzicht van registraties en impact · {periodLabel}
           </p>
         </div>
 
@@ -67,7 +67,7 @@ export function TeamImpactHero({
             value={formatScore(totalSocialScore)}
           />
           <FactTile
-            description="Aantal geregistreerde activiteiten dit jaar."
+            description="Aantal registraties dit jaar."
             icon="edit_note"
             label="Registraties"
             tone="neutral"

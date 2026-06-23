@@ -28,14 +28,16 @@ export function MobileRowActionGroup({ children }: { children: ReactNode }) {
 export function SettingsMobileField({
   children,
   label,
+  stretch = false,
 }: {
   children: ReactNode;
   label: string;
+  stretch?: boolean;
 }) {
   return (
-    <div className={mobileRowCardFieldClassName}>
+    <div className={cn(mobileRowCardFieldClassName, stretch && "flex h-full min-h-0 flex-col")}>
       <p className={mobileRowCardLabelClassName}>{label}</p>
-      {children}
+      <div className={cn(stretch && "flex min-h-0 flex-1 flex-col")}>{children}</div>
     </div>
   );
 }

@@ -196,7 +196,7 @@ export async function getTenantTeamDetailData(
         co2KgCached: registration.co2_kg_cached,
         socialScoreCached: Number(registration.social_score_cached ?? 0),
         teamLabel: team.name,
-        interventionLabel: intervention?.name ?? "Onbekende interventie",
+        interventionLabel: intervention?.name ?? "Onbekende activiteit",
         ecoUnit: intervention?.ecoUnit ?? null,
         socialUnit: intervention?.socialUnit ?? null,
         categoryName: category?.name ?? null,

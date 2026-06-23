@@ -1,9 +1,13 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartResponsiveContainer,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 type TeamRow = {
   co2SavedKg: number;
@@ -45,7 +49,7 @@ export function TeamRankingBar({
             className="h-[280px]"
             config={{ co2SavedKg: { label: "CO2", color: "#0f766e" } }}
           >
-            <ResponsiveContainer width="100%" height="100%">
+            <ChartResponsiveContainer initialHeight={280}>
               <BarChart data={rows} layout="vertical" margin={{ left: 12, right: 8 }}>
                 <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                 <XAxis type="number" tickFormatter={(value: number) => `${formatKg(value)} kg`} />
@@ -65,7 +69,7 @@ export function TeamRankingBar({
                 />
                 <Bar dataKey="co2SavedKg" fill="#0f766e" radius={6} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartResponsiveContainer>
           </ChartContainer>
         )}
       </CardContent>

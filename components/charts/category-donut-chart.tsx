@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { useMemo } from "react";
+import { Cell, Pie, PieChart, Tooltip } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import { cn } from "@/lib/utils";
+import {
+  ChartContainer,
+  ChartResponsiveContainer,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 export type CategorySlice = {
   co2SavedKg: number;
@@ -17,7 +20,6 @@ export type CategorySlice = {
   socialScoreTotal: number;
 };
 
-type CategoryMetricTab = "eco" | "social";
 type SliceMetricKey = keyof Pick<CategorySlice, "co2SavedKg" | "socialScoreTotal">;
 
 function formatKg(value: number): string {
@@ -74,7 +76,7 @@ function CategoryMetricDonut({
   if (rows.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Nog geen data voor deze metric. Registreer activiteiten in andere categorieën.
+        Nog geen data voor deze metric. Voeg registraties toe in andere categorieën.
       </p>
     );
   }
@@ -97,7 +99,7 @@ function CategoryMetricDonut({
               rows.map((item) => [item.id, { label: item.name, color: item.color ?? "#84cc16" }]),
             )}
           >
-            <ResponsiveContainer width="100%" height="100%">
+            <ChartResponsiveContainer initialHeight={size} initialWidth={size}>
               <PieChart>
                 <Tooltip
                   content={
@@ -122,7 +124,7 @@ function CategoryMetricDonut({
                   ))}
                 </Pie>
               </PieChart>
-            </ResponsiveContainer>
+            </ChartResponsiveContainer>
           </ChartContainer>
         </div>
       </div>
@@ -159,61 +161,8 @@ function CategoryMetricDonut({
   );
 }
 
-function CategoryMetricTabs({
-  activeTab,
-  hasEco,
-  hasSocial,
-  onChange,
-}: {
-  activeTab: CategoryMetricTab;
-  hasEco: boolean;
-  hasSocial: boolean;
-  onChange: (tab: CategoryMetricTab) => void;
-}) {
-  if (!hasEco && !hasSocial) return null;
-  if (hasEco && !hasSocial) return null;
-  if (!hasEco && hasSocial) return null;
-
-  return (
-    <div
-      aria-label="Categoriemetric"
-      className="inline-flex rounded-full bg-surface-container-high p-1"
-      role="tablist"
-    >
-      <button
-        aria-selected={activeTab === "eco"}
-        className={cn(
-          "rounded-full px-4 py-1.5 text-xs font-bold transition-colors sm:text-sm",
-          activeTab === "eco"
-            ? "bg-tertiary text-tertiary-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-        onClick={() => onChange("eco")}
-        role="tab"
-        type="button"
-      >
-        Eco
-      </button>
-      <button
-        aria-selected={activeTab === "social"}
-        className={cn(
-          "rounded-full px-4 py-1.5 text-xs font-bold transition-colors sm:text-sm",
-          activeTab === "social"
-            ? "bg-primary text-primary-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-        onClick={() => onChange("social")}
-        role="tab"
-        type="button"
-      >
-        Sociaal
-      </button>
-    </div>
-  );
-}
-
 /**
- * Donut per categorie met tabs (eco / sociaal). Kale variant zonder Card-wrapper.
+ * Donut per categorie — eco en sociaal gestapeld, zonder tabs.
  */
 export function CategoryDonutChartBody({
   items,
@@ -229,20 +178,10 @@ export function CategoryDonutChartBody({
   const hasEco = useMemo(() => hasMetricTotal(items, "co2SavedKg"), [items]);
   const hasSocial = useMemo(() => hasMetricTotal(items, "socialScoreTotal"), [items]);
 
-  const [activeTab, setActiveTab] = useState<CategoryMetricTab>("eco");
-
-  useEffect(() => {
-    if (activeTab === "eco" && !hasEco && hasSocial) {
-      setActiveTab("social");
-    } else if (activeTab === "social" && !hasSocial && hasEco) {
-      setActiveTab("eco");
-    }
-  }, [activeTab, hasEco, hasSocial]);
-
   if (items.filter((item) => item.registrationCount > 0).length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Nog geen categorieverdeling beschikbaar. Registreer eerst een paar acties.
+        Nog geen categorieverdeling beschikbaar. Voeg eerst een paar registraties toe.
       </p>
     );
   }
@@ -250,26 +189,16 @@ export function CategoryDonutChartBody({
   if (!hasEco && !hasSocial) {
     return (
       <p className="text-sm text-muted-foreground">
-        Nog geen impact per categorie. Registreer activiteiten met eco- of sociale waarde.
+        Nog geen impact per categorie. Voeg registraties toe met eco- of sociale waarde.
       </p>
     );
   }
 
-  const ecoCenterSubtitle = "kg CO₂ bespaard";
-  const socialCenterSubtitle = "sociale punten";
-
   return (
-    <div className="space-y-5">
-      <CategoryMetricTabs
-        activeTab={activeTab}
-        hasEco={hasEco}
-        hasSocial={hasSocial}
-        onChange={setActiveTab}
-      />
-
-      {activeTab === "eco" && hasEco ? (
+    <div className="space-y-8">
+      {hasEco ? (
         <CategoryMetricDonut
-          centerSubtitle={ecoCenterSubtitle}
+          centerSubtitle="kg CO₂ bespaard"
           centerValueFormatter={formatKg}
           items={items}
           limit={limit}
@@ -279,9 +208,9 @@ export function CategoryDonutChartBody({
         />
       ) : null}
 
-      {activeTab === "social" && hasSocial ? (
+      {hasSocial ? (
         <CategoryMetricDonut
-          centerSubtitle={socialCenterSubtitle}
+          centerSubtitle="sociale punten"
           centerValueFormatter={formatScore}
           items={items}
           limit={limit}

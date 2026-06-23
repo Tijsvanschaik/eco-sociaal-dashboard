@@ -8,6 +8,9 @@ const publicSupabaseSchema = z.object({
 const serverSchema = publicSupabaseSchema.extend({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   EMBED_FRAME_ANCESTORS: z.string().min(1).default("'self'"),
+  RESEND_API_KEY: z.string().min(1),
+  RESEND_FROM: z.string().min(1),
+  RESEND_REPLY_TO: z.string().email().optional(),
 });
 
 type PublicSupabaseEnv = z.infer<typeof publicSupabaseSchema>;
@@ -35,6 +38,9 @@ export function getServerEnv(): ServerEnv {
     ...publicEnv,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     EMBED_FRAME_ANCESTORS: process.env.EMBED_FRAME_ANCESTORS,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    RESEND_FROM: process.env.RESEND_FROM,
+    RESEND_REPLY_TO: process.env.RESEND_REPLY_TO || undefined,
   });
   return cachedServerEnv;
 }

@@ -3,15 +3,10 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import { ImpactStoryRotator } from "@/components/dashboard/impact-story-rotator";
-import { registrationPlaceholderPhotoUrl } from "@/components/dashboard/registration-placeholder";
+import { ImpactMetaphorCarousel } from "@/components/impact-metaphors/impact-metaphor-carousel";
 import { Icon } from "@/components/ui/icon";
 import type { TeamBreakdownRow } from "@/lib/dashboard";
-import {
-  type ImpactStoryPhotoSource,
-  attachStoryImages,
-  buildImpactStories,
-} from "@/lib/impact-stories";
+import { buildMetaphorUnits } from "@/lib/impact-metaphors";
 import { cn } from "@/lib/utils";
 
 const MAX_VISIBLE_TEAMS = 5;
@@ -44,7 +39,6 @@ export type ImpactOverviewCardProps = {
   teamBreakdown: TeamBreakdownRow[];
   periodLabel: string;
   registrationCount: number;
-  storyPhotoSources?: ImpactStoryPhotoSource[];
   totalCo2Kg: number;
   totalSocialScore: number;
 };
@@ -59,7 +53,6 @@ export function ImpactOverviewCard({
   teamBreakdown,
   periodLabel,
   registrationCount: _registrationCount,
-  storyPhotoSources = [],
   totalCo2Kg,
   totalSocialScore,
 }: ImpactOverviewCardProps) {
@@ -99,12 +92,7 @@ export function ImpactOverviewCard({
           fitToContainer && "min-h-0 flex-1",
         )}
       >
-        <ImpactHero
-          hasData={hasData}
-          storyPhotoSources={storyPhotoSources}
-          totalCo2Kg={totalCo2Kg}
-          totalSocialScore={totalSocialScore}
-        />
+        <ImpactHero hasData={hasData} totalCo2Kg={totalCo2Kg} totalSocialScore={totalSocialScore} />
         <TeamBreakdownPanel
           fitToContainer={fitToContainer}
           hasMore={!forceShowAllTeams && teamBreakdown.length > MAX_VISIBLE_TEAMS}
@@ -124,23 +112,17 @@ export function ImpactOverviewCard({
 
 function ImpactHero({
   hasData,
-  storyPhotoSources,
   totalCo2Kg,
   totalSocialScore,
 }: {
   hasData: boolean;
-  storyPhotoSources: ImpactStoryPhotoSource[];
   totalCo2Kg: number;
   totalSocialScore: number;
 }) {
-  const stories = useMemo(() => {
-    const built = buildImpactStories({ totalCo2Kg, totalSocialScore });
-    return attachStoryImages(
-      built,
-      storyPhotoSources,
-      (registration) => registration.photoUrl ?? registrationPlaceholderPhotoUrl(registration.id),
-    );
-  }, [storyPhotoSources, totalCo2Kg, totalSocialScore]);
+  const units = useMemo(
+    () => buildMetaphorUnits({ totalCo2Kg, totalSocialScore }),
+    [totalCo2Kg, totalSocialScore],
+  );
 
   return (
     <div className="flex min-h-0 flex-col gap-7 lg:h-full">
@@ -149,8 +131,8 @@ function ImpactHero({
       </span>
 
       <div>
-        {hasData && stories.length > 0 ? (
-          <ImpactStoryRotator stories={stories} />
+        {hasData && units.length > 0 ? (
+          <ImpactMetaphorCarousel units={units} />
         ) : (
           <div className="min-h-[8.5rem] space-y-2 sm:min-h-[9rem]">
             <h2
@@ -161,8 +143,8 @@ function ImpactHero({
             </h2>
             <p className="max-w-md text-base leading-relaxed text-muted-foreground">
               {hasData
-                ? "Nog geen vertaling beschikbaar voor dit jaar — voeg registraties toe om bomen, harten en km te zien."
-                : "Zodra de eerste acties binnenrollen, wisselen we hier tussen bomen, harten bereikt en km autorijden vermeden."}
+                ? "Nog geen vertaling beschikbaar voor dit jaar — voeg registraties toe om bomen en harten te zien."
+                : "Zodra de eerste registraties binnenrollen, wisselen we hier tussen bomen geplant en harten bereikt."}
             </p>
           </div>
         )}
@@ -170,7 +152,7 @@ function ImpactHero({
 
       <dl className="grid grid-cols-1 gap-4 pt-1 sm:grid-cols-2 lg:mt-auto">
         <FactTile
-          description="Dit is de som van de CO2 impact van alle eco-sociale activiteiten."
+          description="Dit is de som van de CO₂-impact van alle registraties."
           icon="eco"
           label="Eco score"
           tone="tertiary"
@@ -178,7 +160,7 @@ function ImpactHero({
           value={formatKg(totalCo2Kg)}
         />
         <FactTile
-          description="Dit is de som van alle sociale impact van alle eco-sociale activiteiten."
+          description="Dit is de som van alle sociale impact van alle registraties."
           icon="favorite"
           label="Sociale score"
           tone="primary"
@@ -285,8 +267,8 @@ function TeamBreakdownPanel({
 
       {teams.length === 0 ? (
         <p className="rounded-[1.25rem] border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
-          Nog geen registraties gekoppeld aan een team. Zodra teams registreren, verschijnt hier de
-          impact per team.
+          Nog geen registraties gekoppeld aan een team. Zodra teams registraties toevoegen,
+          verschijnt hier de impact per team.
         </p>
       ) : (
         <ol

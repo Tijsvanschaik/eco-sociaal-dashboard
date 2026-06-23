@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { SuperadminOrgForm } from "@/components/superadmin-org-form";
 import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
+import { SuperadminOrgForm } from "@/components/superadmin-org-form";
 import {
   SuperadminPageHeader,
   SuperadminPageMain,

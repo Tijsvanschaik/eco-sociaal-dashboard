@@ -24,14 +24,14 @@ describe("<RegistrationCard />", () => {
   it("shows an edit link when editHref is provided", () => {
     render(
       <RegistrationCard
-        editHref="/lev-groep/registraties/reg-1/bewerken"
+        editHref="/lev-groep/activiteiten/reg-1/bewerken"
         registration={registration}
       />,
     );
 
     expect(screen.getByRole("link", { name: "Registratie bewerken" })).toHaveAttribute(
       "href",
-      "/lev-groep/registraties/reg-1/bewerken",
+      "/lev-groep/activiteiten/reg-1/bewerken",
     );
   });
 

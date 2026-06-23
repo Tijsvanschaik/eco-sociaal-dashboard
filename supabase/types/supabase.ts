@@ -236,7 +236,9 @@ export type Database = {
           eod_baseline_date: string | null
           eod_baseline_kg: number | null
           id: string
+          impact_disclaimer: string | null
           logo_url: string | null
+          mission_short: string | null
           name: string
           public_share_enabled: boolean
           public_share_slug: string | null
@@ -249,7 +251,9 @@ export type Database = {
           eod_baseline_date?: string | null
           eod_baseline_kg?: number | null
           id?: string
+          impact_disclaimer?: string | null
           logo_url?: string | null
+          mission_short?: string | null
           name: string
           public_share_enabled?: boolean
           public_share_slug?: string | null
@@ -262,7 +266,9 @@ export type Database = {
           eod_baseline_date?: string | null
           eod_baseline_kg?: number | null
           id?: string
+          impact_disclaimer?: string | null
           logo_url?: string | null
+          mission_short?: string | null
           name?: string
           public_share_enabled?: boolean
           public_share_slug?: string | null

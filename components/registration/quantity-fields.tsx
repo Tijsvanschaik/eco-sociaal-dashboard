@@ -5,14 +5,14 @@ import { useEffect, useState } from "react";
 import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
 import { formatRegistrationUnit } from "@/components/dashboard/registration-card";
 import { registrationInsetPanelClassName } from "@/components/registration/registration-section";
-import { InfoHint } from "@/components/ui/info-hint";
 import { Icon } from "@/components/ui/icon";
+import { InfoHint } from "@/components/ui/info-hint";
 import { Input } from "@/components/ui/input";
 import {
+  type MetricsHelpContent,
+  QUANTITIES_PANEL_HELP,
   getEcoQuantityHelp,
   getSocialQuantityHelp,
-  QUANTITIES_PANEL_HELP,
-  type MetricsHelpContent,
 } from "@/lib/copy/eco-social-metrics-help";
 import type { InterventionOption } from "@/lib/tenant-dashboard-data";
 import { cn } from "@/lib/utils";
@@ -144,11 +144,7 @@ function QuantityInset({
       <div className="space-y-1">
         <div className="flex items-center gap-1.5">
           <p className="text-sm font-bold tracking-tight text-foreground">{label}</p>
-          <InfoHint
-            content={helpContent}
-            label={`Uitleg ${label.toLowerCase()}`}
-            side="top"
-          />
+          <InfoHint content={helpContent} label={`Uitleg ${label.toLowerCase()}`} side="top" />
         </div>
         <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
       </div>

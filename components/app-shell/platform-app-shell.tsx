@@ -83,12 +83,7 @@ function PlatformBadge({
         className,
       )}
     >
-      <Logo
-        className={cn(
-          "mb-5 h-8 w-auto",
-          isCollapsed && "md:mb-0 md:h-6 md:w-auto",
-        )}
-      />
+      <Logo className={cn("mb-5 h-8 w-auto", isCollapsed && "md:mb-0 md:h-6 md:w-auto")} />
       <div className={cn(isCollapsed && "md:hidden")}>
         <h1 className="text-xl font-extrabold tracking-tight text-primary">Superadmin</h1>
         <span className="mt-1 max-w-[12rem] truncate text-sm text-muted-foreground">

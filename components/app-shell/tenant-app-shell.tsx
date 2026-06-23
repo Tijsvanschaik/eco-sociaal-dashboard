@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { InstallHintBanner } from "@/components/pwa/install-hint-banner";
 import { AppSidebarLayout, type SidebarCta, type SidebarItem } from "./app-sidebar";
 import { OrgBadge } from "./org-badge";
 
@@ -68,7 +69,7 @@ export function TenantAppShell({
     {
       kind: "link",
       label: "Registraties",
-      href: `/${org.slug}/registraties`,
+      href: `/${org.slug}/activiteiten`,
       icon: "edit_note",
     },
   ];
@@ -85,8 +86,8 @@ export function TenantAppShell({
   }
 
   const cta: SidebarCta = {
-    label: "Nieuwe Registratie",
-    href: `/${org.slug}/registratie`,
+    label: "Activiteit registreren",
+    href: `/${org.slug}/activiteit/nieuw`,
     icon: "add",
   };
 
@@ -119,16 +120,19 @@ export function TenantAppShell({
   footerItems.push({ kind: "form", label: "Uitloggen", action: "/auth/signout", icon: "logout" });
 
   return (
-    <AppSidebarLayout
-      mobileTitle={org.name}
-      brand={
-        <OrgBadge org={org} userDisplayName={userDisplayName} switchableOrgs={switchableOrgs} />
-      }
-      mainItems={mainItems}
-      cta={cta}
-      footerItems={footerItems}
-    >
-      {children}
-    </AppSidebarLayout>
+    <>
+      <InstallHintBanner />
+      <AppSidebarLayout
+        mobileTitle={org.name}
+        brand={
+          <OrgBadge org={org} userDisplayName={userDisplayName} switchableOrgs={switchableOrgs} />
+        }
+        mainItems={mainItems}
+        cta={cta}
+        footerItems={footerItems}
+      >
+        {children}
+      </AppSidebarLayout>
+    </>
   );
 }

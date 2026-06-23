@@ -31,26 +31,21 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
   }
 
   const { redirectTo, error, mode: modeParam } = await searchParams;
-  const mode = modeParam === "password" ? "password" : "magic";
+
+  if (modeParam === "password") {
+    const params = new URLSearchParams();
+    if (redirectTo) params.set("redirectTo", redirectTo);
+    if (error) params.set("error", error);
+    const qs = params.toString();
+    redirect(qs ? `/admin?${qs}` : "/admin");
+  }
+
   const errorMessage = error ? ERROR_MESSAGES[error] : undefined;
-
-  const toggleHref = buildLoginHref({
-    redirectTo,
-    mode: mode === "password" ? undefined : "password",
-  });
-  const toggleLabel = mode === "password" ? "Gebruik magic link" : "Admin Login";
-  const toggleLabelCompact = mode === "password" ? "Magic link" : "Admin";
-
-  const heading = mode === "password" ? "Admin login" : "Welkom!";
-  const lede =
-    mode === "password"
-      ? "Log in met je tijdelijke wachtwoord. Deze fallback is er zolang magic-link e-mails gelimiteerd zijn."
-      : "Log in met jouw werk-emailadres om verder te gaan.";
 
   return (
     <div className="min-h-dvh bg-background p-4 md:p-6">
-      <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6 md:flex-row">
-        <main className="relative flex w-full flex-col rounded-[2rem] bg-card shadow-[0_20px_40px_rgba(54,50,45,0.04)] md:min-h-[calc(100dvh-3rem)] md:w-1/2">
+      <div className="mx-auto flex h-[calc(100dvh-2rem)] w-full max-w-screen-2xl flex-col md:h-[calc(100dvh-3rem)] md:flex-row md:gap-6">
+        <main className="relative flex h-full w-full flex-col rounded-[2rem] bg-card shadow-[0_20px_40px_rgba(54,50,45,0.04)] md:w-1/2">
           <header className="flex flex-row items-center justify-between gap-3 p-6 max-[360px]:flex-col max-[360px]:items-stretch md:p-8">
             <Link
               href="/"
@@ -60,14 +55,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
               <Logo className="h-7 w-auto max-w-[9.5rem] min-[400px]:max-w-[10.5rem] md:h-8 lg:max-w-none" />
             </Link>
             <nav className="flex shrink-0 items-center justify-end gap-2 min-[400px]:gap-3 lg:gap-6">
-              <Link
-                href={toggleHref}
-                className="inline-flex h-9 shrink-0 items-center whitespace-nowrap px-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary min-[400px]:text-sm"
-                data-testid="login-mode-toggle"
-              >
-                <span className="lg:hidden">{toggleLabelCompact}</span>
-                <span className="hidden lg:inline">{toggleLabel}</span>
-              </Link>
               <a
                 href={CONTACT_HREF}
                 target="_blank"
@@ -80,13 +67,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
             </nav>
           </header>
 
-          <div className="flex flex-1 items-center justify-center px-6 pb-12 md:px-10">
+          <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-6 pb-12 md:px-10">
             <div className="w-full max-w-sm">
-              <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-foreground md:text-5xl">
-                {heading}
-              </h1>
-              <p className="mb-10 text-lg leading-relaxed text-muted-foreground">{lede}</p>
-
               {errorMessage && (
                 <p
                   className="mb-6 rounded-[1.25rem] border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
@@ -96,7 +78,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
                 </p>
               )}
 
-              <LoginForm mode={mode} redirectTo={redirectTo} />
+              <LoginForm redirectTo={redirectTo} />
 
               <p className="mt-10 text-center text-sm font-medium text-muted-foreground">
                 Heeft u nog geen account?{" "}
@@ -109,13 +91,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
                   Neem contact op!
                 </a>
               </p>
-
-              {mode === "password" && (
-                <p className="mt-4 text-center text-sm text-muted-foreground">
-                  Tijdelijke fallback voor admins en testgebruikers zolang magic-link e-mails
-                  gelimiteerd zijn.
-                </p>
-              )}
             </div>
           </div>
         </main>
@@ -124,18 +99,4 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
       </div>
     </div>
   );
-}
-
-function buildLoginHref({
-  redirectTo,
-  mode,
-}: {
-  redirectTo?: string;
-  mode?: "password";
-}) {
-  const params = new URLSearchParams();
-  if (redirectTo) params.set("redirectTo", redirectTo);
-  if (mode) params.set("mode", mode);
-  const qs = params.toString();
-  return qs ? `/login?${qs}` : "/login";
 }

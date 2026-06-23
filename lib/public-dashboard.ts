@@ -158,7 +158,7 @@ export async function getPublicDashboardBySlug(
 
   const recentRegistrations: RegistrationCardData[] = (recentRows ?? []).map((row) => ({
     id: row.registration_id ?? "",
-    interventionLabel: row.intervention_name ?? "Onbekende interventie",
+    interventionLabel: row.intervention_name ?? "Onbekende activiteit",
     quantity: Number(row.quantity ?? 0),
     socialQuantity: Number(row.social_quantity ?? 0),
     ecoUnit: row.intervention_eco_unit ?? null,

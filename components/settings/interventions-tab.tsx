@@ -58,12 +58,12 @@ import { iconForCategory } from "@/lib/category-icons";
 import {
   CO2_FACTOR_COLUMN_HELP,
   ECO_UNIT_COLUMN_HELP,
+  INTERVENTIONS_OVERVIEW_HELP,
   INTERVENTION_ECO_SECTION_HELP,
   INTERVENTION_SOCIAL_SECTION_HELP,
-  INTERVENTIONS_OVERVIEW_HELP,
+  type MetricsHelpContent,
   SOCIAL_SCORE_COLUMN_HELP,
   SOCIAL_UNIT_COLUMN_HELP,
-  type MetricsHelpContent,
 } from "@/lib/copy/eco-social-metrics-help";
 import { cn } from "@/lib/utils";
 
@@ -136,23 +136,23 @@ export function InterventionsTab({ categories, interventions, orgSlug }: Interve
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <h3 className={sectionTitleClassName}>Interventies</h3>
+                <h3 className={sectionTitleClassName}>Activiteiten</h3>
                 <InfoHint
                   content={INTERVENTIONS_OVERVIEW_HELP}
-                  label="Uitleg interventies en impact"
+                  label="Uitleg activiteiten en impact"
                   side="bottom"
                 />
               </div>
               <p className={sectionDescriptionClassName}>
-                Stel activiteiten in die medewerkers kunnen kiezen bij registratie. Klik op een
-                waarde om te bewerken.
+                Beheer activiteiten die medewerkers kunnen kiezen bij registratie. Groepeer ze onder
+                categorieën (bijv. Energie, Mobiliteit). Klik op een waarde om te bewerken.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
               <Button
                 type="button"
                 variant="outline"
-                className="min-h-10 rounded-full border-border/60 bg-card px-4"
+                className="min-h-10 w-full rounded-full border-border/60 bg-card px-4 sm:w-auto"
                 onClick={() => setCreateModal({ type: "create-category" })}
               >
                 <Icon name="palette" className="text-base" />
@@ -161,11 +161,11 @@ export function InterventionsTab({ categories, interventions, orgSlug }: Interve
               <Button
                 type="button"
                 variant="brand"
-                className="min-h-10 rounded-full px-4"
+                className="min-h-10 w-full rounded-full px-4 sm:w-auto"
                 onClick={() => setCreateModal({ type: "create-intervention" })}
               >
                 <Icon name="add" className="text-base" />
-                Nieuwe interventie
+                Nieuwe activiteit
               </Button>
             </div>
           </div>
@@ -174,13 +174,13 @@ export function InterventionsTab({ categories, interventions, orgSlug }: Interve
             <p className={sectionLabelClassName}>Filter op categorie</p>
             {categories.length === 0 ? (
               <p className={sectionDescriptionClassName}>
-                Nog geen categorieën. Voeg er eerst een toe via &quot;Nieuwe categorie&quot;.
+                Nog geen categorie&apos;s. Voeg er eerst een toe via &quot;Nieuwe categorie&quot;.
               </p>
             ) : (
               <div className="flex flex-wrap items-center gap-2">
                 <CategoryFilterButton
                   active={categoryFilter === null}
-                  ariaLabel="Alle categorieën"
+                  ariaLabel="Alle activiteiten"
                   icon="apps"
                   onClick={() => setCategoryFilter(null)}
                   title={`Alle (${interventions.length})`}
@@ -214,12 +214,12 @@ export function InterventionsTab({ categories, interventions, orgSlug }: Interve
         {interventions.length === 0 ? (
           <EmptyState
             icon="eco"
-            message="Nog geen interventies. Voeg een categorie en interventie toe om te starten."
+            message="Nog geen activiteiten. Voeg een categorie en activiteit toe om te starten."
           />
         ) : filteredInterventions.length === 0 ? (
           <EmptyState
             icon="filter_alt"
-            message="Geen interventies in deze categorie. Kies een andere filter."
+            message="Geen activiteiten in deze categorie. Kies een andere filter."
           />
         ) : (
           <>
@@ -252,7 +252,7 @@ export function InterventionsTab({ categories, interventions, orgSlug }: Interve
                 <thead>
                   <tr className={cn(tableRowBorderClassName, "border-b-2 border-border/80")}>
                     <th className={tableHeadClassName} scope="col">
-                      Interventie
+                      Activiteit
                     </th>
                     <th className={tableHeadClassName} scope="col">
                       Categorie
@@ -345,7 +345,7 @@ export function InterventionsTab({ categories, interventions, orgSlug }: Interve
           setArchiveModal({ type: "closed" });
         }}
         open={archiveModal.type === "archive-intervention"}
-        title="Interventie verwijderen"
+        title="Activiteit verwijderen"
       />
     </>
   );
@@ -375,6 +375,7 @@ function InterventionRow({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const icon = iconForCategory(category?.name ?? "");
+  const metricFillHeight = layout === "card";
 
   function startEditing(field: EditableField) {
     if (isPending) return;
@@ -416,7 +417,7 @@ function InterventionRow({
       align="left"
       editing={editingField === "name"}
       isPending={isPending}
-      label="Naam"
+      label="Activiteit"
       onCancel={cancelEditing}
       onSave={(value) => saveField("name", value)}
       onStartEdit={() => startEditing("name")}
@@ -442,6 +443,7 @@ function InterventionRow({
   const ecoUnitEditor = (
     <EditableTextCell
       editing={editingField === "ecoUnit"}
+      fillHeight={metricFillHeight}
       isPending={isPending}
       label="Eco-eenheid"
       onCancel={cancelEditing}
@@ -457,6 +459,7 @@ function InterventionRow({
     <EditableNumberCell
       align="right"
       editing={editingField === "co2FactorKg"}
+      fillHeight={metricFillHeight}
       isPending={isPending}
       label="CO₂-factor"
       onCancel={cancelEditing}
@@ -470,6 +473,7 @@ function InterventionRow({
   const socialUnitEditor = (
     <EditableTextCell
       editing={editingField === "socialUnit"}
+      fillHeight={metricFillHeight}
       isPending={isPending}
       label="Sociale eenheid"
       onCancel={cancelEditing}
@@ -485,6 +489,7 @@ function InterventionRow({
     <EditableNumberCell
       align="right"
       editing={editingField === "socialScoreFactor"}
+      fillHeight={metricFillHeight}
       isPending={isPending}
       label="Sociale score"
       onCancel={cancelEditing}
@@ -510,7 +515,7 @@ function InterventionRow({
         <div className="flex items-start gap-2">
           <CategoryIconSquare color={category?.color ?? "#6b7280"} icon={icon} />
           <div className="min-w-0 flex-1 space-y-2">
-            <SettingsMobileField label="Interventie">{nameEditor}</SettingsMobileField>
+            <SettingsMobileField label="Activiteit">{nameEditor}</SettingsMobileField>
             <SettingsMobileField label="Categorie">{categoryEditor}</SettingsMobileField>
           </div>
           <MobileRowActionGroup>
@@ -537,11 +542,19 @@ function InterventionRow({
         </div>
 
         {expanded ? (
-          <div className="mt-2.5 grid grid-cols-2 gap-3 border-t border-border/50 pt-2.5">
-            <SettingsMobileField label="Eco-eenheid">{ecoUnitEditor}</SettingsMobileField>
-            <SettingsMobileField label="CO₂-factor">{co2FactorEditor}</SettingsMobileField>
-            <SettingsMobileField label="Sociale eenheid">{socialUnitEditor}</SettingsMobileField>
-            <SettingsMobileField label="Score">{socialScoreEditor}</SettingsMobileField>
+          <div className="mt-2.5 grid grid-cols-1 items-stretch gap-x-3 gap-y-4 border-t border-border/50 pt-2.5 min-[380px]:grid-cols-2">
+            <SettingsMobileField label="Eco-eenheid" stretch>
+              {ecoUnitEditor}
+            </SettingsMobileField>
+            <SettingsMobileField label="CO₂-factor" stretch>
+              {co2FactorEditor}
+            </SettingsMobileField>
+            <SettingsMobileField label="Sociale eenheid" stretch>
+              {socialUnitEditor}
+            </SettingsMobileField>
+            <SettingsMobileField label="Score" stretch>
+              {socialScoreEditor}
+            </SettingsMobileField>
           </div>
         ) : null}
 
@@ -786,7 +799,7 @@ function CategoryCreateModal({
 
   return (
     <Modal
-      description="Groeperen interventies en bepalen de kleur in grafieken."
+      description="Bijv. Energie of Mobiliteit. Bepaalt de kleur in grafieken en op het dashboard."
       footer={
         <ModalActions>
           <Button type="button" variant="outline" className="rounded-full" onClick={onClose}>
@@ -879,7 +892,7 @@ function InterventionCreateModal({
               className="min-h-11 rounded-full px-6"
               disabled={isPending}
             >
-              {isPending ? "Opslaan..." : "Interventie toevoegen"}
+              {isPending ? "Opslaan..." : "Activiteit toevoegen"}
             </Button>
           </ModalActions>
         )
@@ -887,12 +900,12 @@ function InterventionCreateModal({
       onClose={onClose}
       open={open}
       size="xl"
-      title="Nieuwe interventie"
+      title="Nieuwe activiteit"
     >
       {categories.length === 0 ? (
         <EmptyState
           icon="palette"
-          message="Maak eerst een categorie aan voordat je interventies toevoegt."
+          message="Maak eerst een categorie aan voordat je activiteiten toevoegt."
         />
       ) : (
         <form className="space-y-6" id="create-intervention-form" onSubmit={handleSubmit}>

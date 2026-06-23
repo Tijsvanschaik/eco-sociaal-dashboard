@@ -16,7 +16,18 @@ import {
   teamUpdateSchema,
 } from "@/lib/admin-schema";
 import { findOrCreateUserId } from "@/lib/admin-users";
+import { provisionOrgInvite } from "@/lib/auth/invite-membership";
+import { checkInviteRateLimit } from "@/lib/auth/invite-rate-limit";
+import { sendMagicLinkEmail } from "@/lib/auth/send-magic-link-email";
+import { getPublicSupabaseEnv } from "@/lib/env";
 import { getOrgContextBySlug } from "@/lib/organizations";
+import {
+  ORG_LOGOS_BUCKET,
+  buildOrgLogoStoragePath,
+  extractOrgLogoStoragePath,
+  getOrgLogoPublicUrl,
+  validateOrgLogoFile,
+} from "@/lib/organizations/logo-upload";
 import { revalidateOrgPaths } from "@/lib/revalidate-org-paths";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 
@@ -291,7 +302,7 @@ export async function archiveCategory(orgSlug: string, categoryId: string) {
     .eq("is_archived", false);
 
   if ((count ?? 0) > 0) {
-    throw new Error("Archiveer of verwijder eerst de actieve interventies in deze categorie.");
+    throw new Error("Archiveer of verwijder eerst de actieve activiteiten in deze categorie.");
   }
 
   await writer
@@ -372,7 +383,8 @@ export async function updateOrgProfile(orgSlug: string, formData: FormData) {
   const { context, writer } = await requireAdmin(orgSlug);
   const input = orgProfileSchema.parse({
     description: formData.get("description") ?? "",
-    logoUrl: formData.get("logoUrl") ?? "",
+    impactDisclaimer: formData.get("impactDisclaimer") ?? "",
+    missionShort: formData.get("missionShort") ?? "",
     name: formData.get("name"),
   });
 
@@ -381,9 +393,86 @@ export async function updateOrgProfile(orgSlug: string, formData: FormData) {
     .update({
       name: input.name,
       description: input.description ? input.description : null,
-      logo_url: input.logoUrl ? input.logoUrl : null,
+      impact_disclaimer: input.impactDisclaimer ? input.impactDisclaimer : null,
+      mission_short: input.missionShort ? input.missionShort : null,
     })
     .eq("id", context.org.id);
+
+  revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
+}
+
+async function deleteManagedOrgLogo(
+  writer: Awaited<ReturnType<typeof createClient>>,
+  logoUrl: string | null | undefined,
+  orgId: string,
+) {
+  const { NEXT_PUBLIC_SUPABASE_URL } = getPublicSupabaseEnv();
+  const storagePath = logoUrl
+    ? extractOrgLogoStoragePath(logoUrl, orgId, NEXT_PUBLIC_SUPABASE_URL)
+    : null;
+  if (!storagePath) return;
+
+  const { error } = await writer.storage.from(ORG_LOGOS_BUCKET).remove([storagePath]);
+  if (error) {
+    console.error("[org-logo] delete failed", error.message);
+  }
+}
+
+export async function uploadOrgLogo(orgSlug: string, formData: FormData) {
+  const { context, writer } = await requireAdmin(orgSlug);
+  const file = formData.get("logo");
+
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("Kies een logo-bestand.");
+  }
+
+  const validation = validateOrgLogoFile(file);
+  if (!validation.ok) {
+    throw new Error(validation.message);
+  }
+
+  const storagePath = buildOrgLogoStoragePath(context.org.id, file);
+  const { error: uploadError } = await writer.storage
+    .from(ORG_LOGOS_BUCKET)
+    .upload(storagePath, file, {
+      cacheControl: "86400",
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error("[org-logo] upload failed", uploadError.message);
+    throw new Error("Logo uploaden lukte niet. Probeer het nog eens.");
+  }
+
+  const { NEXT_PUBLIC_SUPABASE_URL } = getPublicSupabaseEnv();
+  const publicUrl = getOrgLogoPublicUrl(NEXT_PUBLIC_SUPABASE_URL, storagePath);
+  const previousLogoUrl = context.org.logoUrl;
+
+  const { error: updateError } = await writer
+    .from("organizations")
+    .update({ logo_url: publicUrl })
+    .eq("id", context.org.id);
+
+  if (updateError) {
+    await writer.storage.from(ORG_LOGOS_BUCKET).remove([storagePath]);
+    console.error("[org-logo] profile update failed", updateError.message);
+    throw new Error("Logo kon niet worden opgeslagen.");
+  }
+
+  await deleteManagedOrgLogo(writer, previousLogoUrl, context.org.id);
+  revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
+
+  return { logoUrl: publicUrl };
+}
+
+export async function removeOrgLogo(orgSlug: string) {
+  const { context, writer } = await requireAdmin(orgSlug);
+  if (!context.org.logoUrl) return;
+
+  await deleteManagedOrgLogo(writer, context.org.logoUrl, context.org.id);
+
+  await writer.from("organizations").update({ logo_url: null }).eq("id", context.org.id);
 
   revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);
 }
@@ -415,45 +504,43 @@ export async function updateOrgSettings(orgSlug: string, formData: FormData) {
 }
 
 export async function provisionUser(orgSlug: string, formData: FormData) {
-  const { context, writer } = await requireAdmin(orgSlug);
+  const { context } = await requireAdmin(orgSlug);
   const input = provisionUserSchema.parse({
     email: formData.get("email"),
     role: formData.get("role"),
     teamId: formData.get("teamId") || undefined,
   });
 
-  const userId = await findOrCreateUserId(input.email);
-  const { data: membership } = await writer
-    .from("memberships")
-    .select("id")
-    .eq("org_id", context.org.id)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (!membership) {
-    await writer.from("memberships").insert({
-      org_id: context.org.id,
-      user_id: userId,
-      role: input.role,
-    });
+  const rateLimit = await checkInviteRateLimit(input.email, context.org.slug);
+  if (!rateLimit.allowed) {
+    throw new Error(rateLimit.message);
   }
 
-  if (input.teamId) {
-    const { data: teamMembership } = await writer
-      .from("team_memberships")
-      .select("id")
-      .eq("org_id", context.org.id)
-      .eq("user_id", userId)
-      .eq("team_id", input.teamId)
-      .maybeSingle();
+  const userId = await findOrCreateUserId(input.email);
 
-    if (!teamMembership) {
-      await writer.from("team_memberships").insert({
-        org_id: context.org.id,
-        user_id: userId,
-        team_id: input.teamId,
-      });
-    }
+  try {
+    await provisionOrgInvite({
+      orgId: context.org.id,
+      orgSlug: context.org.slug,
+      role: input.role,
+      teamId: input.teamId,
+      userId,
+    });
+  } catch (error) {
+    console.error("provisionUser invite error:", error);
+    throw new Error("Medewerker kon niet worden gekoppeld aan deze organisatie.");
+  }
+
+  const inviteResult = await sendMagicLinkEmail({
+    email: input.email,
+    kind: "member_invite",
+    orgName: context.org.name,
+    redirectPath: `/${context.org.slug}/dashboard`,
+  });
+  if (!inviteResult.ok) {
+    throw new Error(
+      "Medewerker is toegevoegd, maar de uitnodigingsmail kon niet worden verstuurd.",
+    );
   }
 
   revalidateOrgPaths(context.org.slug, context.org.publicShareSlug);

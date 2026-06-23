@@ -2,6 +2,8 @@ import { revalidatePath } from "next/cache";
 
 export function revalidateOrgPaths(orgSlug: string, shareSlug: string | null) {
   revalidatePath(`/${orgSlug}/dashboard`);
+  revalidatePath(`/${orgSlug}/activiteit/nieuw`);
+  revalidatePath(`/${orgSlug}/activiteiten`);
   revalidatePath(`/${orgSlug}/registratie`);
   revalidatePath(`/${orgSlug}/registraties`);
   revalidatePath(`/${orgSlug}/instellingen`);

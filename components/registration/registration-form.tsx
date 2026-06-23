@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
-import { createRegistration } from "@/app/(app)/[orgSlug]/registratie/actions";
-import { updateRegistration } from "@/app/(app)/[orgSlug]/registraties/actions";
+import { createRegistration } from "@/app/(app)/[orgSlug]/activiteit/nieuw/actions";
+import { updateRegistration } from "@/app/(app)/[orgSlug]/activiteiten/actions";
 import { ImpactPreview } from "@/components/registration/impact-preview";
 import { InterventionPicker } from "@/components/registration/intervention-picker";
 import { PhotoField } from "@/components/registration/photo-field";
@@ -17,6 +17,7 @@ import type { FormUiState, PhotoState } from "@/components/registration/types";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
+import { fireActivityConfetti } from "@/lib/celebration/confetti";
 import {
   deleteRegistrationPhoto,
   uploadRegistrationPhoto,
@@ -189,7 +190,7 @@ export function RegistrationForm({
         const result = await updateRegistration(orgSlug, registrationId, formData);
         if (result.status === "ok") {
           initialPhotoPathRef.current = values.photoPath ?? null;
-          router.push(`/${orgSlug}/registraties`);
+          router.push(`/${orgSlug}/activiteiten`);
           router.refresh();
           return;
         }
@@ -199,6 +200,7 @@ export function RegistrationForm({
 
       const result = await createRegistration(orgSlug, formData);
       if (result.status === "ok") {
+        void fireActivityConfetti();
         setState({ status: "success", message: result.message });
         form.reset({
           ...values,
@@ -357,7 +359,7 @@ export function RegistrationForm({
                 variant="outline"
                 className="min-h-12 rounded-full border-border/70 bg-card px-6"
               >
-                <Link href={`/${orgSlug}/registraties`}>Annuleren</Link>
+                <Link href={`/${orgSlug}/activiteiten`}>Annuleren</Link>
               </Button>
             ) : null}
             <SubmitButton disabled={submitDisabled} isEdit={isEdit} isPending={isPending} />
@@ -371,7 +373,7 @@ export function RegistrationForm({
                 variant="outline"
                 className="pointer-events-auto min-h-12 rounded-full border-border/70 bg-card px-5"
               >
-                <Link href={`/${orgSlug}/registraties`}>Annuleren</Link>
+                <Link href={`/${orgSlug}/activiteiten`}>Annuleren</Link>
               </Button>
             ) : null}
             <SubmitButton

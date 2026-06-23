@@ -1,10 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type ReactNode, useState, useTransition } from "react";
+import { type ReactNode, useRef, useState, useTransition } from "react";
 
-import { updateOrgProfile, updateOrgSettings } from "@/app/(app)/[orgSlug]/beheer/actions";
-import { EditableTextCell, EditableTextareaCell } from "@/components/settings/editable-cells";
+import {
+  removeOrgLogo,
+  updateOrgProfile,
+  updateOrgSettings,
+  uploadOrgLogo,
+} from "@/app/(app)/[orgSlug]/beheer/actions";
+import { EditableTextCell } from "@/components/settings/editable-cells";
+import { EditableProfileTextareaCell } from "@/components/settings/editable-profile-field";
 import { FormError } from "@/components/settings/form-fields";
 import {
   cellTextClassName,
@@ -14,21 +20,31 @@ import {
   tableRowBorderClassName,
 } from "@/components/settings/settings-styles";
 import { getErrorMessage } from "@/components/settings/settings-ui";
+import { Button } from "@/components/ui/button";
+import { ORG_LOGO_ACCEPTED_MIMES } from "@/lib/organizations/logo-upload";
 import { cn } from "@/lib/utils";
 
 export type GeneralTabContext = {
   description: string | null;
   eodBaselineDate: string | null;
   eodBaselineKg: number | null;
+  impactDisclaimer: string | null;
   logoUrl: string | null;
+  missionShort: string | null;
   name: string;
   publicShareEnabled: boolean;
   publicShareSlug: string | null;
   slug: string;
 };
 
-type ProfileField = "name" | "description" | "logoUrl";
+type ProfileField = "name" | "description" | "missionShort" | "impactDisclaimer";
 type SettingsField = "publicShareSlug" | "eodBaselineKg" | "eodBaselineDate";
+
+const PROFILE_FIELD_LIMITS = {
+  missionShort: 280,
+  description: 4000,
+  impactDisclaimer: 2000,
+} as const;
 
 type GeneralTabProps = {
   context: GeneralTabContext;
@@ -36,12 +52,15 @@ type GeneralTabProps = {
 
 export function GeneralTab({ context }: GeneralTabProps) {
   const router = useRouter();
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [editingProfileField, setEditingProfileField] = useState<ProfileField | null>(null);
   const [editingSettingsField, setEditingSettingsField] = useState<SettingsField | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [isProfilePending, startProfileTransition] = useTransition();
   const [isSettingsPending, startSettingsTransition] = useTransition();
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [isLogoPending, startLogoTransition] = useTransition();
 
   const initials = getInitials(context.name);
 
@@ -51,7 +70,8 @@ export function GeneralTab({ context }: GeneralTabProps) {
     const currentValues = {
       name: context.name,
       description: context.description ?? "",
-      logoUrl: context.logoUrl ?? "",
+      missionShort: context.missionShort ?? "",
+      impactDisclaimer: context.impactDisclaimer ?? "",
     };
 
     const nextValues = {
@@ -67,7 +87,8 @@ export function GeneralTab({ context }: GeneralTabProps) {
     const formData = new FormData();
     formData.set("name", nextValues.name);
     formData.set("description", nextValues.description);
-    formData.set("logoUrl", nextValues.logoUrl);
+    formData.set("missionShort", nextValues.missionShort);
+    formData.set("impactDisclaimer", nextValues.impactDisclaimer);
 
     startProfileTransition(async () => {
       try {
@@ -80,6 +101,39 @@ export function GeneralTab({ context }: GeneralTabProps) {
       }
     });
   }
+
+  function handleLogoUpload(file: File | null) {
+    if (!file || isLogoPending) return;
+
+    const formData = new FormData();
+    formData.set("logo", file);
+
+    startLogoTransition(async () => {
+      try {
+        await uploadOrgLogo(context.slug, formData);
+        setLogoError(null);
+        router.refresh();
+      } catch (error) {
+        setLogoError(getErrorMessage(error));
+      }
+    });
+  }
+
+  function handleLogoRemove() {
+    if (isLogoPending || !context.logoUrl) return;
+
+    startLogoTransition(async () => {
+      try {
+        await removeOrgLogo(context.slug);
+        setLogoError(null);
+        router.refresh();
+      } catch (error) {
+        setLogoError(getErrorMessage(error));
+      }
+    });
+  }
+
+  const logoAccept = Array.from(ORG_LOGO_ACCEPTED_MIMES).join(",");
 
   function saveSettingsField(field: SettingsField, rawValue: string) {
     if (isSettingsPending) return;
@@ -148,13 +202,13 @@ export function GeneralTab({ context }: GeneralTabProps) {
         <header className="space-y-1 pb-6">
           <h3 className={sectionTitleClassName}>Organisatieprofiel</h3>
           <p className={sectionDescriptionClassName}>
-            Naam, beschrijving en logo. Zichtbaar in de sidebar en op je publieke dashboard. Klik op
-            een waarde om te bewerken.
+            Naam, missie, disclaimer en logo. Klik op een waarde om te bewerken. Uitgebreide missie
+            en disclaimer ondersteunen eenvoudige Markdown.
           </p>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)]">
-          <div className={cn("divide-y", tableRowBorderClassName)}>
+          <div className={cn("order-2 divide-y lg:order-1", tableRowBorderClassName)}>
             <SettingsRow
               helper="Zichtbaar in de sidebar en op het dashboard."
               label="Organisatienaam"
@@ -176,53 +230,72 @@ export function GeneralTab({ context }: GeneralTabProps) {
             </SettingsRow>
 
             <SettingsRow
-              helper="Max. 280 tekens. Korte omschrijving van jullie missie."
-              label="Beschrijving"
+              helper="Max. 280 tekens. Korte pitch voor op slides en dashboard."
+              label="Missie kort"
             >
-              <EditableTextareaCell
-                editing={editingProfileField === "description"}
+              <EditableProfileTextareaCell
+                editing={editingProfileField === "missionShort"}
+                emptyLabel="Geen missie kort"
                 isPending={isProfilePending}
-                label="Beschrijving"
+                label="Missie kort"
+                maxLength={PROFILE_FIELD_LIMITS.missionShort}
+                onCancel={() => setEditingProfileField(null)}
+                onSave={(value) => saveProfileField("missionShort", value)}
+                onStartEdit={() => {
+                  setProfileError(null);
+                  setEditingProfileField("missionShort");
+                }}
+                rows={3}
+                value={context.missionShort ?? ""}
+              />
+            </SettingsRow>
+
+            <SettingsRow
+              helper="Uitgebreide toelichting: waarom doen jullie dit? Markdown mag."
+              label="Missie (uitgebreid)"
+            >
+              <EditableProfileTextareaCell
+                editing={editingProfileField === "description"}
+                emptyLabel="Geen missie (uitgebreid)"
+                isPending={isProfilePending}
+                label="Missie (uitgebreid)"
+                markdown
+                maxLength={PROFILE_FIELD_LIMITS.description}
                 onCancel={() => setEditingProfileField(null)}
                 onSave={(value) => saveProfileField("description", value)}
                 onStartEdit={() => {
                   setProfileError(null);
                   setEditingProfileField("description");
                 }}
+                rows={5}
                 value={context.description ?? ""}
-              >
-                <span className={cn(cellTextClassName, "whitespace-pre-wrap")}>
-                  {context.description?.trim() ? context.description : "Geen beschrijving"}
-                </span>
-              </EditableTextareaCell>
+              />
             </SettingsRow>
 
             <SettingsRow
-              helper="PNG of SVG, bij voorkeur transparante achtergrond."
-              label="Logo-URL"
+              helper="Indicatieve cijfers; tonen op publieke surfaces volgt later."
+              label="Impact-disclaimer"
             >
-              <EditableTextCell
-                allowEmpty
-                editing={editingProfileField === "logoUrl"}
-                inputType="url"
+              <EditableProfileTextareaCell
+                editing={editingProfileField === "impactDisclaimer"}
+                emptyLabel="Geen disclaimer ingesteld"
                 isPending={isProfilePending}
-                label="Logo-URL"
+                label="Impact-disclaimer"
+                markdown
+                maxLength={PROFILE_FIELD_LIMITS.impactDisclaimer}
                 onCancel={() => setEditingProfileField(null)}
-                onSave={(value) => saveProfileField("logoUrl", value)}
+                onSave={(value) => saveProfileField("impactDisclaimer", value)}
                 onStartEdit={() => {
                   setProfileError(null);
-                  setEditingProfileField("logoUrl");
+                  setEditingProfileField("impactDisclaimer");
                 }}
-                value={context.logoUrl ?? ""}
-              >
-                <span className={cn(cellTextClassName, "break-all")}>
-                  {context.logoUrl?.trim() ? context.logoUrl : "Geen logo-URL"}
-                </span>
-              </EditableTextCell>
+                rows={5}
+                value={context.impactDisclaimer ?? ""}
+              />
             </SettingsRow>
           </div>
 
-          <aside className="flex flex-col items-center justify-center gap-4 rounded-sm border border-border/40 bg-card/50 p-5 text-center">
+          <aside className="order-first flex flex-col items-center justify-center gap-4 rounded-sm border border-border/40 bg-card/50 p-5 text-center lg:order-2">
             <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-sm border border-border/40 bg-card shadow-sm">
               {context.logoUrl ? (
                 <img
@@ -236,7 +309,44 @@ export function GeneralTab({ context }: GeneralTabProps) {
                 </div>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Preview van je logo of initialen.</p>
+            <div className="flex w-full flex-col gap-2">
+              <input
+                ref={logoInputRef}
+                accept={logoAccept}
+                className="sr-only"
+                disabled={isLogoPending}
+                type="file"
+                onChange={(event) => {
+                  setLogoError(null);
+                  handleLogoUpload(event.currentTarget.files?.[0] ?? null);
+                  event.currentTarget.value = "";
+                }}
+              />
+              <Button
+                className="w-full"
+                disabled={isLogoPending}
+                type="button"
+                variant="outline"
+                onClick={() => logoInputRef.current?.click()}
+              >
+                {isLogoPending ? "Bezig…" : context.logoUrl ? "Logo vervangen" : "Logo uploaden"}
+              </Button>
+              {context.logoUrl ? (
+                <Button
+                  className="w-full"
+                  disabled={isLogoPending}
+                  type="button"
+                  variant="ghost"
+                  onClick={handleLogoRemove}
+                >
+                  Logo verwijderen
+                </Button>
+              ) : null}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              PNG, SVG of WEBP, max. 5 MB. Zichtbaar in de sidebar.
+            </p>
+            {logoError ? <FormError message={logoError} /> : null}
           </aside>
         </div>
 

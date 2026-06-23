@@ -26,7 +26,7 @@ export function RegistrationsScopeToggle({
     params.set("year", String(year));
     if (selectedTeamId) params.set("team", selectedTeamId);
     if (nextScope === "mine") params.set("scope", "mine");
-    router.push(`/${orgSlug}/registraties?${params.toString()}`);
+    router.push(`/${orgSlug}/activiteiten?${params.toString()}`);
   }
 
   return (

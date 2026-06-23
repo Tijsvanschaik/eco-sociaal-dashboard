@@ -43,7 +43,7 @@ export function TeamDetailDashboard({
             Team <span className="text-primary">{teamName}</span>
           </h1>
           <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Activiteiten en impact van dit team in {year}.
+            Registraties en impact van dit team in {year}.
           </p>
         </div>
       </header>

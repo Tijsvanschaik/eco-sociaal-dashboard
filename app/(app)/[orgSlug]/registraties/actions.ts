@@ -62,7 +62,7 @@ export async function updateRegistration(
       .maybeSingle();
     if (!intervention) {
       await cleanupStoragePhoto(supabase, input.photoPath);
-      return { status: "error", message: "Deze interventie is niet meer beschikbaar." };
+      return { status: "error", message: "Deze activiteit is niet meer beschikbaar." };
     }
 
     const { data: team } = await supabase

@@ -2,8 +2,10 @@
 
 import { createOrgSchema } from "@/lib/admin-schema";
 import { findOrCreateUserId } from "@/lib/admin-users";
+import { provisionOrgInvite } from "@/lib/auth/invite-membership";
+import { checkInviteRateLimit } from "@/lib/auth/invite-rate-limit";
+import { sendMagicLinkEmail } from "@/lib/auth/send-magic-link-email";
 import { isCurrentUserSuperadmin } from "@/lib/organizations";
-import { getRequestOrigin } from "@/lib/request-origin";
 import { revalidateOrgPaths } from "@/lib/revalidate-org-paths";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 
@@ -31,6 +33,11 @@ export async function createOrganizationAndInviteAdmin(
     };
   }
 
+  const rateLimit = await checkInviteRateLimit(input.data.adminEmail, input.data.orgSlug);
+  if (!rateLimit.allowed) {
+    return { status: "error", message: rateLimit.message };
+  }
+
   const admin = createServiceRoleClient();
   const { data: organization, error: orgError } = await admin
     .from("organizations")
@@ -55,40 +62,22 @@ export async function createOrganizationAndInviteAdmin(
 
   try {
     const userId = await findOrCreateUserId(input.data.adminEmail);
-    const { data: membership } = await admin
-      .from("memberships")
-      .select("id")
-      .eq("org_id", organization.id)
-      .eq("user_id", userId)
-      .maybeSingle();
 
-    if (!membership) {
-      const { error: membershipError } = await admin.from("memberships").insert({
-        org_id: organization.id,
-        user_id: userId,
-        role: "admin",
-      });
-      if (membershipError) {
-        console.error("createOrganization membership error:", membershipError.message);
-        return {
-          status: "error",
-          message: "Organisatie is aangemaakt, maar admin koppelen lukte niet.",
-        };
-      }
-    }
-
-    const callbackUrl = new URL("/auth/callback", await getRequestOrigin());
-    callbackUrl.searchParams.set("next", `/${organization.slug}/dashboard`);
-
-    const { error: inviteError } = await supabase.auth.signInWithOtp({
-      email: input.data.adminEmail,
-      options: {
-        emailRedirectTo: callbackUrl.toString(),
-        shouldCreateUser: false,
-      },
+    await provisionOrgInvite({
+      orgId: organization.id,
+      orgSlug: organization.slug,
+      role: "admin",
+      userId,
     });
-    if (inviteError) {
-      console.error("createOrganization invite error:", inviteError.message);
+
+    const inviteResult = await sendMagicLinkEmail({
+      email: input.data.adminEmail,
+      kind: "org_admin_invite",
+      orgName: input.data.orgName,
+      redirectPath: `/${organization.slug}/dashboard`,
+    });
+    if (!inviteResult.ok) {
+      console.error("createOrganization invite error:", inviteResult.reason);
       revalidateOrgPaths(organization.slug, null);
       return {
         status: "ok",

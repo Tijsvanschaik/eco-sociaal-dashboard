@@ -8,12 +8,7 @@ import {
 describe("deriveRegistrationListYears", () => {
   it("returns unique years newest first", () => {
     expect(
-      deriveRegistrationListYears([
-        "2024-03-01",
-        "2025-11-02",
-        "2025-01-15",
-        "2023-12-31",
-      ]),
+      deriveRegistrationListYears(["2024-03-01", "2025-11-02", "2025-01-15", "2023-12-31"]),
     ).toEqual([2025, 2024, 2023]);
   });
 

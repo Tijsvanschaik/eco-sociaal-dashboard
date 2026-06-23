@@ -18,6 +18,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
+      RESEND_API_KEY: re_ci_test_key
+      RESEND_FROM: "CI Test <test@example.com>"
     steps:
       - uses: actions/checkout@v4
 

@@ -1,6 +1,21 @@
+import { spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
+
+import withSerwistInit from "@serwist/next";
 import type { NextConfig } from "next";
 
 const embedFrameAncestors = process.env.EMBED_FRAME_ANCESTORS ?? "'self'";
+
+const revision =
+  spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).stdout.trim() || randomUUID();
+
+const withSerwist = withSerwistInit({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
+  additionalPrecacheEntries: [{ url: "/~offline", revision }],
+  disable: process.env.NODE_ENV === "development",
+  globPublicPatterns: ["icons/**/*.{png,svg}"],
+});
 
 const securityHeadersApp = [
   { key: "X-Frame-Options", value: "DENY" },
@@ -36,4 +51,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

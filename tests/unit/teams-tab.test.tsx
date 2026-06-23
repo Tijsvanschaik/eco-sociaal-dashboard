@@ -41,8 +41,9 @@ describe("<TeamsTab />", () => {
   it("opens inline editing when clicking a team name", () => {
     render(<TeamsTab orgSlug="lev-groep" teamMemberships={teamMemberships} teams={teams} />);
 
-    const editButtons = screen.getAllByRole("button", { name: /teamnaam bewerken: lev helmond/i });
-    fireEvent.click(editButtons[0]!);
+    const [editButton] = screen.getAllByRole("button", { name: /teamnaam bewerken: lev helmond/i });
+    if (!editButton) throw new Error("Expected team edit button");
+    fireEvent.click(editButton);
 
     expect(screen.getByDisplayValue("LEV Helmond")).toBeInTheDocument();
   });

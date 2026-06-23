@@ -8,7 +8,7 @@ function isUuidSegment(s: string): boolean {
 }
 
 const ORG_SELECT =
-  "id, name, slug, description, logo_url, public_share_enabled, public_share_slug, eod_baseline_kg, eod_baseline_date" as const;
+  "id, name, slug, description, mission_short, impact_disclaimer, logo_url, public_share_enabled, public_share_slug, eod_baseline_kg, eod_baseline_date" as const;
 
 export type OrgContext = {
   isSuperadmin: boolean;
@@ -17,7 +17,9 @@ export type OrgContext = {
     eodBaselineDate: string | null;
     eodBaselineKg: number | null;
     id: string;
+    impactDisclaimer: string | null;
     logoUrl: string | null;
+    missionShort: string | null;
     name: string;
     publicShareEnabled: boolean;
     publicShareSlug: string | null;
@@ -120,7 +122,9 @@ export async function getOrgContextBySlug(
       eodBaselineDate: org.eod_baseline_date,
       eodBaselineKg: org.eod_baseline_kg,
       id: org.id,
+      impactDisclaimer: org.impact_disclaimer ?? null,
       logoUrl: org.logo_url,
+      missionShort: org.mission_short ?? null,
       name: org.name,
       publicShareEnabled: org.public_share_enabled,
       publicShareSlug: org.public_share_slug,

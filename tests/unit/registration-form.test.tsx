@@ -11,11 +11,11 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/app/(app)/[orgSlug]/registratie/actions", () => ({
+vi.mock("@/app/(app)/[orgSlug]/activiteit/nieuw/actions", () => ({
   createRegistration: (...args: unknown[]) => createRegistration(...args),
 }));
 
-vi.mock("@/app/(app)/[orgSlug]/registraties/actions", () => ({
+vi.mock("@/app/(app)/[orgSlug]/activiteiten/actions", () => ({
   updateRegistration: vi.fn(),
 }));
 

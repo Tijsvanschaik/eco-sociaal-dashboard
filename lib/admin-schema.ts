@@ -39,20 +39,28 @@ export const interventionSchema = z.object({
 });
 
 export const interventionUpdateSchema = interventionSchema.extend({
-  id: z.string().uuid("Ongeldige interventie."),
+  id: z.string().uuid("Ongeldige activiteit."),
 });
 
 export const orgProfileSchema = z.object({
   description: z
     .string()
     .trim()
-    .max(280, "Beschrijving is te lang (max 280 tekens).")
+    .max(4000, "Missie (uitgebreid) is te lang (max. 4000 tekens).")
     .optional()
     .or(z.literal("")),
-  logoUrl: z.union([
-    z.literal(""),
-    z.string().trim().url("Geef een geldige URL op (inclusief https://)."),
-  ]),
+  impactDisclaimer: z
+    .string()
+    .trim()
+    .max(2000, "Disclaimer is te lang (max. 2000 tekens).")
+    .optional()
+    .or(z.literal("")),
+  missionShort: z
+    .string()
+    .trim()
+    .max(280, "Missie kort is te lang (max. 280 tekens).")
+    .optional()
+    .or(z.literal("")),
   name: z.string().trim().min(2, "Naam is te kort.").max(120, "Naam is te lang."),
 });
 

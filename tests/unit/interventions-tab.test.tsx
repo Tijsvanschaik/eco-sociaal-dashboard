@@ -52,13 +52,13 @@ describe("<InterventionsTab />", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: /interventies/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /activiteiten/i })).toBeInTheDocument();
     expect(screen.getAllByText("Fietsen").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Energiecoach").length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole("button", { name: /nieuwe interventie/i }));
+    fireEvent.click(screen.getByRole("button", { name: /nieuwe activiteit/i }));
 
-    expect(screen.getByRole("dialog", { name: /nieuwe interventie/i })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /nieuwe activiteit/i })).toBeInTheDocument();
   });
 
   it("filters interventions by category chip", () => {
@@ -99,10 +99,11 @@ describe("<InterventionsTab />", () => {
       />,
     );
 
-    const categoryButtons = screen.getAllByRole("button", {
+    const [categoryButton] = screen.getAllByRole("button", {
       name: /categorie bewerken: mobiliteit/i,
     });
-    fireEvent.click(categoryButtons[0]!);
+    if (!categoryButton) throw new Error("Expected category edit button");
+    fireEvent.click(categoryButton);
 
     expect(screen.getAllByRole("combobox", { name: /categorie bewerken/i }).length).toBeGreaterThan(
       0,

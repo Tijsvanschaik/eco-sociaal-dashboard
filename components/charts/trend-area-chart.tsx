@@ -1,23 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useMemo } from "react";
+import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartResponsiveContainer,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import { Icon } from "@/components/ui/icon";
 import type { WeeklyTimeseriesRow } from "@/lib/timeseries";
 import { cn } from "@/lib/utils";
-
-type TrendViewMode = "eco" | "social" | "both";
 
 type WeeklyRowExtras = WeeklyTimeseriesRow & {
   cumulativeCo2Kg?: number;
@@ -72,15 +66,7 @@ function buildChartData(data: WeeklyTimeseriesRow[], cumulative: boolean): Weekl
   }, []);
 }
 
-function TrendViewSelector({
-  hasSocial,
-  viewMode,
-  onChange,
-}: {
-  hasSocial: boolean;
-  viewMode: TrendViewMode;
-  onChange: (mode: TrendViewMode) => void;
-}) {
+function TrendLegend({ hasSocial }: { hasSocial: boolean }) {
   if (!hasSocial) {
     return (
       <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
@@ -90,61 +76,16 @@ function TrendViewSelector({
     );
   }
 
-  const options: Array<{ id: TrendViewMode; label: string; icon?: "eco" | "favorite" | "both" }> = [
-    { id: "eco", label: "Eco", icon: "eco" },
-    { id: "social", label: "Sociaal", icon: "favorite" },
-    { id: "both", label: "Eco-sociaal", icon: "both" },
-  ];
-
   return (
-    <div
-      aria-label="Trendweergave"
-      className="inline-flex max-w-full rounded-full bg-surface-container-high p-1"
-      role="radiogroup"
-    >
-      {options.map((option) => {
-        const isActive = viewMode === option.id;
-
-        return (
-          <button
-            key={option.id}
-            aria-checked={isActive}
-            aria-label={option.label}
-            className={cn(
-              "inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors sm:px-4 sm:text-sm",
-              isActive && option.id === "eco" && "bg-tertiary text-tertiary-foreground shadow-sm",
-              isActive && option.id === "social" && "bg-primary text-primary-foreground shadow-sm",
-              isActive &&
-                option.id === "both" &&
-                "bg-card text-foreground shadow-sm ring-1 ring-border/80",
-              !isActive && "text-muted-foreground hover:text-foreground",
-            )}
-            onClick={() => onChange(option.id)}
-            // biome-ignore lint/a11y/useSemanticElements: styled tablist controls; native radio styling doesn't match design
-            role="radio"
-            type="button"
-          >
-            {option.icon === "both" ? (
-              <span aria-hidden className="inline-flex items-center -space-x-0.5">
-                <Icon name="eco" filled className="text-[13px] text-tertiary" />
-                <Icon name="favorite" filled className="text-[13px] text-primary" />
-              </span>
-            ) : (
-              <Icon
-                aria-hidden
-                name={option.icon ?? "eco"}
-                filled
-                className={cn(
-                  "text-sm",
-                  option.id === "eco" ? "text-tertiary" : "text-primary",
-                  isActive && option.id !== "both" && "text-inherit",
-                )}
-              />
-            )}
-            <span className="truncate">{option.label}</span>
-          </button>
-        );
-      })}
+    <div className="inline-flex items-center gap-3 text-xs font-semibold text-muted-foreground">
+      <span className="inline-flex items-center gap-1.5">
+        <Icon aria-hidden name="eco" filled className="text-sm text-tertiary" />
+        Eco
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <Icon aria-hidden name="favorite" filled className="text-sm text-primary" />
+        Sociaal
+      </span>
     </div>
   );
 }
@@ -173,7 +114,6 @@ export function TrendAreaChartBody({
   fillContainer?: boolean;
 }) {
   const hasSocial = useMemo(() => hasTrendSocialData(data), [data]);
-  const [viewMode, setViewMode] = useState<TrendViewMode>("both");
 
   if (data.length === 0) {
     return (
@@ -187,8 +127,8 @@ export function TrendAreaChartBody({
   const chartData = buildChartData(data, cumulative);
   const co2Key = cumulative ? "cumulativeCo2Kg" : "co2SavedKg";
   const socialKey = cumulative ? "cumulativeSocial" : "socialScoreSaved";
-  const showEcoSeries = viewMode === "eco" || viewMode === "both";
-  const showSocialSeries = hasSocial && (viewMode === "social" || viewMode === "both");
+  const showEcoSeries = true;
+  const showSocialSeries = hasSocial;
   const showBoth = showEcoSeries && showSocialSeries;
 
   const config: Record<string, { color: string; label: string }> = {};
@@ -207,7 +147,7 @@ export function TrendAreaChartBody({
 
   return (
     <div className={cn("space-y-4", fillContainer && "flex min-h-0 flex-1 flex-col")}>
-      <TrendViewSelector hasSocial={hasSocial} viewMode={viewMode} onChange={setViewMode} />
+      <TrendLegend hasSocial={hasSocial} />
 
       <ChartContainer
         className={cn("w-full", fillContainer ? "min-h-[260px] flex-1" : "h-[260px]")}
@@ -215,7 +155,7 @@ export function TrendAreaChartBody({
         data-testid="trend-chart"
         style={fillContainer ? { height: "100%" } : { height }}
       >
-        <ResponsiveContainer width="100%" height="100%">
+        <ChartResponsiveContainer initialHeight={height}>
           <AreaChart
             data={chartData}
             margin={{
@@ -306,7 +246,7 @@ export function TrendAreaChartBody({
               />
             ) : null}
           </AreaChart>
-        </ResponsiveContainer>
+        </ChartResponsiveContainer>
       </ChartContainer>
     </div>
   );

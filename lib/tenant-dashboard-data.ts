@@ -312,10 +312,7 @@ async function loadOrgRows(
           userId: registration.user_id,
           teamId: registration.team_id,
           categoryId: intervention?.categoryId ?? null,
-          canEdit:
-            role && userId
-              ? canEditRegistration(role, userId, registration.user_id)
-              : false,
+          canEdit: role && userId ? canEditRegistration(role, userId, registration.user_id) : false,
           quantity: registration.quantity,
           socialQuantity: Number(registration.social_quantity ?? 0),
           happenedOn: registration.happened_on,
@@ -323,7 +320,7 @@ async function loadOrgRows(
           co2KgCached: registration.co2_kg_cached,
           socialScoreCached: Number(registration.social_score_cached ?? 0),
           teamLabel: team?.name ?? "Onbekend team",
-          interventionLabel: intervention?.name ?? "Onbekende interventie",
+          interventionLabel: intervention?.name ?? "Onbekende activiteit",
           ecoUnit: intervention?.ecoUnit ?? null,
           socialUnit: intervention?.socialUnit ?? null,
           categoryName: category?.name ?? null,
@@ -365,9 +362,7 @@ function buildRecentRegistrationsQuery(
     query = query.eq("team_id", feedFilters.teamId);
   }
 
-  const periodStart = feedFilters?.period
-    ? getDashboardFeedPeriodStart(feedFilters.period)
-    : null;
+  const periodStart = feedFilters?.period ? getDashboardFeedPeriodStart(feedFilters.period) : null;
   if (periodStart) {
     query = query.gte("happened_on", periodStart);
   }

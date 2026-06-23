@@ -10,7 +10,7 @@ const photoPathPattern =
 
 export const registrationSchema = z.object({
   teamId: z.string().uuid("Kies een team."),
-  interventionId: z.string().uuid("Kies een interventie."),
+  interventionId: z.string().uuid("Kies een activiteit."),
   quantity: z.coerce
     .number({
       invalid_type_error: "Vul een eco-hoeveelheid in.",

@@ -48,7 +48,7 @@ Openen op <http://localhost:3000>.
 ## Route-groepen
 
 - `app/(app)/[orgSlug]/...` - auth-required intern dashboard
-- `app/(app)/[orgSlug]/beheer` - admin-only beheer voor settings, teams, interventies en users
+- `app/(app)/[orgSlug]/beheer` - admin-only beheer voor settings, teams, activiteiten en users
 - `app/(public)/p/[slug]/...` - publieke share-links (read-only, views)
 - `app/(kiosk)/tv/[slug]` en `app/(kiosk)/embed/[slug]` - TV en intranet-embed
 

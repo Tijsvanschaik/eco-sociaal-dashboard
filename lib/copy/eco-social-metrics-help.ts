@@ -11,9 +11,9 @@ export type MetricsHelpContent = {
 };
 
 export const INTERVENTIONS_OVERVIEW_HELP: MetricsHelpContent = {
-  title: "Interventies en impact",
+  title: "Activiteiten en impact",
   paragraphs: [
-    "Elke interventie is een activiteit die medewerkers kunnen kiezen bij registratie.",
+    "Elke activiteit is iets dat medewerkers kunnen kiezen bij registratie (bijv. Energiecoach of Repaircafé).",
     "Eco en sociaal tellen apart: eco gebruikt uur, km, stuk of kg; sociaal is vrijwel altijd personen.",
     "CO₂-factor × eco-hoeveelheid = kg CO₂. Score-factor × sociale hoeveelheid = sociale score op het dashboard.",
     "Score 1,0 is de standaard bewonersdienst; hoger of lager geeft relatief zwaardere of lichtere sociale impact.",

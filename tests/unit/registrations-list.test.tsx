@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, refresh: vi.fn() }),
 }));
 
-vi.mock("@/app/(app)/[orgSlug]/registraties/actions", () => ({
+vi.mock("@/app/(app)/[orgSlug]/activiteiten/actions", () => ({
   deleteRegistration: vi.fn(),
 }));
 
@@ -180,6 +180,6 @@ describe("<RegistrationsScopeToggle />", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Mijn registraties" }));
 
-    expect(push).toHaveBeenCalledWith("/lev-groep/registraties?year=2026&scope=mine");
+    expect(push).toHaveBeenCalledWith("/lev-groep/activiteiten?year=2026&scope=mine");
   });
 });

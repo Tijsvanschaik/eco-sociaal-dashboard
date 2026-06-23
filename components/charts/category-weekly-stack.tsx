@@ -1,9 +1,13 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartResponsiveContainer,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import type { WeeklyCategoryTimeseriesRow } from "@/lib/timeseries";
 
 type CategoryLegendItem = {
@@ -52,7 +56,7 @@ export function CategoryWeeklyStack({
       <CardContent className="space-y-4">
         {data.length === 0 || activeCategories.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Zodra meerdere categorieen gebruikt worden, zie je hier de spreiding per week.
+            Zodra meerdere categorieën gebruikt worden, zie je hier de spreiding per week.
           </p>
         ) : (
           <>
@@ -65,7 +69,7 @@ export function CategoryWeeklyStack({
                 ]),
               )}
             >
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartResponsiveContainer initialHeight={280}>
                 <BarChart data={data} margin={{ left: 8, right: 8, top: 8 }}>
                   <CartesianGrid vertical={false} strokeDasharray="3 3" />
                   <XAxis
@@ -93,7 +97,7 @@ export function CategoryWeeklyStack({
                     />
                   ))}
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartResponsiveContainer>
             </ChartContainer>
             <div className="flex flex-wrap gap-3 text-sm">
               {activeCategories.map((category) => (

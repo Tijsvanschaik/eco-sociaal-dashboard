@@ -49,7 +49,7 @@ describe("TrendAreaChart", () => {
     expect(screen.getByTestId("trend-chart")).toBeInTheDocument();
   });
 
-  it("start in eco-sociaal weergave wanneer beide metrics data hebben", () => {
+  it("toont gestapelde eco- en sociale legende wanneer beide metrics data hebben", () => {
     render(
       <TrendAreaChartBody
         cumulative
@@ -60,12 +60,9 @@ describe("TrendAreaChart", () => {
       />,
     );
 
-    expect(screen.getByRole("radio", { name: "Eco-sociaal" })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
-    expect(screen.getByRole("radio", { name: "Eco" })).toHaveAttribute("aria-checked", "false");
-    expect(screen.getByRole("radio", { name: "Sociaal" })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByText("Eco")).toBeInTheDocument();
+    expect(screen.getByText("Sociaal")).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Eco-sociaal" })).toBeNull();
   });
 });
 

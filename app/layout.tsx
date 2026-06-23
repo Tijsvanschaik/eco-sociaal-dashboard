@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 
+import { PwaRoot } from "@/components/pwa/pwa-root";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
@@ -12,13 +13,30 @@ const plusJakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+const APP_NAME = "Eco-sociaal Dashboard";
+const APP_DESCRIPTION =
+  "Log eco-sociale activiteiten en volg de CO₂-impact. Zie hoe jullie Earth Overshoot Day verschuift.";
+
 export const metadata: Metadata = {
+  applicationName: APP_NAME,
   title: {
-    default: "Eco-sociaal Dashboard",
+    default: APP_NAME,
     template: "%s - Eco-sociaal Dashboard",
   },
-  description:
-    "Registreer eco-sociale activiteiten, volg de CO2-impact en zie hoe jullie Earth Overshoot Day verschuift.",
+  description: APP_DESCRIPTION,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Eco-sociaal",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -47,7 +65,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-dvh font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          {children}
+          <PwaRoot>{children}</PwaRoot>
         </ThemeProvider>
       </body>
     </html>

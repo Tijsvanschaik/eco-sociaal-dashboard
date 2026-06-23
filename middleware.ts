@@ -8,17 +8,20 @@ import { type NextRequest, NextResponse } from "next/server";
 const RESERVED_FIRST_SEGMENTS = new Set([
   "",
   "login",
+  "admin",
   "auth",
   "api",
   "p",
   "tv",
   "embed",
   "superadmin",
+  "dev",
   "_next",
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",
   "manifest.webmanifest",
+  "~offline",
 ]);
 
 export async function middleware(request: NextRequest) {
@@ -36,8 +39,8 @@ export async function middleware(request: NextRequest) {
     return copyCookies(response, NextResponse.redirect(url));
   }
 
-  // Already-authed users on /login bounce to home, which dispatches to their org.
-  if (pathname === "/login" && user) {
+  // Already-authed users on /login or /admin bounce to home.
+  if ((pathname === "/login" || pathname === "/admin") && user) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";
@@ -60,7 +63,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on all paths except static assets and favicon.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Run on all paths except static assets, service worker, and favicon.
+    "/((?!_next/static|_next/image|favicon.ico|sw\\.js|swe-worker-.*\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

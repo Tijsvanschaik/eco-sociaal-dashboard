@@ -22,7 +22,7 @@ function makeTeam(
     segments: segments.map((segment) => ({
       id: `${id}:${segment.interventionId}`,
       interventionId: segment.interventionId,
-      interventionName: `Interventie ${segment.interventionId}`,
+      interventionName: `Activiteit ${segment.interventionId}`,
       categoryId: `cat-${segment.interventionId}`,
       categoryName: `Categorie ${segment.interventionId}`,
       categoryColor: segment.color,
@@ -69,8 +69,12 @@ describe("<ImpactOverviewCard />", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Eco score")).toBeInTheDocument();
     expect(screen.getByText("Sociale score")).toBeInTheDocument();
-    expect(screen.getByText(/Dit is de som van de CO2 impact/i)).toBeInTheDocument();
-    expect(screen.getByText(/Dit is de som van alle sociale impact/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Dit is de som van de CO₂-impact van alle registraties/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Dit is de som van alle sociale impact van alle registraties/i),
+    ).toBeInTheDocument();
     expect(screen.getByText("4.200")).toBeInTheDocument();
     expect(screen.getByText("LEV Helmond")).toBeInTheDocument();
     expect(screen.getByText("LEV Asten")).toBeInTheDocument();
@@ -119,7 +123,7 @@ describe("<ImpactOverviewCard />", () => {
     );
 
     expect(screen.getByText(/nog geen registraties gekoppeld aan een team/i)).toBeInTheDocument();
-    expect(screen.getByText(/zodra de eerste acties binnenrollen/i)).toBeInTheDocument();
+    expect(screen.getByText(/zodra de eerste registraties binnenrollen/i)).toBeInTheDocument();
   });
 
   it("maakt teamnamen klikbaar wanneer teamLinkBase is gezet", () => {

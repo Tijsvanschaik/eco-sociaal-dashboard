@@ -1,7 +1,4 @@
-import {
-  registrationSchema,
-  registrationUpdateFromFormData,
-} from "@/lib/registrations/schema";
+import { registrationSchema, registrationUpdateFromFormData } from "@/lib/registrations/schema";
 import { describe, expect, it } from "vitest";
 
 const validInput = {
@@ -34,7 +31,7 @@ describe("registrationSchema", () => {
     expect(messages).toEqual(
       expect.arrayContaining([
         "Kies een team.",
-        "Kies een interventie.",
+        "Kies een activiteit.",
         "Eco-hoeveelheid moet groter zijn dan 0.",
         "Sociale hoeveelheid moet groter zijn dan 0.",
       ]),

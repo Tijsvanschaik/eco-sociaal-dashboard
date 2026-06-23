@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { deleteRegistration } from "@/app/(app)/[orgSlug]/registraties/actions";
+import { deleteRegistration } from "@/app/(app)/[orgSlug]/activiteiten/actions";
 import {
   formatRegistrationCo2Kg,
   formatRegistrationDate,
@@ -64,7 +64,7 @@ export function RegistrationsList({
     params.set("year", String(nextYear));
     if (nextTeamId) params.set("team", nextTeamId);
     if (scope === "mine") params.set("scope", "mine");
-    router.push(`/${orgSlug}/registraties?${params.toString()}`);
+    router.push(`/${orgSlug}/activiteiten?${params.toString()}`);
   }
 
   const showAuthorColumn = scope === "all";
@@ -155,7 +155,7 @@ export function RegistrationsList({
                 <RegistrationListRowCard
                   key={row.id}
                   onDelete={() => setDeleteModal({ type: "delete", row })}
-                  onEdit={() => router.push(`/${orgSlug}/registraties/${row.id}/bewerken`)}
+                  onEdit={() => router.push(`/${orgSlug}/activiteiten/${row.id}/bewerken`)}
                   row={row}
                   showAuthor={showAuthorColumn}
                 />
@@ -228,7 +228,7 @@ export function RegistrationsList({
                               icon="edit"
                               label="Registratie bewerken"
                               onClick={() =>
-                                router.push(`/${orgSlug}/registraties/${row.id}/bewerken`)
+                                router.push(`/${orgSlug}/activiteiten/${row.id}/bewerken`)
                               }
                             />
                             <RowIconButton

@@ -7,8 +7,8 @@ import {
   formatRegistrationDate,
   formatRegistrationSocialScore,
 } from "@/components/dashboard/registration-card";
-import { SuperadminMetricGrid } from "@/components/superadmin/superadmin-metric-grid";
 import { SuperadminResetRegistrationsPanel } from "@/components/superadmin-reset-registrations-panel";
+import { SuperadminMetricGrid } from "@/components/superadmin/superadmin-metric-grid";
 import {
   SuperadminPageHeader,
   SuperadminPageMain,
@@ -91,7 +91,7 @@ export default async function SuperadminOrgDetailPage({ params }: { params: Para
             value: formatSocialScoreMetric(data.snapshot.totalSocialScore),
           },
           {
-            description: "Aantal geregistreerde activiteiten.",
+            description: "Aantal registraties.",
             icon: "edit_note",
             label: "Registraties",
             tone: "neutral",
@@ -174,7 +174,9 @@ export default async function SuperadminOrgDetailPage({ params }: { params: Para
                     {registration.quantity} op {formatRegistrationDate(registration.happenedOn)}
                   </p>
                   {registration.note ? (
-                    <p className="mt-2 text-sm leading-relaxed text-foreground">{registration.note}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-foreground">
+                      {registration.note}
+                    </p>
                   ) : null}
                 </li>
               ))}
@@ -231,7 +233,11 @@ function BreakdownPanel({
   const rows = items.filter((item) => item.registrationCount > 0);
 
   return (
-    <DashboardPanel description="Impactverdeling binnen deze tenant." icon="leaderboard" title={title}>
+    <DashboardPanel
+      description="Impactverdeling binnen deze tenant."
+      icon="leaderboard"
+      title={title}
+    >
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">{emptyText}</p>
       ) : (

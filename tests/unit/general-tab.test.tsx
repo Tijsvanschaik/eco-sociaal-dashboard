@@ -8,15 +8,19 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/app/(app)/[orgSlug]/beheer/actions", () => ({
+  removeOrgLogo: vi.fn(),
   updateOrgProfile: vi.fn(),
   updateOrgSettings: vi.fn(),
+  uploadOrgLogo: vi.fn(),
 }));
 
 const context = {
   description: "Welzijnsorganisatie in Brabant",
   eodBaselineDate: "2024-01-15",
   eodBaselineKg: 12500,
+  impactDisclaimer: null,
   logoUrl: null,
+  missionShort: null,
   name: "LEV Groep",
   publicShareEnabled: true,
   publicShareSlug: "lev-groep",
@@ -34,19 +38,26 @@ describe("<GeneralTab />", () => {
     expect(screen.getByText("/p/lev-groep")).toBeInTheDocument();
   });
 
-  it("opens inline editing for organisation name", () => {
-    render(<GeneralTab context={context} />);
+  it("opens inline editing for mission short with character counter", () => {
+    render(
+      <GeneralTab
+        context={{
+          ...context,
+          missionShort: "Welzijnsorganisatie die eco-sociale impact zichtbaar maakt.",
+        }}
+      />,
+    );
 
-    fireEvent.click(screen.getByRole("button", { name: /organisatienaam bewerken/i }));
+    fireEvent.click(screen.getByRole("button", { name: /missie kort bewerken/i }));
 
-    expect(screen.getByDisplayValue("LEV Groep")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /missie kort bewerken/i })).toBeInTheDocument();
+    expect(screen.getByText(/tekens over/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Opslaan$/i })).toBeInTheDocument();
   });
 
-  it("opens inline editing for description", () => {
+  it("shows logo upload controls in the profile preview", () => {
     render(<GeneralTab context={context} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /beschrijving bewerken/i }));
-
-    expect(screen.getByDisplayValue("Welzijnsorganisatie in Brabant")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /logo uploaden/i })).toBeInTheDocument();
   });
 });

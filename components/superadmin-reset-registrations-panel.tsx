@@ -35,7 +35,7 @@ export function SuperadminResetRegistrationsPanel({ orgId, registrationCount }: 
   return (
     <DashboardPanel
       className="border border-destructive/30"
-      description="Verwijdert alle registraties van deze tenant. Leden, teams en interventies blijven bestaan. Storage-foto's worden niet automatisch opgeruimd."
+      description="Verwijdert alle registraties van deze tenant. Leden, teams en activiteiten blijven bestaan. Storage-foto's worden niet automatisch opgeruimd."
       icon="warning"
       iconTone="neutral"
       title="Gevarenzone"

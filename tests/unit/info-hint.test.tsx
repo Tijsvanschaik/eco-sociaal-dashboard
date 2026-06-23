@@ -6,12 +6,7 @@ import { getEcoQuantityHelp } from "@/lib/copy/eco-social-metrics-help";
 
 describe("<InfoHint />", () => {
   it("shows help content when the trigger is clicked", () => {
-    render(
-      <InfoHint
-        content={getEcoQuantityHelp("km")}
-        label="Uitleg eco-hoeveelheid"
-      />,
-    );
+    render(<InfoHint content={getEcoQuantityHelp("km")} label="Uitleg eco-hoeveelheid" />);
 
     expect(screen.queryByText(/kilometers met een duurzaam alternatief/i)).not.toBeInTheDocument();
 

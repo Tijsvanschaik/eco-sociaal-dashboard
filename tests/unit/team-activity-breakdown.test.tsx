@@ -57,8 +57,6 @@ describe("<TeamActivityBreakdown />", () => {
   it("toont empty state zonder segments", () => {
     render(<TeamActivityBreakdown periodLabel="2026" segments={[]} />);
 
-    expect(
-      screen.getByText(/nog geen activiteiten geregistreerd voor dit team/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/nog geen registraties voor dit team/i)).toBeInTheDocument();
   });
 });

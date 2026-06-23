@@ -20,14 +20,13 @@ export const tableSectionBorderClassName = "border-l border-border/50";
 
 export const mobileRowCardClassName =
   "rounded-[1.25rem] border border-border/60 bg-card p-4 shadow-sm";
-export const mobileRowCardFieldClassName = "space-y-1";
+export const mobileRowCardFieldClassName = "space-y-1.5";
 export const mobileRowCardLabelClassName = "text-xs font-medium text-muted-foreground";
-export const mobileDataListClassName = "mt-6 space-y-3 md:hidden";
-export const desktopTableWrapClassName = "mt-6 hidden overflow-x-hidden md:block -mx-6 sm:-mx-8";
+export const mobileDataListClassName = "mt-6 space-y-3 lg:hidden";
+export const desktopTableWrapClassName = "mt-6 -mx-6 hidden overflow-x-auto sm:-mx-8 lg:block";
 
 /** Wide data tables (e.g. registraties) that may still need horizontal scroll on smaller desktops. */
-export const desktopTableScrollClassName =
-  "mt-6 hidden overflow-x-auto md:block -mx-6 sm:-mx-8";
+export const desktopTableScrollClassName = "mt-6 hidden overflow-x-auto md:block -mx-6 sm:-mx-8";
 
 export const tableBodyCellClassName = "max-w-0 overflow-hidden px-3 py-3.5";
 export const tableBodyCellRightClassName = `${tableBodyCellClassName} text-right tabular-nums`;

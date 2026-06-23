@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TenantAppShell } from "@/components/app-shell/tenant-app-shell";
 
@@ -8,10 +8,26 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
+beforeEach(() => {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+});
+
 const org = { id: "org-1", name: "LEV Groep", slug: "lev-groep" };
 
 describe("<TenantAppShell />", () => {
-  it("renders dashboard + registratie for worker role without instellingen", () => {
+  it("renders dashboard + registraties for worker role without instellingen", () => {
     render(
       <TenantAppShell
         org={org}
@@ -123,7 +139,7 @@ describe("<TenantAppShell />", () => {
     expect(screen.getAllByRole("link", { name: /superadmin/i }).length).toBeGreaterThan(0);
   });
 
-  it("renders the CTA pointing at the registratie page", () => {
+  it("renders the CTA pointing at the new activity page", () => {
     render(
       <TenantAppShell
         org={org}
@@ -136,9 +152,9 @@ describe("<TenantAppShell />", () => {
       </TenantAppShell>,
     );
 
-    const ctaLinks = screen.getAllByRole("link", { name: /nieuwe registratie/i });
+    const ctaLinks = screen.getAllByRole("link", { name: /activiteit registreren/i });
     expect(ctaLinks.length).toBeGreaterThan(0);
-    expect(ctaLinks[0]).toHaveAttribute("href", "/lev-groep/registratie");
+    expect(ctaLinks[0]).toHaveAttribute("href", "/lev-groep/activiteit/nieuw");
   });
 
   it("displays org initials when no logo is configured", () => {

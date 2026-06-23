@@ -91,7 +91,7 @@ export function InterventionPicker({
           <div className="flex flex-wrap items-center gap-2">
             <CategoryFilterButton
               active={categoryFilter === null}
-              ariaLabel="Alle categorieën"
+              ariaLabel="Alle activiteiten"
               icon="apps"
               onClick={() => setCategoryFilter(null)}
               title={`Alle (${interventions.length})`}

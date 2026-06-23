@@ -22,7 +22,7 @@ export function calculateCo2(quantity: number, factor: number): number {
 
 /**
  * Sociale score op registratie-niveau: sociale hoeveelheid × factor per
- * sociale eenheid (ingesteld op de interventie). Zelfde afronding als CO₂.
+ * sociale eenheid (ingesteld op de activiteit). Zelfde afronding als CO₂.
  */
 export function calculateSocialScore(quantity: number, factorPerUnit: number): number {
   if (!Number.isFinite(quantity) || !Number.isFinite(factorPerUnit)) {

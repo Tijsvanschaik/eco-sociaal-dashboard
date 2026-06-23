@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import type { DashboardFeedFilters, DashboardFeedPeriod } from "@/lib/registrations/dashboard-filters";
+import type {
+  DashboardFeedFilters,
+  DashboardFeedPeriod,
+} from "@/lib/registrations/dashboard-filters";
 import type { TeamOption } from "@/lib/tenant-dashboard-data";
 import { cn } from "@/lib/utils";
 

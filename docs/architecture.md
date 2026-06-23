@@ -11,14 +11,27 @@ Hosting: Vercel (app) + Supabase (DB/auth/storage).
 - `(public)` — auth-entry en read-only share-links via `/login` en `/p/[slug]`.
 - `(kiosk)` — TV/embed, no-chrome, no-auth.
 
+## Terminologie (UI vs. database)
+
+| Database / code | UI (NL, vanaf Fase 6) | Voorbeeld |
+| --- | --- | --- |
+| `categories` | **Thema** | Energie & Besparing |
+| `interventions` | **Categorie** | Energiecoach |
+| `registrations` | **Activiteit** | Ingevoerde actie op datum |
+
+Zie ADR [`docs/decisions/0009-impact-metaphors-terminology-and-content.md`](decisions/0009-impact-metaphors-terminology-and-content.md).
+
 ## Route-structuur
+
+*Huidige routes; Fase 6 voegt `/activiteit/nieuw` en `/activiteiten` toe met redirects.*
+
 - `/` — dispatcher. Uitgelogd -> `/login`; ingelogd -> eerste org-dashboard of `/superadmin`.
 - `/login` — inlogpagina (magic-link + tijdelijke wachtwoordfallback).
 - `/(app)/[orgSlug]/dashboard` — read-only tenantoverzicht; KPI's en charts gefilterd op **huidig kalenderjaar** (`happened_on`).
-- `/(app)/[orgSlug]/teams/[teamId]` — team-detailpagina (drill-down vanaf dashboard); activiteiten per interventie, trend, recente registraties gefilterd op team.
-- `/(app)/[orgSlug]/registraties` — overzicht van registraties (workers: eigen; admins: alle org-registraties met bewerken/verwijderen).
-- `/(app)/[orgSlug]/registraties/[id]/bewerken` — bestaande registratie bewerken (hergebruikt registratieformulier).
-- `/(app)/[orgSlug]/registratie` — nieuwe registratie aanmaken (sidebar-CTA).
+- `/(app)/[orgSlug]/teams/[teamId]` — team-detailpagina (drill-down vanaf dashboard); activiteiten per categorie, trend, recente activiteiten gefilterd op team.
+- `/(app)/[orgSlug]/registraties` — overzicht activiteiten *(→ `/activiteiten` in Fase 6)*.
+- `/(app)/[orgSlug]/registraties/[id]/bewerken` — activiteit bewerken *(→ `/activiteiten/[id]/bewerken`)*.
+- `/(app)/[orgSlug]/registratie` — nieuwe activiteit *(→ `/activiteit/nieuw`)*.
 - `/(app)/[orgSlug]/instellingen` — admin-only orgbeheer (voorheen `/beheer`).
 - `/superadmin` — platform-overzicht, read-only over alle tenants heen.
 - `/superadmin/orgs/new` — nieuwe organisatie aanmaken + eerste admin uitnodigen.
@@ -35,7 +48,7 @@ User -> Server Action -> Zod -> Supabase (RLS) -> Postgres.
 
 ## Impactmodel (eco + sociaal)
 
-Per **interventie** (admin in Instellingen):
+Per **categorie** (admin in Instellingen; DB: `interventions`):
 
 | Veld | Betekenis |
 | --- | --- |
@@ -44,7 +57,7 @@ Per **interventie** (admin in Instellingen):
 | `social_unit` | Vrij tekstlabel voor sociale telling (bijv. `personen`) |
 | `social_score_factor` | Relatieve score per sociale eenheid |
 
-Per **registratie** (worker/admin):
+Per **activiteit** (worker/admin; DB: `registrations`):
 
 | Veld | Berekening |
 | --- | --- |
@@ -64,17 +77,15 @@ Berekening per registratie: `social_score_cached = social_quantity × social_sco
 
 **Dashboard-copy:** de som van `social_score_cached` presenteren we als **“harten bereikt”** — een gewogen proxy voor bereik, geen letterlijke unieke personen-telling. Vergelijk ADR [`docs/decisions/0007-lev-intervention-impact-factors.md`](decisions/0007-lev-intervention-impact-factors.md) (schaalsysteem sociale score).
 
-### Impact-hero (rotatie)
+### Impact-hero — Illustratie X (gepland, stream 3)
 
-Het interne dashboard roteert linksboven tussen drie vertalingen (jaar-filter):
+LEV: **bomen geplant** · **harten bereikt** (twee slides; water/catalogus later). Zie ADR 0009 + `docs/progress.md` stream 3.
 
-1. **Bomen geplant** — `treesEquivalent(totalCo2Kg)` (~22 kg CO₂-opname per boom/jaar).
-2. **Harten bereikt** — `totalSocialScore` (afgerond).
-3. **Km autorijden vermeden** — `totalCo2Kg / 0,17` (indicatieve mobiliteits-proxy).
-
-Implementatie: `lib/impact-stories.ts`, `components/dashboard/impact-story-rotator.tsx`.
+**Huidige implementatie (tot Fase 6):** `lib/impact-stories.ts`, `ImpactStoryRotator` (incl. km-slide).
 
 ## Chart-architectuur
+
+**Gepland (stream 4):** trend + donut **gestapeld** eco+sociaal; **geen** Eco/Sociaal-tabs.
 - Intern dashboard: weekreeksen en stacked category-series worden server-side opgebouwd uit `registrations` via `lib/timeseries.ts`.
 - Publieke surfaces (`/p`, `/tv`, `/embed`) lezen via `lib/public-dashboard.ts` één gedeelde data-loader die totals (`public_dashboard_totals`), aggregaat-kolommen op `registrations`, `public_recent_registrations` en optioneel `public_dashboard_timeseries` combineert tot een `DashboardSnapshot` met dezelfde shape als het interne dashboard.
 - De UI gebruikt `recharts` met kleine gedeelde wrappers in `components/ui/chart.tsx` en `components/charts/*`.
@@ -101,4 +112,7 @@ Implementatie: `lib/impact-stories.ts`, `components/dashboard/impact-story-rotat
 2. Regenereer types in Supabase dashboard en plak ze in `supabase/types/supabase.ts`.
 
 ## Open vragen
-- [ ] Deploy-URL en embed-whitelist definitief zetten (staging; productie volgt later).
+
+- [ ] Embed-whitelist (wacht op LEV-domeinen).
+- [ ] Stream 6: missie + disclaimer op dashboard, slides, `/p` (knoop open).
+- [ ] Rich-text editor keuze voor org-profiel (Markdown vs. WYSIWYG).
