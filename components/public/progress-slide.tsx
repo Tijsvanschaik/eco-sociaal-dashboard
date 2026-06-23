@@ -1,4 +1,4 @@
-import { CategoryDonutChartBody } from "@/components/charts/category-donut-chart";
+import { CategoryDonutPanel } from "@/components/charts/category-donut-chart";
 import { TrendAreaChartBody } from "@/components/charts/trend-area-chart";
 import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
 import type { DashboardSnapshot } from "@/lib/dashboard";
@@ -67,25 +67,20 @@ export function ProgressSlide({
       >
         <TrendAreaChartBody cumulative data={timeseries} fillContainer />
       </DashboardPanel>
-      <DashboardPanel
-        description={`Verdeling per categorie · kg CO₂ en sociale punten · ${periodLabel}`}
-        icon="donut_small"
-        iconTone="primary"
+      <CategoryDonutPanel
+        description={`Verdeling per categorie · kg CO₂ of sociale punten · ${periodLabel}`}
+        items={snapshot.categoryBreakdown.map((item) => ({
+          id: item.id,
+          name: item.name,
+          color: item.color,
+          co2SavedKg: item.co2SavedKg,
+          socialScoreTotal: item.socialScoreTotal,
+          registrationCount: item.registrationCount,
+          eodDays: item.eodDays,
+        }))}
+        periodLabel={periodLabel}
         title="Impact per categorie"
-      >
-        <CategoryDonutChartBody
-          items={snapshot.categoryBreakdown.map((item) => ({
-            id: item.id,
-            name: item.name,
-            color: item.color,
-            co2SavedKg: item.co2SavedKg,
-            socialScoreTotal: item.socialScoreTotal,
-            registrationCount: item.registrationCount,
-            eodDays: item.eodDays,
-          }))}
-          periodLabel={periodLabel}
-        />
-      </DashboardPanel>
+      />
     </section>
   );
 }

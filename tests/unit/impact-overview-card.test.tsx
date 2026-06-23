@@ -107,7 +107,7 @@ describe("<ImpactOverviewCard />", () => {
     const toggle = screen.getByRole("button", { name: /toon alle 7 teams/i });
     fireEvent.click(toggle);
     expect(screen.getByText("Team 6")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /toon top 5/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /toon minder/i })).toBeInTheDocument();
   });
 
   it("toont een lege-staat wanneer er geen teamdata is", () => {
