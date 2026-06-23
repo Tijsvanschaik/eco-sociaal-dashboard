@@ -2,10 +2,21 @@
 
 import { type ReactNode, useMemo, useState } from "react";
 
+import { ImpactHeroSandboxFrame } from "@/components/dashboard/impact-hero-sandbox-frame";
+import type { ImpactHeroSandboxViewport } from "@/components/dashboard/impact-hero-sandbox-frame";
+import { ImpactHeroSection } from "@/components/dashboard/impact-hero-section";
 import { ImpactIslandStage } from "@/components/impact-metaphors/island/impact-island-stage";
+import { IslandFinetunePanel } from "@/components/impact-metaphors/island/island-finetune-panel";
 import { LandscapeMetaphorStage } from "@/components/impact-metaphors/landscape/landscape-metaphor-stage";
 import type { LandscapeViewport } from "@/components/impact-metaphors/landscape/landscape-spawn-layer";
 import { buildMetaphorUnits } from "@/lib/impact-metaphors";
+import { gridDimensionForCount } from "@/lib/impact-metaphors/island-grid";
+import { islandCellCapacity } from "@/lib/impact-metaphors/island-shape";
+import {
+  DEFAULT_ISLAND_TUNING,
+  type IslandTuning,
+  cloneIslandTuning,
+} from "@/lib/impact-metaphors/island-tuning";
 import { cn } from "@/lib/utils";
 
 const PRESETS = [
@@ -18,15 +29,21 @@ const PRESETS = [
 
 type PrototypeMode = "heuvels" | "island";
 type IslandMetric = "eco" | "social";
+type IslandPreviewMode = "finetune" | "productie";
+type SandboxViewport = ImpactHeroSandboxViewport;
 
 export function ImpactVisualPlayground() {
   const [co2Kg, setCo2Kg] = useState(44);
   const [socialScore, setSocialScore] = useState(12);
-  const [viewport, setViewport] = useState<LandscapeViewport>("mobile");
+  const [viewport, setViewport] = useState<SandboxViewport>("mobile");
   const [mode, setMode] = useState<PrototypeMode>("island");
   const [islandMetric, setIslandMetric] = useState<IslandMetric>("eco");
+  const [islandPreviewMode, setIslandPreviewMode] = useState<IslandPreviewMode>("productie");
   const [paused, setPaused] = useState(false);
   const [stageKey, setStageKey] = useState(0);
+  const [islandTuning, setIslandTuning] = useState<IslandTuning>(() =>
+    cloneIslandTuning(DEFAULT_ISLAND_TUNING),
+  );
 
   const units = useMemo(
     () =>
@@ -47,200 +64,274 @@ export function ImpactVisualPlayground() {
   const peopleUnit = units.find((unit) => unit.id === "people");
   const activeIslandUnit = islandMetric === "eco" ? treeUnit : peopleUnit;
   const islandSeed = `${stageKey}-${co2Kg}-${socialScore}-${islandMetric}`;
+  const carouselSeedPrefix = `${stageKey}-${co2Kg}-${socialScore}`;
+  const landscapeViewport: LandscapeViewport = viewport === "tv" ? "tv" : "mobile";
 
   const restartAnimation = () => setStageKey((value) => value + 1);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-8">
-      <header className="space-y-2">
-        <p className="text-xs font-bold uppercase tracking-widest text-primary">
-          Sandbox · dev only
-        </p>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-          Impact-visualisatie prototypes
-        </h1>
-        <p className="max-w-2xl text-muted-foreground">
-          Vergelijk heuvel-scene vs. isometrisch eiland (Forest-achtig grid). Het eiland schaalt
-          mee: 4×4 → 8×8 → 16×16 … met vaste tegel-posities en squash-&amp;-stretch landing.
-        </p>
-      </header>
-
-      <div className="flex flex-wrap gap-2">
-        <ModeToggle active={mode === "heuvels"} onClick={() => setMode("heuvels")}>
-          Heuvels
-        </ModeToggle>
-        <ModeToggle active={mode === "island"} onClick={() => setMode("island")}>
-          Isometrisch eiland
-        </ModeToggle>
-      </div>
-
-      {mode === "island" ? (
-        <div className="flex flex-wrap gap-2">
-          <ModeToggle
-            active={islandMetric === "eco"}
-            onClick={() => {
-              setIslandMetric("eco");
-              restartAnimation();
-            }}
-          >
-            Eco · bomen
-          </ModeToggle>
-          <ModeToggle
-            active={islandMetric === "social"}
-            onClick={() => {
-              setIslandMetric("social");
-              restartAnimation();
-            }}
-          >
-            Sociaal · poppetjes
-          </ModeToggle>
-        </div>
-      ) : null}
-
-      <div
-        className={cn(
-          "mx-auto w-full transition-[max-width]",
-          viewport === "tv" ? "max-w-5xl" : "max-w-md",
-          mode === "island" && viewport === "tv" && "max-w-5xl",
-        )}
-      >
-        {mode === "heuvels" ? (
-          <LandscapeMetaphorStage
-            key={stageKey}
-            paused={paused}
-            units={units}
-            viewport={viewport}
-          />
-        ) : activeIslandUnit ? (
-          <ImpactIslandStage
-            key={`${islandSeed}-${activeIslandUnit.id}`}
-            animateSpawn={!paused}
-            entityType={islandMetric === "eco" ? "tree" : "person"}
-            formattedValue={activeIslandUnit.formattedValue}
-            iconCount={activeIslandUnit.iconCount}
-            seed={islandSeed}
-            title={activeIslandUnit.title}
-            unitsPerIcon={activeIslandUnit.unitsPerIcon}
-            viewport={viewport}
-          />
-        ) : (
-          <div className="flex aspect-[4/3] items-center justify-center rounded-[2rem] bg-[#163816] text-sm text-white/70">
-            Geen data voor deze metric — pas de sliders aan.
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <header className="shrink-0 border-b border-border/60 bg-background px-4 py-3 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
+              Sandbox · dev only
+            </p>
+            <h1 className="truncate text-lg font-extrabold tracking-tight text-foreground sm:text-xl">
+              Impact-visualisatie prototypes
+            </h1>
           </div>
-        )}
-      </div>
 
-      <div className="grid gap-6 rounded-[2rem] bg-card p-6 shadow-[0_20px_40px_rgba(54,50,45,0.04)] lg:grid-cols-2">
-        <fieldset className="space-y-5">
-          <legend className="text-sm font-bold text-foreground">Data</legend>
+          <div className="flex flex-wrap items-center gap-2">
+            <ModeToggle active={mode === "heuvels"} onClick={() => setMode("heuvels")}>
+              Heuvels
+            </ModeToggle>
+            <ModeToggle active={mode === "island"} onClick={() => setMode("island")}>
+              Eiland
+            </ModeToggle>
 
-          <label className="block space-y-2">
-            <span className="flex items-center justify-between text-sm font-medium">
-              Eco score (kg CO₂)
-              <span className="tabular-nums text-muted-foreground">{co2Kg}</span>
-            </span>
-            <input
-              className="w-full accent-tertiary"
-              max={500}
-              min={0}
-              onChange={(event) => setCo2Kg(Number(event.target.value))}
-              step={1}
-              type="range"
-              value={co2Kg}
-            />
-          </label>
+            {mode === "island" && islandPreviewMode === "finetune" ? (
+              <>
+                <span className="hidden h-6 w-px bg-border sm:block" />
+                <ModeToggle
+                  active={islandMetric === "eco"}
+                  onClick={() => {
+                    setIslandMetric("eco");
+                    restartAnimation();
+                  }}
+                >
+                  Eco
+                </ModeToggle>
+                <ModeToggle
+                  active={islandMetric === "social"}
+                  onClick={() => {
+                    setIslandMetric("social");
+                    restartAnimation();
+                  }}
+                >
+                  Sociaal
+                </ModeToggle>
+              </>
+            ) : null}
 
-          <label className="block space-y-2">
-            <span className="flex items-center justify-between text-sm font-medium">
-              Sociale score (punten)
-              <span className="tabular-nums text-muted-foreground">{socialScore}</span>
-            </span>
-            <input
-              className="w-full accent-primary"
-              max={200}
-              min={0}
-              onChange={(event) => setSocialScore(Number(event.target.value))}
-              step={1}
-              type="range"
-              value={socialScore}
-            />
-          </label>
-
-          <div className="flex flex-wrap gap-2">
-            {PRESETS.map((preset) => (
-              <button
-                key={preset.label}
-                className="rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-accent"
-                onClick={() => {
-                  setCo2Kg(preset.co2);
-                  setSocialScore(preset.social);
-                  restartAnimation();
-                }}
-                type="button"
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        <fieldset className="space-y-5">
-          <legend className="text-sm font-bold text-foreground">Weergave</legend>
-
-          <div className="flex flex-wrap gap-2">
+            <span className="hidden h-6 w-px bg-border sm:block" />
             <ViewportToggle active={viewport === "mobile"} onClick={() => setViewport("mobile")}>
               Mobiel
             </ViewportToggle>
+            {mode === "island" ? (
+              <ViewportToggle
+                active={viewport === "desktop"}
+                onClick={() => setViewport("desktop")}
+              >
+                Desktop
+              </ViewportToggle>
+            ) : null}
             <ViewportToggle active={viewport === "tv"} onClick={() => setViewport("tv")}>
-              TV / kiosk
+              TV
             </ViewportToggle>
           </div>
+        </div>
+      </header>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-              onClick={() => setPaused((value) => !value)}
-              type="button"
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <section
+          className={cn(
+            "relative flex min-w-0 flex-1 justify-center p-4 sm:p-6",
+            mode === "island" && islandPreviewMode === "productie"
+              ? "items-start overflow-y-auto lg:items-center"
+              : "min-h-[40dvh] items-center lg:min-h-0",
+          )}
+        >
+          {mode === "heuvels" ? (
+            <div
+              className={cn("h-full w-full", landscapeViewport === "tv" ? "max-w-5xl" : "max-w-lg")}
             >
-              {paused ? "Hervat animatie" : "Pauzeer"}
-            </button>
-            <button
-              className="rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-foreground"
-              onClick={restartAnimation}
-              type="button"
-            >
-              Opnieuw afspelen
-            </button>
+              <LandscapeMetaphorStage
+                key={stageKey}
+                className="h-full max-h-full"
+                paused={paused}
+                units={units}
+                viewport={landscapeViewport}
+              />
+            </div>
+          ) : islandPreviewMode === "productie" ? (
+            <ImpactHeroSandboxFrame viewport={viewport}>
+              <ImpactHeroSection
+                carouselPaused={paused}
+                carouselSeedPrefix={carouselSeedPrefix}
+                fitToContainer={viewport === "tv"}
+                islandTuning={islandTuning}
+                totalCo2Kg={co2Kg}
+                totalSocialScore={socialScore}
+              />
+            </ImpactHeroSandboxFrame>
+          ) : (
+            <div className={cn("h-full w-full", viewport === "tv" ? "max-w-5xl" : "max-w-lg")}>
+              <ImpactIslandStage
+                key={islandSeed}
+                animateSpawn={!paused && (activeIslandUnit?.iconCount ?? 0) > 0}
+                className="h-full max-h-full"
+                entityType={islandMetric === "eco" ? "tree" : "person"}
+                fillContainer
+                formattedValue={activeIslandUnit?.formattedValue ?? "0"}
+                iconCount={activeIslandUnit?.iconCount ?? 0}
+                phase="idle"
+                seed={islandSeed}
+                title={
+                  activeIslandUnit?.title ??
+                  (islandMetric === "eco" ? "bomen geplant" : "mensen bereikt")
+                }
+                tuning={islandTuning}
+                unitsPerIcon={activeIslandUnit?.unitsPerIcon ?? 1}
+                viewport={viewport === "tv" ? "tv" : "mobile"}
+              />
+            </div>
+          )}
+        </section>
+
+        <aside className="flex min-h-0 w-full shrink-0 flex-col gap-4 overflow-y-auto border-t border-border/60 bg-card/40 p-4 sm:p-5 lg:w-[min(420px,38vw)] lg:border-l lg:border-t-0">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+            <fieldset className="space-y-4">
+              <legend className="text-sm font-bold text-foreground">Data</legend>
+
+              <label className="block space-y-2">
+                <span className="flex items-center justify-between text-sm font-medium">
+                  Eco score (kg CO₂)
+                  <span className="tabular-nums text-muted-foreground">{co2Kg}</span>
+                </span>
+                <input
+                  className="w-full accent-tertiary"
+                  max={2000}
+                  min={0}
+                  onChange={(event) => setCo2Kg(Number(event.target.value))}
+                  step={1}
+                  type="range"
+                  value={co2Kg}
+                />
+              </label>
+
+              <label className="block space-y-2">
+                <span className="flex items-center justify-between text-sm font-medium">
+                  Sociale score (punten)
+                  <span className="tabular-nums text-muted-foreground">{socialScore}</span>
+                </span>
+                <input
+                  className="w-full accent-primary"
+                  max={200}
+                  min={0}
+                  onChange={(event) => setSocialScore(Number(event.target.value))}
+                  step={1}
+                  type="range"
+                  value={socialScore}
+                />
+              </label>
+
+              <div className="flex flex-wrap gap-2">
+                {PRESETS.map((preset) => (
+                  <button
+                    key={preset.label}
+                    className="rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-accent"
+                    onClick={() => {
+                      setCo2Kg(preset.co2);
+                      setSocialScore(preset.social);
+                      restartAnimation();
+                    }}
+                    type="button"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="space-y-4">
+              <legend className="text-sm font-bold text-foreground">Weergave</legend>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                  onClick={() => setPaused((value) => !value)}
+                  type="button"
+                >
+                  {paused ? "Hervat" : "Pauzeer"}
+                </button>
+                <button
+                  className="rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-foreground"
+                  onClick={restartAnimation}
+                  type="button"
+                >
+                  Opnieuw
+                </button>
+              </div>
+
+              {mode === "island" ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Sandbox-weergave</p>
+                  <div className="flex flex-wrap gap-2">
+                    <PreviewModeToggle
+                      active={islandPreviewMode === "productie"}
+                      onClick={() => setIslandPreviewMode("productie")}
+                    >
+                      Productie hero
+                    </PreviewModeToggle>
+                    <PreviewModeToggle
+                      active={islandPreviewMode === "finetune"}
+                      onClick={() => setIslandPreviewMode("finetune")}
+                    >
+                      Finetune eiland
+                    </PreviewModeToggle>
+                  </div>
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    Productie hero is 1:1 het dashboard-blok (badge, carrousel, score-tegels).
+                    Finetune is alleen het eiland voor sprite-sliders. Logica/layout wijzig je in
+                    productie hero; defaults test je in finetune.
+                  </p>
+                </div>
+              ) : null}
+
+              <dl className="grid grid-cols-2 gap-2 text-sm">
+                <Stat label="Bomen (eq.)" value={treeUnit?.numericValue ?? 0} />
+                <Stat label="Mensen (eq.)" value={peopleUnit?.numericValue ?? 0} />
+                <Stat label="Iconen eco" value={treeUnit?.iconCount ?? 0} />
+                <Stat label="Iconen sociaal" value={peopleUnit?.iconCount ?? 0} />
+                {mode === "island" && islandPreviewMode === "finetune" && activeIslandUnit ? (
+                  <>
+                    <Stat
+                      label="Grid"
+                      value={gridDimensionForCount(
+                        activeIslandUnit.iconCount,
+                        islandTuning.islandShape,
+                        islandTuning.maxGridSize,
+                      )}
+                    />
+                    <Stat
+                      label="Tegels"
+                      value={islandCellCapacity(
+                        gridDimensionForCount(
+                          activeIslandUnit.iconCount,
+                          islandTuning.islandShape,
+                          islandTuning.maxGridSize,
+                        ),
+                        islandTuning.islandShape,
+                      )}
+                    />
+                  </>
+                ) : null}
+              </dl>
+            </fieldset>
           </div>
 
-          <dl className="grid grid-cols-2 gap-3 text-sm">
-            <Stat label="Bomen (eq.)" value={treeUnit?.numericValue ?? 0} />
-            <Stat label="Mensen (eq.)" value={peopleUnit?.numericValue ?? 0} />
-            <Stat label="Iconen eco" value={treeUnit?.iconCount ?? 0} />
-            <Stat label="Iconen sociaal" value={peopleUnit?.iconCount ?? 0} />
-            {mode === "island" && activeIslandUnit ? (
-              <Stat
-                label="Grid"
-                value={
-                  activeIslandUnit.iconCount <= 16
-                    ? 4
-                    : activeIslandUnit.iconCount <= 64
-                      ? 8
-                      : activeIslandUnit.iconCount <= 256
-                        ? 16
-                        : 32
-                }
-              />
-            ) : null}
-          </dl>
-        </fieldset>
-      </div>
+          {mode === "island" ? (
+            <IslandFinetunePanel onChange={setIslandTuning} tuning={islandTuning} />
+          ) : null}
 
-      {units.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground">
-          Geen units — zet minstens één slider boven 0.
-        </p>
-      ) : null}
+          {units.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Geen units — zet minstens één slider boven 0.
+            </p>
+          ) : null}
+        </aside>
+      </div>
     </div>
   );
 }
@@ -257,7 +348,7 @@ function ModeToggle({
   return (
     <button
       className={cn(
-        "rounded-full px-4 py-2 text-sm font-semibold transition",
+        "rounded-full px-3 py-1.5 text-sm font-semibold transition sm:px-4 sm:py-2",
         active
           ? "bg-tertiary text-tertiary-foreground"
           : "bg-secondary text-foreground hover:bg-accent",
@@ -282,9 +373,34 @@ function ViewportToggle({
   return (
     <button
       className={cn(
-        "rounded-full px-4 py-2 text-sm font-semibold transition",
+        "rounded-full px-3 py-1.5 text-sm font-semibold transition sm:px-4 sm:py-2",
         active
           ? "bg-primary text-primary-foreground"
+          : "bg-secondary text-foreground hover:bg-accent",
+      )}
+      onClick={onClick}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
+function PreviewModeToggle({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={cn(
+        "rounded-full px-3 py-1.5 text-sm font-semibold transition",
+        active
+          ? "bg-tertiary text-tertiary-foreground"
           : "bg-secondary text-foreground hover:bg-accent",
       )}
       onClick={onClick}

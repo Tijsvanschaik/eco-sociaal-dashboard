@@ -1,108 +1,127 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { useState } from "react";
 
 import {
   IslandPersonSprite,
   IslandTreeSprite,
 } from "@/components/impact-metaphors/island/island-sprites";
 import type { IslandEntityPlacement } from "@/lib/impact-metaphors/island-grid";
-import { gridToScreen } from "@/lib/impact-metaphors/island-grid";
+import { ISLAND_ENTITY_POP_MS } from "@/lib/impact-metaphors/island-slide-timing";
+import type { IslandTuning } from "@/lib/impact-metaphors/island-tuning";
+import type { MetaphorSlidePhase } from "@/lib/impact-metaphors/slide-timing";
 
 export type IslandEntityType = "person" | "tree";
 
 type IslandEntityProps = {
+  allowSway?: boolean;
+  anchored?: boolean;
   animateSpawn: boolean;
+  carouselTiming?: boolean;
+  despawnDelayMs?: number;
   entity: IslandEntityPlacement;
+  phase?: MetaphorSlidePhase;
   spawnDelayMs: number;
+  tuning: IslandTuning;
   type: IslandEntityType;
 };
 
-export function IslandEntity({ animateSpawn, entity, spawnDelayMs, type }: IslandEntityProps) {
+export function IslandEntity({
+  allowSway = true,
+  anchored = false,
+  animateSpawn,
+  carouselTiming = false,
+  despawnDelayMs = 0,
+  entity,
+  phase = "idle",
+  spawnDelayMs,
+  tuning,
+  type,
+}: IslandEntityProps) {
   const reduceMotion = useReducedMotion();
-  const [hovered, setHovered] = useState(false);
-  const { x, y } = gridToScreen(entity.col, entity.row);
+  const { baselineOffset, renderY, x } = entity;
   const swayDelay = (entity.col * 0.17 + entity.row * 0.23) % 2;
-  const delaySec = spawnDelayMs / 1000;
+  const isDespawning = phase === "despawn";
+  const delaySec = (isDespawning ? despawnDelayMs : spawnDelayMs) / 1000;
+  const spawnDuration = carouselTiming ? ISLAND_ENTITY_POP_MS / 1000 : 0.65;
+  const despawnDuration = carouselTiming ? ISLAND_ENTITY_POP_MS / 1000 / 2.7 : 0.34;
+  const spritePopDelay = carouselTiming ? 0.42 : 0.32;
+  const spritePopDuration = carouselTiming ? 0.48 : 0.38;
 
   const sprite =
     type === "tree" ? (
-      <IslandTreeSprite highlighted={hovered} />
+      <IslandTreeSprite tuning={tuning} variant={entity.treeVariant} />
     ) : (
-      <IslandPersonSprite highlighted={hovered} />
+      <IslandPersonSprite tuning={tuning} variant={entity.personVariant} />
     );
 
-  const tooltip = hovered ? (
-    <foreignObject height="44" width="148" x="-74" y="-68">
-      <div className="rounded-lg bg-[#0f2a0f]/92 px-2 py-1 text-center text-[10px] leading-tight text-white shadow-lg backdrop-blur-sm">
-        <strong>{type === "tree" ? "Boom geplant" : "Persoon bereikt"}</strong>
-        <br />
-        {entity.team}
-        <br />
-        {entity.plantedAt}
-      </div>
-    </foreignObject>
-  ) : null;
+  const rootTransform = anchored
+    ? `translate(0 ${baselineOffset})`
+    : `translate(${x} ${renderY + baselineOffset})`;
 
   if (reduceMotion || !animateSpawn) {
+    if (isDespawning) return null;
+    return <g transform={rootTransform}>{sprite}</g>;
+  }
+
+  if (isDespawning) {
     return (
-      <g
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        transform={`translate(${x} ${y})`}
-      >
-        <g style={{ transform: hovered ? "scale(1.08)" : undefined, transformOrigin: "0px 0px" }}>
+      <g transform={rootTransform}>
+        <motion.g
+          animate={{ opacity: 0, scaleX: 0.9, scaleY: 0.2 }}
+          initial={{ opacity: 1, scaleX: 1, scaleY: 1 }}
+          style={{ transformBox: "fill-box", transformOrigin: "center bottom" }}
+          transition={{
+            delay: delaySec,
+            duration: despawnDuration,
+            ease: [0.4, 0, 0.9, 0.2],
+          }}
+        >
           {sprite}
-        </g>
-        {tooltip}
+        </motion.g>
       </g>
     );
   }
 
   return (
-    <g transform={`translate(${x} ${y})`}>
+    <g transform={rootTransform}>
       <motion.g
-        animate={
-          hovered
-            ? { scale: 1.08 }
-            : {
-                opacity: 1,
-                scaleX: [1.15, 0.9, 1.06, 0.98, 1],
-                scaleY: [0.12, 1.12, 0.88, 1.04, 1],
-                y: [-32, -4, -10, -7, 0],
-              }
-        }
-        initial={{ opacity: 0, scaleX: 1.15, scaleY: 0.12, y: -32 }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        animate={{
+          opacity: 1,
+          scaleX: [1.15, 0.92, 1.05, 0.98, 1],
+          scaleY: [0.15, 1.08, 0.92, 1.02, 1],
+        }}
+        initial={{ opacity: 0, scaleX: 1.15, scaleY: 0.15 }}
         style={{ transformBox: "fill-box", transformOrigin: "center bottom" }}
-        transition={
-          hovered
-            ? { duration: 0.18 }
-            : { delay: delaySec, duration: 0.7, ease: [0.22, 1.15, 0.36, 1] }
-        }
+        transition={{ delay: delaySec, duration: spawnDuration, ease: [0.22, 1.12, 0.36, 1] }}
       >
         <motion.g
-          animate={{ rotate: hovered ? 0 : [-1.2, 1.2, -1.2] }}
-          transition={{
-            delay: delaySec + swayDelay,
-            duration: 3.8,
-            ease: "easeInOut",
-            repeat: Number.POSITIVE_INFINITY,
-            repeatType: "mirror",
-          }}
+          animate={allowSway ? { rotate: [-1.2, 1.2, -1.2] } : { rotate: 0 }}
+          transition={
+            allowSway
+              ? {
+                  delay: delaySec + swayDelay,
+                  duration: 3.8,
+                  ease: "easeInOut",
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatType: "mirror",
+                }
+              : { duration: 0.2, ease: "easeOut" }
+          }
         >
           <motion.g
             animate={{ opacity: 1, scale: 1 }}
             initial={{ opacity: 0, scale: 0.25 }}
-            transition={{ delay: delaySec + 0.32, duration: 0.38, ease: "backOut" }}
+            transition={{
+              delay: delaySec + spritePopDelay,
+              duration: spritePopDuration,
+              ease: "backOut",
+            }}
           >
             {sprite}
           </motion.g>
         </motion.g>
       </motion.g>
-      {tooltip}
     </g>
   );
 }

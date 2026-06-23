@@ -28,7 +28,7 @@ export type MetaphorUnit = {
 
 export const METAPHOR_MAX_VISIBLE: Record<MetaphorId, number> = {
   trees: 36,
-  people: 32,
+  people: 40,
   water: 28,
   meals: 28,
   solar: 24,

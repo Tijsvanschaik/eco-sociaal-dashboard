@@ -13,7 +13,7 @@ export default function ImpactLandscapeSandboxPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-background">
+    <main className="h-dvh overflow-hidden bg-background">
       <ImpactVisualPlayground />
     </main>
   );
