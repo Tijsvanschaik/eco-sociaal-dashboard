@@ -818,3 +818,13 @@ Bron: `README.md`, `.cursor/rules/00-project.mdc`, Fase 0–5 in dit bestand.
 | `9000_seed.sql` | 2026-05-21 | ✅ 2026-05-26 | n.v.t. |
 
 **Productie** bestaat nog niet. Staging is de referentie-omgeving voor UAT/LEV.
+
+## Fase — Isometrisch eiland (impact hero)
+
+- [x] Eiland-visualisatie (`ImpactIslandStage`, grid, assets, carousel-timing)
+- [x] Finetune defaults bevroren (`DEFAULT_ISLAND_TUNING`, `islandScale: 1.1`)
+- [x] Assets productiepad `/assets/island/`
+- [x] `IslandMetaphorCarousel` in dashboard, TV (`fitToContainer`) en publieke share
+- [x] Scatter hero (`TreeScene`/`PeopleScene`/`WaterScene`) vervangen; water-slide uit carrousel
+- [x] Sandbox `/dev/impact-landscape` deelt carrousel-component met productie
+- [x] ADR `0012-island-impact-metaphor.md`
