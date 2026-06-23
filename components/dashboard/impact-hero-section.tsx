@@ -51,9 +51,9 @@ export function ImpactHeroSection({
   const hasData = hasDataProp ?? (totalCo2Kg > 0 || totalSocialScore > 0 || units.length > 0);
 
   return (
-    <div className={cn("flex min-h-0 flex-col gap-5 lg:h-full lg:gap-6", className)}>
-      <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
-        <Icon name="insights" className="text-base" filled /> Totale eco-sociale impact
+    <div className={cn("flex min-h-0 flex-col gap-3 sm:gap-5 lg:h-full lg:gap-6", className)}>
+      <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary sm:gap-2 sm:px-4 sm:py-1.5 sm:text-xs">
+        <Icon name="insights" className="text-sm sm:text-base" filled /> Totale eco-sociale impact
       </span>
 
       <div className="min-h-0">
@@ -81,7 +81,7 @@ export function ImpactHeroSection({
         )}
       </div>
 
-      <dl className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <dl className="mt-1 grid grid-cols-2 gap-2.5 sm:mt-2 sm:gap-4">
         <ImpactFactTile
           description="Dit is de som van de CO₂-impact van alle registraties."
           icon="eco"
@@ -126,29 +126,29 @@ function ImpactFactTile({
   return (
     <div
       className={cn(
-        "group relative flex flex-col gap-3 overflow-hidden p-5 transition-transform hover:-translate-y-0.5",
+        "group relative flex min-w-0 flex-col gap-2 overflow-hidden p-3.5 transition-transform hover:-translate-y-0.5 sm:gap-3 sm:p-5",
         impactInsetPanelClassName,
       )}
     >
       <span
         className={cn(
-          "inline-flex h-10 w-10 items-center justify-center rounded-[0.875rem] shadow-sm",
+          "inline-flex h-8 w-8 items-center justify-center rounded-[0.75rem] shadow-sm sm:h-10 sm:w-10 sm:rounded-[0.875rem]",
           iconTone,
         )}
       >
-        <Icon name={icon} filled className="text-xl" />
+        <Icon name={icon} filled className="text-lg sm:text-xl" />
       </span>
-      <div className="space-y-2">
-        <div className="flex items-baseline gap-1.5">
-          <dd className="text-3xl font-extrabold leading-none tracking-tight text-foreground sm:text-4xl">
+      <div className="space-y-1 sm:space-y-2">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1 gap-y-0.5">
+          <dd className="text-xl font-extrabold leading-none tracking-tight text-foreground sm:text-3xl md:text-4xl">
             {value}
           </dd>
           {unit ? (
-            <span className="text-sm font-semibold text-muted-foreground">{unit}</span>
+            <span className="text-[11px] font-semibold text-muted-foreground sm:text-sm">{unit}</span>
           ) : null}
         </div>
-        <dt className="text-sm font-bold tracking-tight text-foreground">{label}</dt>
-        <p className="text-xs leading-relaxed text-muted-foreground/90">{description}</p>
+        <dt className="text-xs font-bold tracking-tight text-foreground sm:text-sm">{label}</dt>
+        <p className="hidden text-xs leading-relaxed text-muted-foreground/90 sm:block">{description}</p>
       </div>
     </div>
   );

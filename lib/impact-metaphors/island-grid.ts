@@ -559,7 +559,7 @@ export function computeIslandViewBoxBoundsFromTiles(
   const maxY = Math.max(...surfaceYs) + t.tileHeight * 1.35;
   const horizontalPadding = tightTop ? Math.min(padding, 28) : padding;
   const topPadding = tightTop ? 4 : padding;
-  const bottomPadding = tightTop ? 28 : padding;
+  const bottomPadding = tightTop ? 16 : padding;
 
   return {
     x: minX - horizontalPadding,
@@ -648,7 +648,7 @@ export function computeSharedIslandViewBoxBounds(
     : Math.max(t.tileHeight * 5, maxOverhang + scaleCushion);
   const horizontalPadding = tightTop ? Math.min(padding, 28) : padding;
   const topPadding = tightTop ? 4 : padding;
-  const bottomPadding = tightTop ? 28 : padding;
+  const bottomPadding = tightTop ? 16 : padding;
   const minY = minSurfaceY - topMargin;
   const maxY = maxSurfaceY + t.tileHeight * 1.35;
 

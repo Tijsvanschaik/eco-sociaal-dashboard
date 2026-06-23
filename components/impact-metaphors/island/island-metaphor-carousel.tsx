@@ -150,20 +150,20 @@ export function IslandMetaphorCarousel({
           )}
         >
           {headlineOverlay ? (
-            <div className="relative z-20 shrink-0 bg-surface-container-low px-4 pb-2 pt-1 text-center sm:px-6 sm:pb-3 sm:pt-1.5">
+            <div className="relative z-20 shrink-0 bg-surface-container-low px-1 pb-1 pt-0.5 text-center sm:px-6 sm:pb-3 sm:pt-1.5">
               <h2
-                className="flex flex-col items-center gap-0.5"
+                className="flex flex-col items-center gap-0 sm:gap-0.5"
                 {...(index === activeIndex ? { id: "impact-overview-heading" } : {})}
               >
                 <span
                   className={cn(
-                    "text-[2.75rem] font-extrabold leading-[0.95] tracking-tight sm:text-[4.25rem]",
+                    "text-[2.125rem] font-extrabold leading-[0.95] tracking-tight sm:text-[4.25rem]",
                     entityTypeForUnit(unit) === "tree" ? "text-tertiary" : "text-primary",
                   )}
                 >
                   {unit.formattedValue}
                 </span>
-                <span className="text-[1.15rem] font-bold leading-tight text-foreground sm:text-[1.65rem]">
+                <span className="text-base font-bold leading-tight text-foreground sm:text-[1.65rem]">
                   {unit.title}
                 </span>
               </h2>
@@ -186,7 +186,6 @@ export function IslandMetaphorCarousel({
               className={cn(
                 "max-w-none rounded-none bg-transparent shadow-none",
                 fillContainer && "h-full max-h-full min-h-0",
-                headlineOverlay && "min-h-[160px]",
               )}
               enableIdleFloat={enableIdleFloat}
               entityType={entityTypeForUnit(unit)}
@@ -210,7 +209,7 @@ export function IslandMetaphorCarousel({
       {showSlideDots && units.length > 1 ? (
         <div
           aria-label="Impactvisualisaties"
-          className="mt-2 flex items-center justify-center gap-2 sm:mt-2.5"
+          className="mt-1 flex items-center justify-center gap-2 sm:mt-2.5"
           role="tablist"
         >
           {units.map((unit, index) => (
