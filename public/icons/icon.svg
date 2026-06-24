@@ -1,6 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Eco-sociaal Dashboard">
-  <rect width="512" height="512" rx="112" fill="#af1e7b"/>
-  <rect x="88" y="296" width="128" height="96" rx="16" fill="#6fcd7c"/>
-  <rect x="192" y="208" width="128" height="96" rx="16" fill="#fff8f3"/>
-  <rect x="296" y="120" width="128" height="96" rx="16" fill="#6fcd7c"/>
+  <rect width="512" height="512" rx="112" fill="#ffa6d2"/>
+  <g transform="translate(96, 119) scale(1.763) translate(-213.553, -230.883)">
+    <rect x="213.553" y="346.23" width="116.43" height="39.3806" rx="2.85226" fill="#af1e7b"/>
+    <rect x="329.793" y="230.883" width="65.7583" height="39.3806" rx="2.85226" fill="#af1e7b"/>
+    <rect x="287.244" y="288.905" width="108.308" height="39.3806" rx="2.85226" fill="#22222B"/>
+    <rect x="348.814" y="346.23" width="46.2294" height="39.3806" rx="2.85226" fill="#22222B"/>
+  </g>
 </svg>

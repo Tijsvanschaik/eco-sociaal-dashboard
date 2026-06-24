@@ -10,7 +10,7 @@ type LogoProps = Omit<SVGProps<SVGSVGElement>, "viewBox" | "xmlns"> & {
 
 /**
  * CFTF-merkwoordbeeld als inline SVG. Kleuren zijn vastgezet op het merk
- * (groen + donker), _niet_ op `currentColor`: zo blijft de identiteit
+ * (paars + donker), _niet_ op `currentColor`: zo blijft de identiteit
  * consistent. Bij gebruik op donkere achtergronden is een geïnverteerde
  * variant nodig; die volgt zodra we een dark-mode-design hebben.
  */

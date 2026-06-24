@@ -8,7 +8,7 @@ import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700", "800"],
   variable: "--font-plus-jakarta",
   display: "swap",
 });
@@ -33,10 +33,6 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
-  icons: {
-    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
-    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
-  },
 };
 
 export const viewport: Viewport = {
@@ -55,14 +51,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="nl" className={plusJakarta.variable} suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-        />
-      </head>
       <body className="min-h-dvh font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <PwaRoot>{children}</PwaRoot>

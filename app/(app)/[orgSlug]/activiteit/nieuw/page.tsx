@@ -6,14 +6,14 @@ import { RegistrationForm } from "@/components/registration/registration-form";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { createClient } from "@/lib/supabase/server";
-import { getTenantDashboardData } from "@/lib/tenant-dashboard-data";
+import { getTenantRegistrationFormData } from "@/lib/tenant-registration-form-data";
 
 type Params = Promise<{ orgSlug: string }>;
 
 export default async function NewActivityPage({ params }: { params: Params }) {
   const { orgSlug } = await params;
   const supabase = await createClient();
-  const data = await getTenantDashboardData(supabase, orgSlug);
+  const data = await getTenantRegistrationFormData(supabase, orgSlug);
   if (!data) notFound();
 
   const canRegister = data.teams.length > 0 && data.interventions.length > 0;

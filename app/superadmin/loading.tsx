@@ -1,5 +1,5 @@
 import { GenericTenantPageSkeleton } from "@/components/loading/page-skeletons";
 
-export default function RootLoading() {
+export default function SuperadminLoading() {
   return <GenericTenantPageSkeleton />;
 }

@@ -1,5 +1,4 @@
-import { CategoryDonutPanel } from "@/components/charts/category-donut-chart";
-import { TrendAreaChartBody } from "@/components/charts/trend-area-chart";
+import { LazyCategoryDonutPanel, LazyTrendAreaChartBody } from "@/components/charts/lazy-charts";
 import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
 import type { DashboardSnapshot } from "@/lib/dashboard";
 import type { WeeklyTimeseriesRow } from "@/lib/timeseries";
@@ -49,7 +48,7 @@ export function ProgressSlide({
           iconTone="tertiary"
           title={`Voortgang ${yearLabel}`}
         >
-          <TrendAreaChartBody cumulative data={timeseries} fillContainer />
+          <LazyTrendAreaChartBody cumulative data={timeseries} fillContainer />
         </DashboardPanel>
       </section>
     );
@@ -65,9 +64,9 @@ export function ProgressSlide({
         iconTone="tertiary"
         title={`Voortgang ${yearLabel}`}
       >
-        <TrendAreaChartBody cumulative data={timeseries} fillContainer />
+        <LazyTrendAreaChartBody cumulative data={timeseries} fillContainer />
       </DashboardPanel>
-      <CategoryDonutPanel
+      <LazyCategoryDonutPanel
         description={`Verdeling per categorie · kg CO₂ of sociale punten · ${periodLabel}`}
         items={snapshot.categoryBreakdown.map((item) => ({
           id: item.id,

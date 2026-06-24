@@ -14,7 +14,11 @@ const withSerwist = withSerwistInit({
   swDest: "public/sw.js",
   additionalPrecacheEntries: [{ url: "/~offline", revision }],
   disable: process.env.NODE_ENV === "development",
-  globPublicPatterns: ["icons/**/*.{png,svg}"],
+  globPublicPatterns: [
+    "icons/**/*.{png,svg}",
+    "assets/island/**/*.svg",
+    "fonts/material-symbols-outlined.woff2",
+  ],
 });
 
 const securityHeadersApp = [

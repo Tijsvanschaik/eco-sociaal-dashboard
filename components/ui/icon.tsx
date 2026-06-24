@@ -8,8 +8,8 @@ type IconProps = Omit<React.ComponentProps<"span">, "children"> & {
 };
 
 /**
- * Material Symbols Outlined icon. Het font wordt via <link> geladen in
- * app/layout.tsx. Geef `filled` mee om de gevulde variant te tonen.
+ * Material Symbols Outlined icon. Self-hosted subset — see lib/material-symbol-icons.ts
+ * and `npm run icons:sync`. Geef `filled` mee om de gevulde variant te tonen.
  */
 export function Icon({ name, filled, className, "aria-label": ariaLabel, ...rest }: IconProps) {
   return (

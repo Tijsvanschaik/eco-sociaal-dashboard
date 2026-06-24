@@ -9,8 +9,7 @@ const root = resolve(__dirname, "..");
 const svgPath = resolve(root, "public/icons/icon.svg");
 const svg = await readFile(svgPath);
 
-async function writePng(size, filename, extend = 0) {
-  const outPath = resolve(root, "public/icons", filename);
+async function writePng(outPath, size, extend = 0, extendColor = "#ffa6d2") {
   let pipeline = sharp(svg).resize(size, size);
 
   if (extend > 0) {
@@ -19,14 +18,16 @@ async function writePng(size, filename, extend = 0) {
       bottom: extend,
       left: extend,
       right: extend,
-      background: "#af1e7b",
+      background: extendColor,
     });
   }
 
   await pipeline.png().toFile(outPath);
-  console.log(`Wrote ${filename}`);
+  console.log(`Wrote ${outPath.replace(`${root}\\`, "").replace(`${root}/`, "")}`);
 }
 
-await writePng(192, "icon-192.png");
-await writePng(512, "icon-512.png");
-await writePng(512, "icon-512-maskable.png", 64);
+await writePng(resolve(root, "public/icons/icon-192.png"), 192);
+await writePng(resolve(root, "public/icons/icon-512.png"), 512);
+await writePng(resolve(root, "public/icons/icon-512-maskable.png"), 512, 64);
+await writePng(resolve(root, "app/icon.png"), 32);
+await writePng(resolve(root, "app/apple-icon.png"), 180);

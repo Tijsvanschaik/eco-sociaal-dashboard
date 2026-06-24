@@ -144,11 +144,15 @@ function ImpactFactTile({
             {value}
           </dd>
           {unit ? (
-            <span className="text-[11px] font-semibold text-muted-foreground sm:text-sm">{unit}</span>
+            <span className="text-[11px] font-semibold text-muted-foreground sm:text-sm">
+              {unit}
+            </span>
           ) : null}
         </div>
         <dt className="text-xs font-bold tracking-tight text-foreground sm:text-sm">{label}</dt>
-        <p className="hidden text-xs leading-relaxed text-muted-foreground/90 sm:block">{description}</p>
+        <p className="hidden text-xs leading-relaxed text-muted-foreground/90 sm:block">
+          {description}
+        </p>
       </div>
     </div>
   );

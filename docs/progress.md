@@ -109,7 +109,7 @@
 ## Fase 6 — Todo (geconsolideerd)
 
 **ADR:** [`0009`](decisions/0009-impact-metaphors-terminology-and-content.md)  
-**Status:** streams 1–2, 4–5 afgerond; stream 3 + 6 **geparkeerd**; stream 7 deels; zie backlog hieronder.
+**Status:** streams 1–2, 4–5 afgerond; stream 3 deels (island live, finetune open); stream 6 **actief**; stream 7 deels; zie backlog hieronder.
 
 ### Besluiten (afgerond)
 
@@ -125,7 +125,7 @@
 | Missie lang | Hergebruik `organizations.description` |
 | Missie kort + disclaimer | Nieuwe kolommen `mission_short`, `impact_disclaimer` |
 | Org-profiel UI | Logo-upload + rich-text velden op Instellingen → Algemeen |
-| Missie/disclaimer op slides & `/p` | **Uitgesteld** — pas na Illustratie X (stream 3) |
+| Missie/disclaimer op slides & `/p` | **Actief** — stream 6; samen met visualisatie-finetune |
 
 ---
 
@@ -145,25 +145,26 @@
 
 ---
 
-### Stream 3 — Illustratie X (impact-metaforen) ⏸️ GEPARKEERD
+### Stream 3 — Illustratie X (isometrisch eiland)
 
-**LEV live (2026-06-22):** alleen **bomen** (eco) + **harten** (sociaal). Glazen water tijdelijk uit default carrousel.
+**LEV live (2026-06-22):** eiland-carrousel met **bomen** (eco) + **personen** (sociaal). Scatter-scenes vervangen.
 
 - [x] `lib/impact-metaphors.ts` + unit tests
-- [x] `ImpactMetaphorCarousel` + `TreeScene`, `PeopleScene`
-- [x] Stagger spawn + carrousel; SVG; cap zichtbare items
-- [x] Dashboard + TV/embed + `/p` (`variant` compact | kiosk)
-- [x] Afbouwen `ImpactStoryRotator` + km-slide
+- [x] `IslandMetaphorCarousel` + `ImpactIslandStage` (dashboard, TV/embed, `/p`)
+- [x] Finetune defaults bevroren (`DEFAULT_ISLAND_TUNING`); ADR [`0012-island`](decisions/0012-island-impact-metaphor.md)
 - [x] Recharts container-warnings opgelost (`ChartResponsiveContainer`)
 
-**Terugkomen later (stream 3 hervatten):**
+**Finetune vóór eerste klant (open):**
+
+- [ ] Eiland-animatie op mobiel/PWA: timing, dichtheid, headline-overlay — visueel nalopen met LEV
+- [ ] TV/kiosk: leesbaarheid op afstand + vh-fill op verschillende schermformaten
+- [ ] `prefers-reduced-motion`: vereenvoudigde statische fallback (nu vooral confetti)
+
+**Later (niet blocking MVP):**
 
 - [ ] Derde slide **glazen water** (of andere catalogus-metafoor) opnieuw inschakelen
-- [ ] Iconen-getal UX verder finetunen (schaal, dichtheid, animatie)
 - [ ] `WaterScene` / overige catalogus (`meals`, `solar`, `park`) + org pick-3
 - [ ] `--accent-water` token · `impact_metaphors` jsonb per org
-
-`WaterScene` en catalogus-code blijven in repo; default is `LEV_DEFAULT_METAPHOR_IDS = ["trees", "people"]`.
 
 ---
 
@@ -193,11 +194,17 @@ Eén stream: content-velden + logo-upload.
 
 ---
 
-### Stream 6 — Missie & disclaimer op surfaces ⏸️ UITGESTELD
+### Stream 6 — Missie & disclaimer op surfaces 🔄 ACTIEF
 
-Velden bestaan (stream 5). **Presentatie op dashboard/TV/`/p` uitgesteld** tot Illustratie X (stream 3) verder is — eerst visualisatie finetunen.
+Velden bestaan in Instellingen (stream 5). **Presentatie op dashboard/TV/`/p` is nu prioriteit** — samen met visualisatie-finetune (stream 3).
 
-- [ ] Beslissing + implementatie pas na stream 3-hervatting
+- [ ] **UX-beslissing:** layout intern dashboard — waar `mission_short`, uitgebreide missie (`description`) en `impact_disclaimer` (hero-onder, footer, collapsible?)
+- [ ] **UX-beslissing:** layout TV/embed/`/p` — disclaimer altijd zichtbaar vs. compact footer vs. aparte slide
+- [ ] Data: org-profielvelden doorgeven op intern dashboard + publieke loader (`getPublicDashboardBySlug`)
+- [ ] Gedeeld component (`SafeMarkdown`) voor disclaimer + missie-fragmenten
+- [ ] Intern dashboard: missie kort + disclaimer tonen
+- [ ] TV/embed + `/p`: disclaimer (+ optioneel missie kort) tonen
+- [ ] Tests (unit/component) voor render + lege velden
 
 ---
 
@@ -211,15 +218,32 @@ Velden bestaan (stream 5). **Presentatie op dashboard/TV/`/p` uitgesteld** tot I
 - [ ] User-invite E2E (mailprovider: Resend — zie ADR [`0011`](decisions/0011-transactional-email-resend.md))
 - [x] Transactionele mail via Resend (login + admin/member invites, rate limit, NL-templates)
 - [x] PWA (manifest + service worker) — zie ADR [`0010`](decisions/0010-pwa-scope.md)
-- [ ] PWA handmatig end-to-end testen (install op iOS + Android, offline fallback, update-toast op staging)
+- [x] PWA handmatig getest (install werkt; **traag** — zie performance-backlog hieronder)
+- [ ] PWA performance-backlog (prioriteit voor medewerkersflow):
+  - [x] **Material Symbols self-hosten** — subset 69 iconen (~11 KB woff2), `npm run icons:sync`
+  - [x] **Recharts lazy-loaden** (`next/dynamic` via `components/charts/lazy-charts.tsx` op ProgressSlide)
+  - [x] **Island-assets precachen** in Serwist (`globPublicPatterns`: `assets/island/**` + icon font)
+  - [x] Plus Jakarta Sans: font-weights 400/600/700/800 (500 verwijderd)
+  - [x] Route `loading.tsx` skeletons op tenant-routes + registratie (perceived speed)
+  - [x] Registratiepagina: lightweight data loader (`getTenantRegistrationFormData`)
+  - [ ] Lighthouse/PWA audit op staging (LCP, TBT, cache hit rate na 2e bezoek) — **handmatig**
 
 ---
 
 ### Omgevingen & SQL
 
-- Dev + staging actief; **productie nog niet**
+- Dev + staging actief; **productie uitstellen** — staging blijft referentie voor eerste klant (UAT)
 - SQL `0001`–`0011` + seed op staging (2026-05-26); **`0012_org_profile_content.sql` op staging** (2026-06-22)
 - EOD-baseline: geen LEV-blocker; org-instelling blijft
+
+### Eerste klant — readiness (2026-06-24)
+
+- [x] Login magic link getest (Resend + prod/staging)
+- [ ] **Superadmin-flow testen:** org aanmaken, eerste admin uitnodigen, tenantdetail
+- [ ] **Org-onboarding testen:** teams, medewerkers uitnodigen, activiteiten/categorieën, logo + profielvelden
+- [ ] **Visualisaties finetunen** (stream 3) + **missie/disclaimer op surfaces** (stream 6)
+- [ ] Embed-whitelist domeinen (wacht LEV)
+- [ ] User-invite E2E (Playwright)
 
 ---
 
@@ -363,9 +387,9 @@ sociaal (`kg CO₂` / `punten`), en registratiekaarten + impact-hero aantrekkeli
 
 ## Laatste sessie
 
-Datum: 2026-06-23  
-Wat gedaan: **Resend mailflow** (stream 7) — `admin.generateLink` + Resend API voor login, superadmin org-invite en member-provision; `NEXT_PUBLIC_APP_URL` voor callbacks; rate limit op login; NL-templates; ADR [`0011`](decisions/0011-transactional-email-resend.md).  
-Wat volgt: handmatig testen op productie (login + invite); user-invite E2E; embed-whitelist (wacht LEV).  
+Datum: 2026-06-24  
+Wat gedaan: readiness-review eerste klant; staging blijft primair; login magic link bevestigd; PWA handmatig getest (werkt, traag).  
+Wat volgt: superadmin + org-onboarding testen; stream 6 (missie/disclaimer op dashboard/TV/`/p`); visualisatie-finetune; PWA performance (Material Symbols self-host + chart lazy-load).  
 Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (wachtwoord-fallback blijft beschikbaar)
 
 ## Sessie 2026-06-22 — Fase 6 planning
