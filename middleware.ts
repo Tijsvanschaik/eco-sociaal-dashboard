@@ -22,6 +22,7 @@ const RESERVED_FIRST_SEGMENTS = new Set([
   "sitemap.xml",
   "manifest.webmanifest",
   "~offline",
+  "fonts",
 ]);
 
 export async function middleware(request: NextRequest) {
@@ -64,6 +65,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Run on all paths except static assets, service worker, and favicon.
-    "/((?!_next/static|_next/image|favicon.ico|sw\\.js|swe-worker-.*\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw\\.js|swe-worker-.*\\.js|fonts/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2|woff)$).*)",
   ],
 };
