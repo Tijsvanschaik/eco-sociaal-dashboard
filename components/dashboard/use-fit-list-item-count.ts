@@ -7,7 +7,34 @@ export const DEFAULT_FIT_LIST_ITEM_COUNT = 5;
 
 /** Approximate row height for team bars in the impact overview panel. */
 export const TEAM_BAR_ROW_HEIGHT_PX = 58;
+/** Slightly taller estimate on kiosk/TV (rank badge + bar + gaps). */
+export const KIOSK_TEAM_BAR_ROW_HEIGHT_PX = 62;
 export const TEAM_BAR_ROW_GAP_PX = 10;
+/** List gap when team rows are not links (TV / embed). */
+export const KIOSK_TEAM_BAR_ROW_GAP_PX = 16;
+
+export function computeFitListItemCount({
+  containerHeightPx,
+  fallbackCount = DEFAULT_FIT_LIST_ITEM_COUNT,
+  gapPx = TEAM_BAR_ROW_GAP_PX,
+  itemCount,
+  itemHeightPx = TEAM_BAR_ROW_HEIGHT_PX,
+  minCount = 1,
+}: {
+  containerHeightPx: number;
+  fallbackCount?: number;
+  gapPx?: number;
+  itemCount: number;
+  itemHeightPx?: number;
+  minCount?: number;
+}): number {
+  if (itemCount === 0) return 0;
+  if (containerHeightPx <= 0) return Math.min(itemCount, fallbackCount);
+
+  const rowSpan = itemHeightPx + gapPx;
+  const count = Math.floor((containerHeightPx + gapPx) / rowSpan);
+  return Math.min(itemCount, Math.max(minCount, count));
+}
 
 export function useFitListItemCount({
   enabled,
@@ -37,15 +64,16 @@ export function useFitListItemCount({
     }
 
     const measure = () => {
-      const height = container.clientHeight;
-      if (height <= 0) {
-        setFitCount(Math.min(itemCount, fallbackCount));
-        return;
-      }
-
-      const rowSpan = itemHeightPx + gapPx;
-      const count = Math.floor((height + gapPx) / rowSpan);
-      setFitCount(Math.min(itemCount, Math.max(minCount, count)));
+      setFitCount(
+        computeFitListItemCount({
+          containerHeightPx: container.clientHeight,
+          fallbackCount,
+          gapPx,
+          itemCount,
+          itemHeightPx,
+          minCount,
+        }),
+      );
     };
 
     measure();

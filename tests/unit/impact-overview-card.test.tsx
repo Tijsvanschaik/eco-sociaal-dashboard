@@ -126,6 +126,31 @@ describe("<ImpactOverviewCard />", () => {
     expect(screen.getByText(/zodra de eerste registraties binnenrollen/i)).toBeInTheDocument();
   });
 
+  it("beperkt zichtbare teams op tv/kiosk aan de beschikbare lijsthoogte", () => {
+    const many = Array.from({ length: 10 }, (_, i) =>
+      makeTeam(`team-${i}`, `Team ${i + 1}`, 100 - i),
+    );
+
+    render(
+      <ImpactOverviewCard
+        eodDays={3}
+        fitToContainer
+        registrationCount={10}
+        showTeamRanks
+        totalCo2Kg={500}
+        totalSocialScore={0}
+        periodLabel="alle data"
+        teamBreakdown={many}
+      />,
+    );
+
+    expect(screen.getByText("Team 1")).toBeInTheDocument();
+    expect(screen.getByText("Team 5")).toBeInTheDocument();
+    expect(screen.queryByText("Team 6")).not.toBeInTheDocument();
+    expect(screen.queryByText("Team 10")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /toon alle/i })).not.toBeInTheDocument();
+  });
+
   it("maakt teamnamen klikbaar wanneer teamLinkBase is gezet", () => {
     render(
       <ImpactOverviewCard

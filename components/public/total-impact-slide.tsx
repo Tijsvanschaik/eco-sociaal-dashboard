@@ -23,7 +23,6 @@ export function TotalImpactSlide({
       <ImpactOverviewCard
         eodDays={snapshot.eodDays}
         fitToContainer={isTv}
-        forceShowAllTeams={isTv}
         periodLabel={periodLabel}
         registrationCount={snapshot.registrationCount}
         showTeamRanks={isTv}

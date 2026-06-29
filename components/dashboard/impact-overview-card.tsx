@@ -6,6 +6,8 @@ import { type RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState }
 import { ImpactHeroSection } from "@/components/dashboard/impact-hero-section";
 import {
   DEFAULT_FIT_LIST_ITEM_COUNT,
+  KIOSK_TEAM_BAR_ROW_GAP_PX,
+  KIOSK_TEAM_BAR_ROW_HEIGHT_PX,
   TEAM_BAR_ROW_GAP_PX,
   TEAM_BAR_ROW_HEIGHT_PX,
   useFitListItemCount,
@@ -91,7 +93,8 @@ export function ImpactOverviewCard({
   const heroColumnRef = useRef<HTMLDivElement>(null);
   const [heroColumnHeight, setHeroColumnHeight] = useState(0);
   const isLargeScreen = useLargeScreenLayout(!fitToContainer);
-  const useDynamicTeamFit = isLargeScreen && !fitToContainer && !forceShowAllTeams;
+  const useMeasuredTeamFit = !forceShowAllTeams && (fitToContainer || isLargeScreen);
+  const useHeroHeightMatch = isLargeScreen && !fitToContainer && !forceShowAllTeams;
 
   const hasData =
     totalCo2Kg > 0 ||
@@ -99,7 +102,7 @@ export function ImpactOverviewCard({
     teamBreakdown.some((t) => t.co2SavedKg > 0 || t.socialScoreTotal > 0);
 
   useEffect(() => {
-    if (!useDynamicTeamFit) {
+    if (!useHeroHeightMatch) {
       setHeroColumnHeight(0);
       return;
     }
@@ -115,17 +118,20 @@ export function ImpactOverviewCard({
     observer.observe(node);
 
     return () => observer.disconnect();
-  }, [useDynamicTeamFit]);
+  }, [useHeroHeightMatch]);
+
+  const teamRowGapPx = teamLinkBase ? TEAM_BAR_ROW_GAP_PX : KIOSK_TEAM_BAR_ROW_GAP_PX;
+  const teamRowHeightPx = fitToContainer ? KIOSK_TEAM_BAR_ROW_HEIGHT_PX : TEAM_BAR_ROW_HEIGHT_PX;
 
   const { containerRef: teamListContainerRef, fitCount: dynamicFitCount } = useFitListItemCount({
-    enabled: useDynamicTeamFit && !showAllTeams,
+    enabled: useMeasuredTeamFit && !showAllTeams,
     fallbackCount: DEFAULT_FIT_LIST_ITEM_COUNT,
-    gapPx: teamLinkBase ? TEAM_BAR_ROW_GAP_PX : 16,
+    gapPx: teamRowGapPx,
     itemCount: teamBreakdown.length,
-    itemHeightPx: TEAM_BAR_ROW_HEIGHT_PX,
+    itemHeightPx: teamRowHeightPx,
   });
 
-  const collapsedTeamLimit = useDynamicTeamFit
+  const collapsedTeamLimit = useMeasuredTeamFit
     ? dynamicFitCount
     : forceShowAllTeams
       ? teamBreakdown.length
@@ -169,11 +175,13 @@ export function ImpactOverviewCard({
           />
         </div>
         <TeamBreakdownPanel
-          dynamicTeamFit={useDynamicTeamFit}
+          dynamicTeamFit={useHeroHeightMatch}
           fitToContainer={fitToContainer}
-          hasMore={!forceShowAllTeams && teamBreakdown.length > collapsedTeamLimit}
-          listContainerRef={teamListContainerRef}
-          matchedHeight={useDynamicTeamFit && heroColumnHeight > 0 ? heroColumnHeight : undefined}
+          hasMore={
+            !fitToContainer && !forceShowAllTeams && teamBreakdown.length > collapsedTeamLimit
+          }
+          listContainerRef={useMeasuredTeamFit ? teamListContainerRef : undefined}
+          matchedHeight={useHeroHeightMatch && heroColumnHeight > 0 ? heroColumnHeight : undefined}
           maxCombinedImpact={maxCombinedImpact}
           teamLinkBase={teamLinkBase}
           teams={visibleTeams}
