@@ -81,14 +81,8 @@ export function ImpactHeroSection({
         )}
       </div>
 
-      <dl
-        className={cn(
-          "mt-1 grid grid-cols-2 gap-2.5 sm:mt-2 sm:gap-4",
-          fitToContainer && "mt-0 gap-2 sm:gap-2",
-        )}
-      >
+      <dl className="mt-1 grid grid-cols-2 gap-2.5 sm:mt-2 sm:gap-4">
         <ImpactFactTile
-          compact={fitToContainer}
           description="Dit is de som van de CO₂-impact van alle registraties."
           icon="eco"
           label="Eco score"
@@ -97,7 +91,6 @@ export function ImpactHeroSection({
           value={formatKg(totalCo2Kg)}
         />
         <ImpactFactTile
-          compact={fitToContainer}
           description="Dit is de som van alle sociale impact van alle registraties."
           icon="favorite"
           label="Sociale score"
@@ -111,7 +104,6 @@ export function ImpactHeroSection({
 }
 
 function ImpactFactTile({
-  compact = false,
   description,
   icon,
   label,
@@ -119,7 +111,6 @@ function ImpactFactTile({
   unit,
   value,
 }: {
-  compact?: boolean;
   description: string;
   icon: string;
   label: string;
@@ -131,37 +122,6 @@ function ImpactFactTile({
     tone === "tertiary"
       ? "bg-tertiary-container text-tertiary"
       : "bg-primary-container text-primary";
-
-  if (compact) {
-    return (
-      <div
-        aria-label={`${label}: ${value}${unit ? ` ${unit}` : ""}`}
-        className={cn(
-          "flex min-w-0 items-center gap-2 p-2.5 sm:gap-2.5 sm:p-3",
-          impactInsetPanelClassName,
-        )}
-      >
-        <span
-          className={cn(
-            "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg shadow-sm sm:h-8 sm:w-8",
-            iconTone,
-          )}
-        >
-          <Icon name={icon} filled className="text-base sm:text-lg" />
-        </span>
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1 gap-y-0">
-          <dd className="text-lg font-extrabold leading-none tracking-tight text-foreground sm:text-xl md:text-2xl">
-            {value}
-          </dd>
-          {unit ? (
-            <span className="text-[10px] font-semibold text-muted-foreground sm:text-xs">
-              {unit}
-            </span>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div

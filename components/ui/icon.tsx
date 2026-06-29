@@ -18,7 +18,11 @@ export function Icon({ name, filled, className, "aria-label": ariaLabel, ...rest
       aria-hidden={ariaLabel ? undefined : true}
       aria-label={ariaLabel}
       role={ariaLabel ? "img" : undefined}
-      className={cn("material-symbols-outlined", filled && "is-filled", className)}
+      className={cn(
+        "material-symbols-outlined text-2xl leading-none",
+        filled && "is-filled",
+        className,
+      )}
       {...rest}
     >
       {name}
