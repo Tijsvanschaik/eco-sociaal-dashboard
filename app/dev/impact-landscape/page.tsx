@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { ImpactVisualPlayground } from "@/components/impact-metaphors/landscape/landscape-playground";
+import { isImpactSandboxEnabled } from "@/lib/dev/impact-sandbox-enabled";
 
 export const metadata = {
   title: "Impact-visualisatie sandbox",
@@ -8,7 +9,7 @@ export const metadata = {
 };
 
 export default function ImpactLandscapeSandboxPage() {
-  if (process.env.NODE_ENV === "production") {
+  if (!isImpactSandboxEnabled()) {
     notFound();
   }
 
