@@ -103,12 +103,12 @@ export function RegistrationFeaturedHero({
                 </span>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-xl font-extrabold tracking-tight text-foreground xl:text-2xl">
-                    Recente registraties
+                    Recente eco-sociale activiteiten
                   </h3>
                   <p className="mt-0.5 text-xs font-medium text-muted-foreground xl:text-sm">
                     {recentMeta.total > 1
                       ? `${recentMeta.index + 1} van ${recentMeta.total}`
-                      : "Laatste actie van de organisatie"}
+                      : "Laatste eco-sociale activiteit van de organisatie"}
                   </p>
                 </div>
               </header>

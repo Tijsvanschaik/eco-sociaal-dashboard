@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { OrgWelcomePanel } from "@/components/org-welcome-panel";
 import { KioskSlideshow } from "@/components/public/kiosk-slideshow";
 import { type KioskSlide, KioskStack } from "@/components/public/kiosk-stack";
 import { ProgressSlide } from "@/components/public/progress-slide";
@@ -92,7 +93,6 @@ function buildKioskSlides({
 export function PublicSurface({ data, intervalMs, mode, slideOrder }: PublicSurfaceProps) {
   const order = slideOrder?.length ? slideOrder : [...ALL_PUBLIC_SLIDES];
   const periodLabel = "alle data";
-  const orgName = data.totals.org_name ?? "";
   const expandRecent = mode === "tv" || mode === "embed-rotate";
 
   const slideMap: Record<PublicSlideId, ReactNode> = {
@@ -119,6 +119,7 @@ export function PublicSurface({ data, intervalMs, mode, slideOrder }: PublicSurf
   });
 
   const showRotation = expandRecent;
+  const showWelcome = mode === "share" || mode === "embed-stack";
 
   return (
     <main
@@ -132,7 +133,9 @@ export function PublicSurface({ data, intervalMs, mode, slideOrder }: PublicSurf
       data-mode={mode}
       data-testid="public-surface"
     >
-      {mode !== "tv" ? <PublicSurfaceHeader mode={mode} orgName={orgName} /> : null}
+      {showWelcome ? (
+        <OrgWelcomePanel className="mb-8" {...data.orgWelcome} />
+      ) : null}
 
       {showRotation ? (
         <>
@@ -148,45 +151,5 @@ export function PublicSurface({ data, intervalMs, mode, slideOrder }: PublicSurf
         <KioskStack slides={slides} />
       )}
     </main>
-  );
-}
-
-function PublicSurfaceHeader({
-  mode,
-  orgName,
-}: {
-  mode: PublicSurfaceMode;
-  orgName: string;
-}) {
-  const eyebrow =
-    mode === "tv"
-      ? "TV-modus"
-      : mode === "embed-rotate" || mode === "embed-stack"
-        ? "Intranet embed"
-        : "Publiek dashboard";
-
-  // TV krijgt een compacter header zodat de slide ruim z'n viewport vult.
-  const isTv = mode === "tv";
-
-  return (
-    <header
-      className={cn(
-        "w-full",
-        isTv ? "shrink-0 px-2 pb-4 pt-2 lg:pb-6" : "space-y-3 px-2 pb-2 pt-4 sm:pb-4",
-      )}
-    >
-      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{eyebrow}</p>
-      <h1
-        className={cn(
-          "font-extrabold tracking-tight text-foreground",
-          isTv ? "text-3xl sm:text-4xl lg:text-5xl" : "text-2xl sm:text-3xl",
-        )}
-      >
-        {orgName}
-      </h1>
-      <p className={cn("text-muted-foreground", isTv ? "text-sm" : "text-sm sm:text-base")}>
-        Live overzicht van eco-sociale impact. Deze pagina toont alleen publieke cijfers.
-      </p>
-    </header>
   );
 }

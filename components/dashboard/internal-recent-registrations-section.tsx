@@ -37,15 +37,15 @@ export function InternalRecentRegistrationsSection({
         <Button asChild size="sm" variant="outline" className="hidden rounded-full sm:inline-flex">
           <Link href={`/${orgSlug}/activiteiten`}>
             <Icon name="list" className="text-base" />
-            Alle registraties
+            Alle activiteiten
           </Link>
         </Button>
       }
       contentClassName="space-y-5"
-      description="Filter op periode of team. Bewerk je eigen registraties of alles als beheerder."
+      description="Filter op periode of team. Bewerk je eigen activiteiten of alles als beheerder."
       icon="history"
       iconTone="primary"
-      title="Recente registraties"
+      title="Recente eco-sociale activiteiten"
     >
       <RegistrationsFilters
         filters={filters}
@@ -58,8 +58,8 @@ export function InternalRecentRegistrationsSection({
         <div className="flex flex-col items-start gap-2 rounded-[1.5rem] bg-card p-6 text-sm text-muted-foreground shadow-[0_20px_40px_rgba(54,50,45,0.04)]">
           <Icon name="inbox" className="text-2xl text-primary" filled />
           <p>
-            Geen registraties voor deze selectie. Pas de filters aan of voeg een nieuwe registratie
-            toe.
+            Geen eco-sociale activiteiten voor deze selectie. Pas de filters aan of registreer een
+            nieuwe activiteit.
           </p>
         </div>
       ) : (
@@ -83,7 +83,7 @@ export function InternalRecentRegistrationsSection({
         <Button asChild className="w-full rounded-full" variant="outline">
           <Link href={`/${orgSlug}/activiteiten`}>
             <Icon name="list" className="text-base" />
-            Alle registraties bekijken
+            Alle activiteiten bekijken
           </Link>
         </Button>
       </div>

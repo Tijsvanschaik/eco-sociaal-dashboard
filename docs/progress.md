@@ -196,15 +196,18 @@ Eén stream: content-velden + logo-upload.
 
 ### Stream 6 — Missie & disclaimer op surfaces 🔄 ACTIEF
 
-Velden bestaan in Instellingen (stream 5). **Presentatie op dashboard/TV/`/p` is nu prioriteit** — samen met visualisatie-finetune (stream 3).
+Velden bestaan in Instellingen (stream 5). **Presentatie op intern dashboard + `/p`/embed-stack live**; TV/embed-rotate nog open.
 
-- [ ] **UX-beslissing:** layout intern dashboard — waar `mission_short`, uitgebreide missie (`description`) en `impact_disclaimer` (hero-onder, footer, collapsible?)
-- [ ] **UX-beslissing:** layout TV/embed/`/p` — disclaimer altijd zichtbaar vs. compact footer vs. aparte slide
-- [ ] Data: org-profielvelden doorgeven op intern dashboard + publieke loader (`getPublicDashboardBySlug`)
-- [ ] Gedeeld component (`SafeMarkdown`) voor disclaimer + missie-fragmenten
-- [ ] Intern dashboard: missie kort + disclaimer tonen
-- [ ] TV/embed + `/p`: disclaimer (+ optioneel missie kort) tonen
-- [ ] Tests (unit/component) voor render + lege velden
+- [x] **UX-beslissing:** layout intern dashboard — welkomstkaart: titel + missie (links) / disclaimer (rechts); 2-koloms vanaf `2xl`
+- [ ] **UX-beslissing:** layout TV/embed-rotate — disclaimer op kiosk-slides (nu nog zonder welkomstblok)
+- [x] Data: org-profielvelden doorgeven op intern dashboard + publieke loader (`getPublicDashboardBySlug`)
+- [x] Gedeeld component (`OrgWelcomePanel` + `SafeMarkdown`) voor disclaimer + missie
+- [x] Intern dashboard: missie (`description`) + disclaimer tonen; missie uitklapbaar (`ExpandableMarkdown`, 3 regels)
+- [x] `/p` + embed-stack: zelfde `OrgWelcomePanel` (client boundary fix voor publieke route)
+- [ ] TV/embed-rotate: disclaimer (+ optioneel missie kort) op kiosk-slides
+- [x] Tests (unit/component) voor render + lege velden + public surface
+- [x] SQL `0013_lev_dashboard_profile_copy.sql` voor LEV missie/disclaimer-teksten
+- [x] Feed-copy dashboard + publiek: **Recente eco-sociale activiteiten** i.p.v. registraties
 
 ---
 
@@ -387,10 +390,9 @@ sociaal (`kg CO₂` / `punten`), en registratiekaarten + impact-hero aantrekkeli
 
 ## Laatste sessie
 
-Datum: 2026-06-24  
-Wat gedaan: readiness-review eerste klant; staging blijft primair; login magic link bevestigd; PWA handmatig getest (werkt, traag).  
-Wat volgt: superadmin + org-onboarding testen; stream 6 (missie/disclaimer op dashboard/TV/`/p`); visualisatie-finetune; PWA performance (Material Symbols self-host + chart lazy-load).  
-Dev-login: `anouk.admin@levdev.test` / `LevDev2026!` (wachtwoord-fallback blijft beschikbaar)
+Datum: 2026-07-01  
+Wat gedaan: stream 6 deels — gedeeld `OrgWelcomePanel` (missie + disclaimer) op intern dashboard en `/p`/embed-stack; uitklapbare missie; LEV-profielteksten in seed + `0013`; copy-feed **Recente eco-sociale activiteiten** op intern + publiek; client-boundary fix publieke route; 288 unit tests + build groen.  
+Wat volgt: missie/disclaimer op TV/embed-rotate kiosk-slides; superadmin + org-onboarding testen; visualisatie-finetune (stream 3); `0013` draaien op dev/staging indien nog niet gedaan.
 
 ## Sessie 2026-06-22 — Fase 6 planning
 
@@ -839,6 +841,7 @@ Bron: `README.md`, `.cursor/rules/00-project.mdc`, Fase 0–5 in dit bestand.
 | `0009_eco_social_units.sql` | 2026-05-21 | ✅ 2026-05-26 | n.v.t. |
 | `0010_fix_intervention_social_units.sql` | 2026-05-26 | ✅ 2026-05-26 | n.v.t. |
 | `0011_lev_social_metrics.sql` | 2026-05-26 | ✅ 2026-05-26 | n.v.t. |
+| `0013_lev_dashboard_profile_copy.sql` | — | — | n.v.t. |
 | `9000_seed.sql` | 2026-05-21 | ✅ 2026-05-26 | n.v.t. |
 
 **Productie** bestaat nog niet. Staging is de referentie-omgeving voor UAT/LEV.

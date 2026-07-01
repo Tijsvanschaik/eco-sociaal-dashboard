@@ -12,7 +12,7 @@ test.describe("public share surfaces", () => {
     await expect(page.getByText(/totale impact/i)).toBeVisible();
     await expect(page.getByText(/top teams/i)).toBeVisible();
     await expect(page.getByTestId("trend-chart").locator("svg").first()).toBeVisible();
-    await expect(page.getByText(/recente registraties/i)).toBeVisible();
+    await expect(page.getByText(/recente eco-sociale activiteiten/i)).toBeVisible();
   });
 
   test("tv dashboard renders in kiosk slideshow mode on desktop", async ({ page }) => {
@@ -28,10 +28,10 @@ test.describe("public share surfaces", () => {
   test("embed defaults to a stack of all three slides", async ({ page }) => {
     await page.goto(`/embed/${shareSlug}`);
 
-    await expect(page.getByText(/intranet embed/i)).toBeVisible();
+    await expect(page.getByTestId("org-welcome-panel")).toBeVisible();
     await expect(page.getByText(/totale impact/i)).toBeVisible();
     await expect(page.getByText(/impact per categorie/i)).toBeVisible();
-    await expect(page.getByText(/recente registraties/i)).toBeVisible();
+    await expect(page.getByText(/recente eco-sociale activiteiten/i)).toBeVisible();
   });
 
   test("embed?mode=rotate renders the slideshow shell on desktop", async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe("public share surfaces", () => {
     await page.goto(`/embed/${shareSlug}?screens=1,3`);
 
     await expect(page.getByText(/totale impact/i)).toBeVisible();
-    await expect(page.getByText(/recente registraties/i)).toBeVisible();
+    await expect(page.getByText(/recente eco-sociale activiteiten/i)).toBeVisible();
     await expect(page.getByText(/impact per categorie/i)).toHaveCount(0);
   });
 });

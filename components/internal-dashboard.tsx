@@ -1,9 +1,7 @@
 import Link from "next/link";
 
-import {
-  tenantPageHeaderClassName,
-  tenantPageMainClassName,
-} from "@/components/app-shell/tenant-page-layout";
+import { tenantPageMainClassName } from "@/components/app-shell/tenant-page-layout";
+import { OrgWelcomePanel } from "@/components/org-welcome-panel";
 import { InternalRecentRegistrationsSection } from "@/components/dashboard/internal-recent-registrations-section";
 import { ProgressSlide } from "@/components/public/progress-slide";
 import { TotalImpactSlide } from "@/components/public/total-impact-slide";
@@ -16,6 +14,9 @@ import type { WeeklyTimeseriesRow } from "@/lib/timeseries";
 
 export function InternalDashboard({
   feedFilters,
+  description,
+  impactDisclaimer,
+  missionShort,
   orgSlug,
   orgName,
   recentRegistrations,
@@ -26,6 +27,9 @@ export function InternalDashboard({
   year,
 }: {
   feedFilters: DashboardFeedFilters;
+  description?: string | null;
+  impactDisclaimer?: string | null;
+  missionShort?: string | null;
   orgSlug: string;
   orgName: string;
   recentRegistrations: RecentRegistration[];
@@ -39,11 +43,12 @@ export function InternalDashboard({
 
   return (
     <main className={tenantPageMainClassName}>
-      <header className={tenantPageHeaderClassName}>
-        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
-          Welkom op het <span className="text-primary">{orgName}</span> impact dashboard
-        </h1>
-      </header>
+      <OrgWelcomePanel
+        description={description}
+        impactDisclaimer={impactDisclaimer}
+        missionShort={missionShort}
+        orgName={orgName}
+      />
 
       <TotalImpactSlide
         periodLabel={periodLabel}

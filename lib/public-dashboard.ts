@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { RegistrationCardData } from "@/components/dashboard/registration-card";
+import type { OrgWelcomeProfile } from "@/components/org-welcome-panel";
 import { type DashboardSnapshot, buildDashboardSnapshot } from "@/lib/dashboard";
 import { REGISTRATIONS_BUCKET } from "@/lib/registrations/photo-upload";
 import { type createClient, createServiceRoleClient } from "@/lib/supabase/server";
@@ -26,11 +27,14 @@ const PUBLIC_PHOTO_SIGNED_URL_TTL_SECONDS = 60 * 60;
 
 const DEFAULT_RECENT_LIMIT = 9;
 
+export type { OrgWelcomeProfile };
+
 export type PublicDashboardData = {
   totals: PublicDashboardTotalsRow;
   snapshot: DashboardSnapshot;
   timeseries: WeeklyTimeseriesRow[];
   recentRegistrations: RegistrationCardData[];
+  orgWelcome: OrgWelcomeProfile;
 };
 
 /**
@@ -70,12 +74,18 @@ export async function getPublicDashboardBySlug(
   const orgId = totals.org_id;
 
   const [
+    { data: orgRow },
     { data: teamRows },
     { data: categoryRows },
     { data: interventionRows },
     { data: registrationRows },
     { data: recentRows },
   ] = await Promise.all([
+    supabase
+      .from("organizations")
+      .select("name, description, mission_short, impact_disclaimer")
+      .eq("id", orgId)
+      .maybeSingle(),
     supabase.from("teams").select("id, name").eq("org_id", orgId).eq("is_archived", false),
     supabase
       .from("categories")
@@ -173,7 +183,18 @@ export async function getPublicDashboardBySlug(
     happenedOn: row.happened_on ?? "",
   }));
 
-  return { totals, snapshot, timeseries, recentRegistrations };
+  return {
+    totals,
+    snapshot,
+    timeseries,
+    recentRegistrations,
+    orgWelcome: {
+      description: orgRow?.description ?? null,
+      impactDisclaimer: orgRow?.impact_disclaimer ?? null,
+      missionShort: orgRow?.mission_short ?? null,
+      orgName: orgRow?.name ?? totals.org_name ?? "",
+    },
+  };
 }
 
 /**

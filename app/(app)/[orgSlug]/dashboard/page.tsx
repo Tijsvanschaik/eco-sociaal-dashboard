@@ -24,7 +24,10 @@ export default async function DashboardPage({
 
   return (
     <InternalDashboard
+      description={data.context.org.description}
       feedFilters={data.feedFilters}
+      impactDisclaimer={data.context.org.impactDisclaimer}
+      missionShort={data.context.org.missionShort}
       orgSlug={orgSlug}
       orgName={data.context.org.name}
       recentRegistrations={data.recentRegistrations}

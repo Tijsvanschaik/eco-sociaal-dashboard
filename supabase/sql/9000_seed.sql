@@ -42,8 +42,8 @@ values (
   50000,
   date '2024-01-01',
   'Welzijnsorganisatie die eco-sociale impact zichtbaar maakt voor medewerkers en samenleving.',
-  'LEV Groep zet zich in voor welzijn en duurzaamheid. Medewerkers registreren dagelijkse activiteiten; dit dashboard vertaalt die inzichten naar begrijpelijke impact — van CO₂-besparing tot sociale verbinding.',
-  'De getoonde cijfers zijn indicatief en bedoeld voor zichtbaarheid en bewustwording. Ze zijn geen wetenschappelijke metingen. Dit dashboard maakt deel uit van het bredere eco-sociale initiatief van LEV Groep — het staat niet op zichzelf.'
+  'LEV Groep werkt sinds 2020 aan duurzaamheid, van energiebesparing tot circulaire inkoop. Die ervaring gebruiken we nu ook buiten onze eigen muren: van binnen naar buiten. Klimaatverandering raakt namelijk niet alleen het milieu, maar ook de mensen in onze wijken, denk aan energiearmoede, hittestress en leefbaarheid. Daarom verbinden we eco-thema''s als energie, mobiliteit en klimaatadaptatie met sociale thema''s als gezondheid en verbinding. Dit dashboard maakt zichtbaar welke concrete stappen medewerkers en teams daarin zetten, in Helmond en de regio.',
+  'De eco- en sociale score op dit dashboard zijn indicatieve inschattingen, bedoeld om bewustwording en betrokkenheid te stimuleren. Ze zijn geen wetenschappelijk gevalideerde meting, maar geven een praktisch beeld van de impact van onze activiteiten.'
 )
 on conflict (slug) do nothing;
 
@@ -55,11 +55,11 @@ set
   ),
   description = coalesce(
     description,
-    'LEV Groep zet zich in voor welzijn en duurzaamheid. Medewerkers registreren dagelijkse activiteiten; dit dashboard vertaalt die inzichten naar begrijpelijke impact — van CO₂-besparing tot sociale verbinding.'
+    'LEV Groep werkt sinds 2020 aan duurzaamheid, van energiebesparing tot circulaire inkoop. Die ervaring gebruiken we nu ook buiten onze eigen muren: van binnen naar buiten. Klimaatverandering raakt namelijk niet alleen het milieu, maar ook de mensen in onze wijken, denk aan energiearmoede, hittestress en leefbaarheid. Daarom verbinden we eco-thema''s als energie, mobiliteit en klimaatadaptatie met sociale thema''s als gezondheid en verbinding. Dit dashboard maakt zichtbaar welke concrete stappen medewerkers en teams daarin zetten, in Helmond en de regio.'
   ),
   impact_disclaimer = coalesce(
     impact_disclaimer,
-    'De getoonde cijfers zijn indicatief en bedoeld voor zichtbaarheid en bewustwording. Ze zijn geen wetenschappelijke metingen. Dit dashboard maakt deel uit van het bredere eco-sociale initiatief van LEV Groep — het staat niet op zichzelf.'
+    'De eco- en sociale score op dit dashboard zijn indicatieve inschattingen, bedoeld om bewustwording en betrokkenheid te stimuleren. Ze zijn geen wetenschappelijk gevalideerde meting, maar geven een praktisch beeld van de impact van onze activiteiten.'
   )
 where slug = 'lev-groep';
 

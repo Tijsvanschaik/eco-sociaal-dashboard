@@ -40,7 +40,7 @@ describe("<RecentRegistrationsSlide />", () => {
       />,
     );
 
-    expect(screen.getByText(/Recente registraties/)).toBeInTheDocument();
+    expect(screen.getByText(/Recente eco-sociale activiteiten/)).toBeInTheDocument();
     expect(screen.getAllByText(/vegetarische maaltijd/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/voedselverspilling voorkomen/i)).toBeInTheDocument();
     expect(screen.getByText(/LEV Helmond/)).toBeInTheDocument();
@@ -50,8 +50,8 @@ describe("<RecentRegistrationsSlide />", () => {
   it("renders the empty state when no registrations are provided", () => {
     render(<RecentRegistrationsSlide registrations={[]} />);
 
-    expect(screen.getByText(/Recente registraties/)).toBeInTheDocument();
-    expect(screen.getByText(/nog geen registraties binnen deze organisatie/i)).toBeInTheDocument();
+    expect(screen.getByText(/Recente eco-sociale activiteiten/)).toBeInTheDocument();
+    expect(screen.getByText(/nog geen eco-sociale activiteiten binnen deze organisatie/i)).toBeInTheDocument();
   });
 
   it("respects the limit prop and only shows the first N registrations", () => {

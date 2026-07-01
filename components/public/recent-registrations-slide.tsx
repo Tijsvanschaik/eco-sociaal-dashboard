@@ -39,7 +39,7 @@ const DEFAULT_GRID = "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3";
  */
 export function RecentRegistrationsSlide({
   compactCards = false,
-  description = "De laatste acties van de hele organisatie — elke kaart telt direct mee in het overzicht bovenaan.",
+  description = "De meest recente eco-sociale activiteiten van de hele organisatie — elke kaart telt direct mee in het overzicht bovenaan.",
   limit,
   registrations,
   gridClassName,
@@ -53,15 +53,12 @@ export function RecentRegistrationsSlide({
       description={description}
       icon="history"
       iconTone="primary"
-      title="Recente registraties"
+      title="Recente eco-sociale activiteiten"
     >
       {visible.length === 0 ? (
         <div className="flex flex-col items-start gap-2 rounded-[1.5rem] bg-surface-container-low p-6 text-sm text-muted-foreground">
           <Icon name="inbox" className="text-2xl text-primary" filled />
-          <p>
-            Nog geen registraties binnen deze organisatie. Voeg via de registratie-pagina de eerste
-            actie toe.
-          </p>
+          <p>Nog geen eco-sociale activiteiten binnen deze organisatie.</p>
         </div>
       ) : (
         <ul className={cn(DEFAULT_GRID, gridClassName)}>
