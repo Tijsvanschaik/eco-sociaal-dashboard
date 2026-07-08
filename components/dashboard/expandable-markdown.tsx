@@ -2,8 +2,8 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 
-import { SafeMarkdown } from "@/components/ui/safe-markdown";
 import { Icon } from "@/components/ui/icon";
+import { SafeMarkdown } from "@/components/ui/safe-markdown";
 import { cn } from "@/lib/utils";
 
 const lineClampClassName: Record<number, string> = {
@@ -35,6 +35,7 @@ export function ExpandableMarkdown({
   const contentRef = useRef<HTMLDivElement>(null);
   const clampClassName = lineClampClassName[maxLines] ?? "line-clamp-3";
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: remeasure when markdown copy changes
   useLayoutEffect(() => {
     function measureOverflow() {
       const node = contentRef.current;

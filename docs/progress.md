@@ -223,7 +223,7 @@ Velden bestaan in Instellingen (stream 5). **Presentatie op intern dashboard + `
 - [x] PWA (manifest + service worker) — zie ADR [`0010`](decisions/0010-pwa-scope.md)
 - [x] PWA handmatig getest (install werkt; **traag** — zie performance-backlog hieronder)
 - [ ] PWA performance-backlog (prioriteit voor medewerkersflow):
-  - [x] **Material Symbols self-hosten** — subset 69 iconen (~11 KB woff2), `npm run icons:sync`
+  - [x] **Material Symbols self-hosten** — subset 70 iconen (~25 KB woff2), `npm run icons:sync`; `expand_less` toegevoegd (fix uitklap-icoon dashboard missie)
   - [x] **Recharts lazy-loaden** (`next/dynamic` via `components/charts/lazy-charts.tsx` op ProgressSlide)
   - [x] **Island-assets precachen** in Serwist (`globPublicPatterns`: `assets/island/**` + icon font)
   - [x] Plus Jakarta Sans: font-weights 400/600/700/800 (500 verwijderd)
@@ -390,8 +390,8 @@ sociaal (`kg CO₂` / `punten`), en registratiekaarten + impact-hero aantrekkeli
 
 ## Laatste sessie
 
-Datum: 2026-07-01  
-Wat gedaan: stream 6 deels — gedeeld `OrgWelcomePanel` (missie + disclaimer) op intern dashboard en `/p`/embed-stack; uitklapbare missie; LEV-profielteksten in seed + `0013`; copy-feed **Recente eco-sociale activiteiten** op intern + publiek; client-boundary fix publieke route; 288 unit tests + build groen.  
+Datum: 2026-07-08  
+Wat gedaan: fix **Lees meer**-toggle op dashboard — `expand_less` ontbrak in self-hosted Material Symbols subset (icoon werd letterlijk als bloktekst getoond); subset gesynchroniseerd (70 iconen); Biome/lint fixes voor groene CI.  
 Wat volgt: missie/disclaimer op TV/embed-rotate kiosk-slides; superadmin + org-onboarding testen; visualisatie-finetune (stream 3); `0013` draaien op dev/staging indien nog niet gedaan.
 
 ## Sessie 2026-06-22 — Fase 6 planning

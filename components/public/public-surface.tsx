@@ -133,9 +133,7 @@ export function PublicSurface({ data, intervalMs, mode, slideOrder }: PublicSurf
       data-mode={mode}
       data-testid="public-surface"
     >
-      {showWelcome ? (
-        <OrgWelcomePanel className="mb-8" {...data.orgWelcome} />
-      ) : null}
+      {showWelcome ? <OrgWelcomePanel className="mb-8" {...data.orgWelcome} /> : null}
 
       {showRotation ? (
         <>

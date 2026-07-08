@@ -51,7 +51,9 @@ describe("<RecentRegistrationsSlide />", () => {
     render(<RecentRegistrationsSlide registrations={[]} />);
 
     expect(screen.getByText(/Recente eco-sociale activiteiten/)).toBeInTheDocument();
-    expect(screen.getByText(/nog geen eco-sociale activiteiten binnen deze organisatie/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/nog geen eco-sociale activiteiten binnen deze organisatie/i),
+    ).toBeInTheDocument();
   });
 
   it("respects the limit prop and only shows the first N registrations", () => {
