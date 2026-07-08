@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { tenantPageMainClassName } from "@/components/app-shell/tenant-page-layout";
-import { OrgWelcomePanel } from "@/components/org-welcome-panel";
 import { InternalRecentRegistrationsSection } from "@/components/dashboard/internal-recent-registrations-section";
+import { OrgWelcomePanel } from "@/components/org-welcome-panel";
 import { ProgressSlide } from "@/components/public/progress-slide";
 import { TotalImpactSlide } from "@/components/public/total-impact-slide";
 import { Button } from "@/components/ui/button";

@@ -58,7 +58,9 @@ describe("OrgWelcomePanel", () => {
   it("labels the methodology disclaimer section", () => {
     render(<OrgWelcomePanel orgName="LEV Groep" />);
 
-    expect(screen.getByRole("heading", { level: 2, name: "Over de impactcijfers" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Over de impactcijfers" }),
+    ).toBeInTheDocument();
   });
 
   it("uses a two-column grid only from 2xl", () => {
