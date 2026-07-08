@@ -31,6 +31,7 @@ export const MATERIAL_SYMBOL_ICONS = [
   "edit_note",
   "error",
   "event",
+  "expand_less",
   "expand_more",
   "favorite",
   "filter_alt",
